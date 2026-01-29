@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diário de Bordo - E. M. Sobral Pinto </title>
+    <style>
+        :root { --blue: #0d47a1; --gold: #ffd600; --glass: rgba(255, 255, 255, 0.95); }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80') center/cover fixed; min-height: 100vh; }
+        header { background: var(--blue); color: white; padding: 15px 3%; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .img-topo { width: 80px; height: 80px; object-fit: contain; background: white; border-radius: 8px; padding: 5px; }
+        .escola-txt { text-align: center; flex-grow: 1; padding: 0 15px; }
+        .escola-txt h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
+        .escola-txt p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; line-height: 1.4; }
+        .auth-wrapper { display: flex; justify-content: center; align-items: center; padding: 40px 20px; }
+        .box-auth { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+        .container { max-width: 650px; margin: 20px auto; padding: 15px; }
+        .tabs { display: flex; background: rgba(255,255,255,0.2); border-radius: 12px 12px 0 0; backdrop-filter: blur(10px); padding: 5px 5px 0; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: none; color: white; cursor: pointer; font-weight: bold; border-radius: 8px 8px 0 0; }
+        .tab-btn.active { background: var(--glass); color: var(--blue); }
+        .card { background: var(--glass); padding: 25px; border-radius: 0 0 12px 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .hidden { display: none !important; }
+        label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
+        input, select, textarea, .btn-main { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        .btn-main { background: var(--blue); color: white; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; }
+        .btn-main:hover { background: #1565c0; }
+        .btn-link { background: none; border: none; color: var(--blue); text-decoration: underline; cursor: pointer; margin-top: 15px; font-size: 14px; width: auto; }
+        .titulo-trimestre { background: var(--gold); color: #000; padding: 8px 15px; margin-top: 25px; border-radius: 6px; font-weight: bold; border-left: 10px solid var(--blue); }
+        .item-ocorrencia { background: white; padding: 15px; border-left: 5px solid var(--blue); margin-top: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
+	.modal-ajuda input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+        @media print { body { background: white !important; } header { display: flex !important; border-bottom: 2px solid #000 !important; color: black !important; } .tabs, .btn-main, label, select, .box-auth, button, .btn-link { display: none !important; } .container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; } .card { box-shadow: none !important; background: white !important; } .titulo-trimestre { border: 1px solid #000 !important; background: #eee !important; margin-top: 20px !important; } }
+
+/* Botão Flutuante de Ajuda Didático */
+.btn-ajuda-fixo {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #25d366; /* Cor WhatsApp */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px; /* Formato de pílula */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    cursor: pointer;
+    z-index: 9999;
+    border: none;
+    transition: transform 0.2s;
+}
+
+.btn-ajuda-fixo:hover {
+    transform: scale(1.05);
+}
+
+.icone-lampada {
+    font-size: 24px;
+}
+
+/* Modal de Ajuda */
+.modal-ajuda {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 280px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    z-index: 9999;
+    text-align: left;
+}
+.modal-ajuda h3 { margin-top: 0; color: var(--blue); font-size: 18px; }
+.modal-ajuda textarea { width: 100%; border: 1px solid #ccc; border-radius: 8px; padding: 8px; resize: none; box-sizing: border-box; }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="https://lh3.googleusercontent.com/u/0/d/16JafsMd81Ho26kkaqCI-YTvsCGIXQ2Fy" alt="Prefeitura" class="img-topo">
+    <div class="escola-txt">
+        <h1>Escola Municipal Sobral Pinto</h1>
+        <p>Rua das Almas, 120 - Conjunto Paulo VI, Belo Horizonte - MG.<br>CEP: 31998-020</p>
+    </div>
+</header>
+
+<div id="secaoAcesso" class="auth-wrapper">
+    <div id="telaLogin" class="box-auth">
+        <h2 style="color:var(--blue)">🔒 Login</h2>
+        <input type="text" id="userLogin" placeholder="Usuário">
+        <input type="password" id="passLogin" placeholder="Senha">
+        <button class="btn-main" onclick="executarLogin()">Entrar</button>
+        <button class="btn-link" onclick="irPara('telaCadastro')">Primeiro Acesso / Recuperar</button>
+    </div>
+    <div id="telaCadastro" class="box-auth hidden">
+        <h2 style="color:var(--blue)">📝 Cadastro</h2>
+        <input type="text" id="cadCpf" placeholder="CPF (números)">
+        <input type="text" id="cadNasc" placeholder="Nascimento (DD/MM/AAAA)">
+        <input type="text" id="cadUser" placeholder="Usuário">
+        <input type="password" id="cadPass" placeholder="Senha">
+        <button class="btn-main" onclick="executarCadastro()">Validar e Gravar</button>
+        <button class="btn-link" onclick="irPara('telaLogin')">Voltar</button>
+    </div>
+</div>
+
+<div id="conteudoDiario" class="container hidden">
+    <div class="tabs">
+        <button id="t1" class="tab-btn active" onclick="tab(1)">📝 INCLUIR</button>
+        <button id="t2" class="tab-btn" onclick="tab(2)">🔍 CONSULTAR</button>
+        <button onclick="logout()" style="background:none; color:white; flex:0.3; cursor:pointer">Sair</button>
+    </div>
+    <div class="card">
+        <div id="aba1">
+            <label>Responsável:</label>
+            <input type="text" id="nomeProfLogado" readonly style="background:#e9ecef">
+            <label>Data:</label>
+            <input type="date" id="dataOcorrenciaManual">
+            <label>Turma:</label>
+            <select id="selTurma" onchange="atualizarAlunos('selTurma', 'selAluno')"><option value="">Selecione...</option><option>9º Ano A</option><option>1ª Série B</option></select>
+            <label>Aluno:</label>
+            <select id="selAluno"><option value="">Selecione a turma...</option></select>
+            <label>Relato:</label>
+            <textarea id="relatoTexto" rows="5"></textarea>
+            <button class="btn-main" id="btnGravar" onclick="gravarOcorrencia()">Gravar no Diário</button>
+        </div>
+        <div id="aba2" class="hidden">
+            <select id="selTurmaCons" onchange="atualizarAlunos('selTurmaCons', 'selAlunoCons')"><option value="">Turma...</option><option>9º Ano A</option><option>1ª Série B</option></select>
+            <select id="selAlunoCons" style="margin-top:10px;"><option value="">Aluno...</option></select>
+<select id="selPeriodoCons" style="margin-top:10px;">
+    <option value="Ano Todo">Ano Todo (Todos os Trimestres)</option>
+    <option value="1º Trimestre">1º Trimestre</option>
+    <option value="2º Trimestre">2º Trimestre</option>
+    <option value="3º Trimestre">3º Trimestre</option>
+</select>
+            <button class="btn-main" onclick="consultarHistorico()">🔍 Buscar</button>
+            <div id="areaImpressao"><div id="resConsulta"></div></div>
+            <button class="btn-main" id="btnImp" style="background:#444; display:none; margin-top:20px" onclick="window.print()">🖨️ PDF / Imprimir</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlVbz3C-bdKUbRvuWx4SrL9eiFdmyRwwZwUYVhi9u8u2df9NSgNRNjsYx7gD5q1qef7g/exec"; 
+    const ALUNOS = { "9º Ano A": ["Ana Beatriz", "Bruno Silva", "Carlos Eduardo", "Turma Toda"], "1ª Série B": ["Daniela Oliveira", "Eduardo Souza", "Fernanda Lima", "Turma Toda"] };
+    
+    let cargoLogado = "", profNomeLogado = "", disciplinaLogada = "", idEditando = null;
+
+    // AO CARREGAR A PÁGINA: VERIFICA SE JÁ ESTÁ LOGADO
+    window.onload = function() {
+        const salvo = localStorage.getItem('diarioAcesso');
+        if (salvo) {
+            const d = JSON.parse(salvo);
+            aplicarLogin(d);
+        }
+    };
+
+    function toggleAjuda() {
+    document.getElementById('caixaAjuda').classList.toggle('hidden');
+}
+
+function enviarWhatsApp() {
+    const telefone = "5531975580836"; 
+    
+    const escola = document.getElementById('escolaDuvida').value; // Pega o nome da escola
+    let nomeInformado = document.getElementById('nomeDuvida').value;
+    const duvida = document.getElementById('textoDuvida').value;
+    const nomeLogado = document.getElementById('nomeProfLogado').value;
+
+    if (!nomeInformado && nomeLogado) {
+        nomeInformado = nomeLogado;
+    }
+
+    if (!nomeInformado) return alert("Por favor, informe seu nome.");
+    if (!duvida) return alert("Por favor, descreva sua dúvida.");
+
+    // Mensagem formatada com a Escola inclusa
+    const mensagem = `*Suporte Diário de Bordo*\n\n*Escola:* ${escola}\n*De:* ${nomeInformado}\n*Dúvida:* ${duvida}`;
+    
+    const url = `https://api.whatsapp.com/send?phone=${telefone}&text=${encodeURIComponent(mensagem)}`;
+
+    window.open(url, '_blank');
+    
+    document.getElementById('nomeDuvida').value = "";
+    document.getElementById('textoDuvida').value = "";
+    toggleAjuda();
+}
+
+
+    function irPara(id) { document.getElementById('telaLogin').classList.add('hidden'); document.getElementById('telaCadastro').classList.add('hidden'); document.getElementById(id).classList.remove('hidden'); }
+    function tab(n) { document.getElementById('aba1').classList.toggle('hidden', n !== 1); document.getElementById('aba2').classList.toggle('hidden', n !== 2); document.getElementById('t1').classList.toggle('active', n === 1); document.getElementById('t2').classList.toggle('active', n === 2); if(n===2) cancelarEdicao(); }
+    
+    function atualizarAlunos(idT, idA) {
+        const t = document.getElementById(idT).value; const s = document.getElementById(idA); s.innerHTML = "";
+        if(ALUNOS[t]) { s.add(new Option("Selecione o Aluno...", "")); ALUNOS[t].forEach(a => s.add(new Option(a, a))); }
+    }
+
+    function definirDataHoje() { document.getElementById('dataOcorrenciaManual').value = new Date().toISOString().split('T')[0]; }
+
+    function identificarTrimestre(ds) {
+        const p = ds.split('/'); const d = new Date(p[2], p[1]-1, p[0]);
+        if (d >= new Date(2026, 1, 4) && d <= new Date(2026, 4, 15)) return "1º Trimestre";
+        if (d >= new Date(2026, 4, 18) && d <= new Date(2026, 7, 31)) return "2º Trimestre";
+        if (d >= new Date(2026, 8, 1) && d <= new Date(2026, 11, 15)) return "3º Trimestre";
+        return "Fora do Período Letivo";
+    }
+
+    async function executarLogin() {
+        const u = document.getElementById('userLogin').value, s = document.getElementById('passLogin').value;
+        try {
+            const res = await fetch(`${SCRIPT_URL}?acao=login&usuario=${u}&senha=${s}`);
+            const d = await res.json();
+            if(d.status === "Autorizado") {
+                localStorage.setItem('diarioAcesso', JSON.stringify(d)); // SALVA NO NAVEGADOR
+                aplicarLogin(d);
+            } else alert("Acesso negado.");
+        } catch (e) { alert("Erro de conexão."); }
+    }
+
+    function aplicarLogin(d) {
+        cargoLogado = d.cargo; profNomeLogado = d.nome; disciplinaLogada = d.disciplina;
+        document.getElementById('secaoAcesso').classList.add('hidden');
+        document.getElementById('conteudoDiario').classList.remove('hidden');
+        document.getElementById('nomeProfLogado').value = profNomeLogado;
+        if(cargoLogado === "Diretor") { document.getElementById('nomeProfLogado').readOnly = false; document.getElementById('nomeProfLogado').style.background = "#fff"; }
+        definirDataHoje();
+    }
+
+    function logout() { localStorage.removeItem('diarioAcesso'); location.reload(); }
+
+    async function executarCadastro() {
+        let cpf = document.getElementById('cadCpf').value.replace(/\D/g, '');
+        let nascRaw = document.getElementById('cadNasc').value;
+        let nasc = nascRaw.includes("-") ? nascRaw.split("-").reverse().join("/") : nascRaw;
+        const p = new URLSearchParams();
+        p.append('acao', 'cadastrar'); p.append('cpf', cpf); p.append('nascimento', nasc);
+        p.append('usuario', document.getElementById('cadUser').value); p.append('senha', document.getElementById('cadPass').value);
+        await fetch(SCRIPT_URL, { method: 'POST', body: p });
+        alert("Processamento concluído!"); irPara('telaLogin');
+    }
+
+    async function gravarOcorrencia() {
+        const dVal = document.getElementById('dataOcorrenciaManual').value;
+        const [ano, mes, dia] = dVal.split("-");
+        const dFormat = `${dia}/${mes}/${ano}`;
+        const primNome = document.getElementById('nomeProfLogado').value.split(" ")[0];
+        const nomeFinal = (cargoLogado === "Diretor") ? "Diretor(a): " + primNome : `Prof(a): ${primNome} (${disciplinaLogada})`;
+
+        const p = new URLSearchParams();
+        p.append('acao', idEditando ? 'editarOcorrencia' : 'salvarOcorrencia');
+        if(idEditando) p.append('id', idEditando);
+        p.append('professor', nomeFinal); p.append('dataManual', dFormat);
+        p.append('turma', document.getElementById('selTurma').value); p.append('aluno', document.getElementById('selAluno').value);
+        p.append('texto', document.getElementById('relatoTexto').value);
+
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        alert("Sucesso!");
+        cancelarEdicao();
+        document.getElementById('relatoTexto').value = "";
+        definirDataHoje();
+    }
+
+    function carregarParaEdicao(id, data, turma, aluno, texto) {
+        idEditando = id; tab(1);
+        const p = data.split('/');
+        document.getElementById('dataOcorrenciaManual').value = `${p[2]}-${p[1]}-${p[0]}`;
+        document.getElementById('selTurma').value = turma;
+        atualizarAlunos('selTurma', 'selAluno');
+        setTimeout(() => document.getElementById('selAluno').value = aluno, 150);
+        document.getElementById('relatoTexto').value = texto;
+        const b = document.getElementById('btnGravar');
+        b.innerText = "💾 Salvar Alteração"; b.style.background = "orange";
+    }
+
+    function cancelarEdicao() {
+        idEditando = null;
+        const b = document.getElementById('btnGravar');
+        b.innerText = "Gravar no Diário"; b.style.background = "";
+    }
+
+    async function consultarHistorico() {
+    const turmaSel = document.getElementById('selTurmaCons').value;
+    const alunoSel = document.getElementById('selAlunoCons').value;
+    const periodoSel = document.getElementById('selPeriodoCons').value; // Novo filtro
+    const resDiv = document.getElementById('resConsulta');
+    
+    if (!turmaSel || !alunoSel) return alert("Selecione a turma e o aluno.");
+
+    resDiv.innerHTML = "Buscando registros...";
+    document.getElementById('btnImp').style.display = "none";
+
+    try {
+        const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
+        const data = await res.json();
+
+        // 1. FILTRO POR ALUNO E TURMA
+        let filtrados = data.filter(r => {
+            return String(r[3]).trim() === turmaSel && String(r[4]).trim() === alunoSel;
+        });
+
+        // 2. FILTRO POR PERÍODO (TRIMESTRE)
+        if (periodoSel !== "Ano Todo") {
+            filtrados = filtrados.filter(r => {
+                return identificarTrimestre(r[1]) === periodoSel;
+            });
+        }
+
+        if (filtrados.length === 0) {
+            resDiv.innerHTML = `Nenhum registro encontrado para "${alunoSel}" no período "${periodoSel}".`;
+            return;
+        }
+
+        // ORGANIZAÇÃO POR TRIMESTRE PARA EXIBIÇÃO
+        let grupos = { "1º Trimestre": [], "2º Trimestre": [], "3º Trimestre": [], "Fora de Período": [] };
+        filtrados.forEach(r => { 
+            const tri = identificarTrimestre(r[1]);
+            if(grupos[tri]) grupos[tri].push(r);
+            else grupos["Fora de Período"].push(r);
+        });
+
+        let html = `<h2>Histórico de ocorrências: ${alunoSel}</h2><p>Período: ${periodoSel} | Turma: ${turmaSel}</p>`;
+        
+        for (let tri in grupos) {
+            if (grupos[tri].length > 0) {
+                html += `<div class="titulo-trimestre">${tri}</div>`;
+                grupos[tri].forEach(r => {
+                    const podeMudar = (r[2].includes(profNomeLogado.split(" ")[0]) || cargoLogado === "Diretor");
+                    html += `
+                        <div class="item-ocorrencia" id="card-${r[0]}">
+                            ${podeMudar ? `
+                                <button onclick="apagarRegistro('${r[0]}')" style="float:right; background:red; color:white; border:none; padding:5px; border-radius:5px; margin-left:5px">Apagar</button>
+                                <button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}')" style="float:right; background:orange; border:none; padding:5px; border-radius:5px">Editar</button>
+                            ` : ''}
+                            <strong>Data:</strong> ${r[1]} | <strong>${r[2]}</strong><br><br>
+                            ${r[5]}
+                        </div>`;
+                });
+            }
+        }
+        resDiv.innerHTML = html;
+        document.getElementById('btnImp').style.display = "block";
+
+    } catch (e) {
+        console.error(e);
+        resDiv.innerHTML = "Erro ao processar busca. Tente novamente.";
+    }
+}
+
+    async function apagarRegistro(id) {
+        if (!confirm("Excluir?")) return;
+        const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id);
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        document.getElementById(`card-${id}`).remove();
+    }
+</script>
+<button class="btn-ajuda-fixo" onclick="toggleAjuda()">
+    <span class="icone-lampada">💡</span>
+    <span>Dúvidas?</span>
+</button>
+
+<div id="caixaAjuda" class="modal-ajuda hidden">
+    <h3>Suporte Técnico</h3>
+    
+    <input type="text" id="escolaDuvida" value="E. M. Sobral Pinto" readonly style="background:#f0f0f0; margin-bottom: 10px; font-weight:bold;">
+    
+    <input type="text" id="nomeDuvida" placeholder="Seu nome completo" style="margin-bottom: 10px; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 8px;">
+    
+    <textarea id="textoDuvida" rows="4" placeholder="Descreva o problema aqui..." style="width: 100%; border: 1px solid #ccc; border-radius: 8px; padding: 8px;"></textarea>
+    
+    <button class="btn-main" style="background:#25d366; margin-top:10px;" onclick="enviarWhatsApp()">
+        Enviar via WhatsApp
+    </button>
+</div>
+
+</body>
+</html>
