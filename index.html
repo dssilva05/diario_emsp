@@ -84,6 +84,12 @@
             <select id="selTurma" onchange="atualizarAlunos('selTurma', 'selAluno')"><option value="">Carregando...</option></select>
             <label>Aluno:</label>
             <select id="selAluno"><option value="">Selecione a turma...</option></select>
+            
+            <label style="display: flex; align-items: center; cursor: pointer; background: #fff3cd; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba; margin-top: 15px;">
+                <input type="checkbox" id="chkAdvertencia" style="width: auto; margin: 0 10px 0 0;"> 
+                <span style="color: #856404; font-size: 14px;">Foi enviada Advertência por Escrito?</span>
+            </label>
+
             <label>Relato:</label>
             <textarea id="relatoTexto" rows="5"></textarea>
             <button class="btn-main" id="btnGravar" onclick="gravarOcorrencia()">Gravar no Diário</button>
@@ -135,7 +141,7 @@
     let cargoLogado = "", profNomeLogado = "", disciplinaLogada = "", idEditando = null;
 
     window.onload = function() {
-        const salvo = localStorage.getItem('diarioAcessoSobral'); // Chave única por escola
+        const salvo = localStorage.getItem('diarioAcessoSobral');
         if (salvo) aplicarLogin(JSON.parse(salvo));
         carregarDadosIniciais();
     };
@@ -157,9 +163,7 @@
         const t = document.getElementById(idT).value;
         const s = document.getElementById(idA);
         s.innerHTML = '<option value="">Selecione o Aluno...</option>';
-        if(ALUNOS[t]) {
-            ALUNOS[t].forEach(al => s.add(new Option(al, al)));
-        }
+        if(ALUNOS[t]) { ALUNOS[t].forEach(al => s.add(new Option(al, al))); }
     }
 
     function alternarCheckboxes(quem) {
@@ -183,10 +187,8 @@
     function aplicarLogin(d) {
         profNomeLogado = d.nome;
         disciplinaLogada = d.disciplina;
-        
         const cargosGestores = ["diretor", "diretora", "vice-diretor", "vice-diretora", "coordenador", "coordenadora", "supervisor", "supervisora"];
         const eGestor = cargosGestores.some(c => d.cargo.toLowerCase().includes(c) || d.disciplina.toLowerCase().includes(c));
-        
         cargoLogado = eGestor ? "Diretor" : "Professor";
         document.getElementById('secaoAcesso').classList.add('hidden');
         document.getElementById('conteudoDiario').classList.remove('hidden');
@@ -200,9 +202,7 @@
         if(!dVal) return alert("Selecione a data!");
         const [ano, mes, dia] = dVal.split("-");
         const dFormat = `${dia}/${mes}/${ano}`;
-        const nomeInput = document.getElementById('nomeProfLogado').value;
-        const primNome = nomeInput.split(" ")[0];
-        const nomeFinal = `Prof(a): ${primNome} (${disciplinaLogada})`;
+        const nomeFinal = `Prof(a): ${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`;
 
         const p = new URLSearchParams();
         p.append('acao', idEditando ? 'editarOcorrencia' : 'salvarOcorrencia');
@@ -211,9 +211,12 @@
         p.append('turma', document.getElementById('selTurma').value);
         p.append('aluno', document.getElementById('selAluno').value);
         p.append('texto', document.getElementById('relatoTexto').value);
+        p.append('advertencia', document.getElementById('chkAdvertencia').checked ? "SIM" : "NÃO");
 
         await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
-        alert("Sucesso!"); cancelarEdicao(); document.getElementById('relatoTexto').value = ""; definirDataHoje();
+        alert("Sucesso!");
+        document.getElementById('chkAdvertencia').checked = false;
+        cancelarEdicao(); document.getElementById('relatoTexto').value = ""; definirDataHoje();
     }
 
     async function consultarHistorico() {
@@ -225,10 +228,8 @@
         try {
             const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
             const data = await res.json();
-            
             let filtrados = data.filter(r => String(r[3]).trim() === t && String(r[4]).trim() === a);
             
-            // ORDENAÇÃO POR DATA
             filtrados.sort((a, b) => {
                 const conv = (txt) => { const pt = txt.split('/'); return new Date(pt[2], pt[1]-1, pt[0]); };
                 return conv(a[1]) - conv(b[1]);
@@ -242,7 +243,10 @@
             if (filtrados.length === 0) { rDiv.innerHTML = "Nada encontrado."; return; }
             
             let grupos = { "1º Trimestre": [], "2º Trimestre": [], "3º Trimestre": [], "Fora de Período": [] };
-            filtrados.forEach(r => grupos[identificarTrimestre(r[1])].push(r));
+            filtrados.forEach(r => {
+                const tri = identificarTrimestre(r[1]);
+                if(grupos[tri]) grupos[tri].push(r); else grupos["Fora de Período"].push(r);
+            });
             
             let html = `<h2>Histórico: ${a}</h2>`;
             for (let tri in grupos) {
@@ -250,10 +254,13 @@
                     html += `<div class="titulo-trimestre">${tri}</div>`;
                     grupos[tri].forEach(r => {
                         const pode = (String(r[2]).includes(profNomeLogado.split(" ")[0]) || cargoLogado === "Diretor");
+                        const temAdverte = r[6] === "SIM" ? `<div style="margin-top:8px; color:#d32f2f; font-weight:bold; font-size:12px;">⚠️ ADVERTÊNCIA POR ESCRITO ENVIADA</div>` : "";
+                        
                         html += `<div class="item-ocorrencia" id="card-${r[0]}">
                             ${pode ? `<button onclick="apagarRegistro('${r[0]}')" style="float:right; background:red; color:white; border:none; padding:5px; border-radius:5px; margin-left:5px">Apagar</button>
                             <button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}')" style="float:right; background:orange; border:none; padding:5px; border-radius:5px">Editar</button>` : ''}
                             <strong>Data:</strong> ${r[1]} | <strong>${r[2]}</strong><br><br>${r[5]}
+                            ${temAdverte}
                         </div>`;
                     });
                 }
