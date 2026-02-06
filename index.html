@@ -13,8 +13,6 @@
         header { background: var(--blue); color: white; padding: 15px 3%; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .img-topo { width: 80px; height: 80px; object-fit: contain; background: white; border-radius: 8px; padding: 5px; }
         .escola-txt { text-align: center; flex-grow: 1; padding: 0 15px; }
-        .escola-txt h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
-        .escola-txt p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; line-height: 1.4; }
         .auth-wrapper { display: flex; justify-content: center; align-items: center; padding: 40px 20px; }
         .box-auth { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
         .container { max-width: 650px; margin: 20px auto; padding: 15px; }
@@ -27,16 +25,11 @@
         input, select, textarea, .btn-main { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
         .btn-main { background: var(--blue); color: white; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; }
         .btn-main:hover { background: #1565c0; }
-        .btn-link { background: none; border: none; color: var(--blue); text-decoration: underline; cursor: pointer; margin-top: 15px; font-size: 14px; width: auto; }
-        .titulo-trimestre { background: var(--gold); color: #000; padding: 8px 15px; margin-top: 25px; border-radius: 6px; font-weight: bold; border-left: 10px solid var(--blue); }
         .item-ocorrencia { background: white; padding: 15px; border-left: 5px solid var(--blue); margin-top: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
-        .filtro-box { margin-top: 15px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc; display: flex; flex-direction: column; gap: 12px; }
-        .filtro-item { display: flex; align-items: center; cursor: pointer; font-size: 14px; color: #444; }
-        .filtro-item input { width: 18px; height: 18px; margin: 0 12px 0 0; cursor: pointer; }
-        .btn-ajuda-fixo { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 10px 20px; border-radius: 30px; display: flex; align-items: center; gap: 10px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 9999; border: none; }
-        .modal-ajuda { position: fixed; bottom: 90px; right: 20px; width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; text-align: left; }
-        .modal-ajuda h3 { margin: 0 0 10px; color: var(--blue); font-size: 18px; }
-        @media print { body { background: white !important; } header { display: flex !important; border-bottom: 2px solid #000 !important; color: black !important; } .tabs, .btn-main, label, select, .box-auth, button, .btn-link, .btn-ajuda-fixo, .modal-ajuda, .filtro-box { display: none !important; } .container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; } .card { box-shadow: none !important; background: white !important; } .titulo-trimestre { border: 1px solid #000 !important; background: #eee !important; margin-top: 20px !important; } }
+        .titulo-trimestre { background: var(--gold); color: #000; padding: 8px 15px; margin-top: 25px; border-radius: 6px; font-weight: bold; border-left: 10px solid var(--blue); }
+        .btn-ajuda-fixo { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 10px 20px; border-radius: 30px; display: flex; align-items: center; gap: 10px; font-weight: bold; z-index: 9999; border: none; cursor: pointer; }
+        .modal-ajuda { position: fixed; bottom: 90px; right: 20px; width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; }
+        @media print { .tabs, .btn-main, label, select, .box-auth, button, .btn-ajuda-fixo, .modal-ajuda { display: none !important; } }
     </style>
 </head>
 <body>
@@ -44,27 +37,17 @@
 <header>
     <img src="https://lh3.googleusercontent.com/u/0/d/16JafsMd81Ho26kkaqCI-YTvsCGIXQ2Fy" alt="Prefeitura" class="img-topo">
     <div class="escola-txt">
-        <h1>Escola Municipal Sobral Pinto</h1>
-        <p>Rua das Almas, 120 - Conjunto Paulo VI, Belo Horizonte - MG.<br>CEP: 31998-020</p>
+        <h1 style="font-size: 18px; margin:0;">E. M. Sobral Pinto</h1>
+        <p style="font-size: 12px; margin: 5px 0 0;">Diário de Bordo Digital</p>
     </div>
 </header>
 
 <div id="secaoAcesso" class="auth-wrapper">
     <div id="telaLogin" class="box-auth">
-        <h2 style="color:var(--blue)">🔒 Login</h2>
+        <h2>🔒 Login</h2>
         <input type="text" id="userLogin" placeholder="Usuário">
         <input type="password" id="passLogin" placeholder="Senha">
         <button class="btn-main" onclick="executarLogin()">Entrar</button>
-        <button class="btn-link" onclick="irPara('telaCadastro')">Primeiro Acesso / Recuperar</button>
-    </div>
-    <div id="telaCadastro" class="box-auth hidden">
-        <h2 style="color:var(--blue)">📝 Cadastro</h2>
-        <input type="text" id="cadCpf" placeholder="CPF (números)">
-        <input type="text" id="cadNasc" placeholder="Nascimento (DD/MM/AAAA)">
-        <input type="text" id="cadUser" placeholder="Usuário">
-        <input type="password" id="cadPass" placeholder="Senha">
-        <button class="btn-main" onclick="executarCadastro()">Validar e Gravar</button>
-        <button class="btn-link" onclick="irPara('telaLogin')">Voltar</button>
     </div>
 </div>
 
@@ -87,61 +70,35 @@
             
             <label style="display: flex; align-items: center; cursor: pointer; background: #fff3cd; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba; margin-top: 15px;">
                 <input type="checkbox" id="chkAdvertencia" style="width: auto; margin: 0 10px 0 0;"> 
-                <span style="color: #856404; font-size: 14px;">Foi enviada Advertência por Escrito?</span>
+                <span style="color: #856404; font-size: 14px;">Advertência por Escrito enviada?</span>
             </label>
 
             <div id="containerTratativa"></div>
 
-            <label>Relato:</label>
+            <label>Relato do Professor:</label>
             <textarea id="relatoTexto" rows="5"></textarea>
             <button class="btn-main" id="btnGravar" onclick="gravarOcorrencia()">Gravar no Diário</button>
         </div>
 
         <div id="aba2" class="hidden">
-            <label>Turma:</label>
-            <select id="selTurmaCons" onchange="atualizarAlunos('selTurmaCons', 'selAlunoCons')"><option value="">Carregando...</option></select>
-            <label>Aluno:</label>
-            <select id="selAlunoCons" style="margin-top:10px;"><option value="">Selecione a turma...</option></select>
-            <label>Período:</label>
+            <select id="selTurmaCons" onchange="atualizarAlunos('selTurmaCons', 'selAlunoCons')"><option value="">Turma...</option></select>
+            <select id="selAlunoCons" style="margin-top:10px;"><option value="">Aluno...</option></select>
             <select id="selPeriodoCons" style="margin-top:10px;">
-                <option value="Ano Todo">Ano Todo (Todos os Trimestres)</option>
+                <option value="Ano Todo">Ano Todo</option>
                 <option value="1º Trimestre">1º Trimestre</option>
                 <option value="2º Trimestre">2º Trimestre</option>
                 <option value="3º Trimestre">3º Trimestre</option>
             </select>
-
-            <div class="filtro-box">
-                <label class="filtro-item">
-                    <input type="checkbox" id="chkMeusRegistros" checked onclick="alternarCheckboxes('meu')"> 
-                    Ver apenas minhas ocorrências
-                </label>
-                <label class="filtro-item">
-                    <input type="checkbox" id="chkTodosRegistros" onclick="alternarCheckboxes('todos')"> 
-                    Ver todas as ocorrências
-                </label>
-            </div>
-
-            <button class="btn-main" style="margin-top: 20px;" onclick="consultarHistorico()">🔍 Buscar Histórico</button>
-            <div id="areaImpressao"><div id="resConsulta"></div></div>
+            <button class="btn-main" onclick="consultarHistorico()">🔍 Buscar Histórico</button>
+            <div id="resConsulta"></div>
             <button class="btn-main" id="btnImp" style="background:#444; display:none; margin-top:20px" onclick="window.print()">🖨️ PDF / Imprimir</button>
         </div>
     </div>
 </div>
 
-<button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas?</button>
-<div id="caixaAjuda" class="modal-ajuda hidden">
-    <h3>Suporte Técnico</h3>
-    <input type="text" id="escolaDuvida" value="E. M. Sobral Pinto" readonly style="background:#f0f0f0;">
-    <input type="text" id="nomeDuvida" placeholder="Seu nome completo">
-    <textarea id="textoDuvida" rows="4" placeholder="Descreva sua dúvida..."></textarea>
-    <button class="btn-main" style="background:#25d366; margin-top: 10px;" onclick="enviarWhatsApp()">Enviar via WhatsApp</button>
-</div>
-
 <script>
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js').then(() => console.log("Offline OK"));
-        });
+        navigator.serviceWorker.register('sw.js').then(() => console.log("Offline Ativo"));
     }
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlVbz3C-bdKUbRvuWx4SrL9eiFdmyRwwZwUYVhi9u8u2df9NSgNRNjsYx7gD5q1qef7g/exec"; 
@@ -152,10 +109,7 @@
         const salvo = localStorage.getItem('diarioAcessoSobral');
         if (salvo) aplicarLogin(JSON.parse(salvo));
         carregarDadosIniciais();
-        if (navigator.onLine) sincronizarDados();
     };
-
-    window.addEventListener('online', sincronizarDados);
 
     async function carregarDadosIniciais() {
         try {
@@ -185,14 +139,6 @@
         if(ALUNOS[t]) { ALUNOS[t].forEach(al => s.add(new Option(al, al))); }
     }
 
-    function alternarCheckboxes(quem) {
-        const cMeu = document.getElementById('chkMeusRegistros');
-        const cTodos = document.getElementById('chkTodosRegistros');
-        if (quem === 'meu' && cMeu.checked) cTodos.checked = false;
-        else if (quem === 'todos' && cTodos.checked) cMeu.checked = false;
-        if (!cMeu.checked && !cTodos.checked) cMeu.checked = true;
-    }
-
     async function executarLogin() {
         const u = document.getElementById('userLogin').value, s = document.getElementById('passLogin').value;
         try {
@@ -212,32 +158,44 @@
         document.getElementById('secaoAcesso').classList.add('hidden');
         document.getElementById('conteudoDiario').classList.remove('hidden');
         document.getElementById('nomeProfLogado').value = profNomeLogado;
-        if(cargoLogado === "Diretor") { document.getElementById('nomeProfLogado').readOnly = false; document.getElementById('nomeProfLogado').style.background = "#fff"; }
         definirDataHoje();
     }
 
     async function gravarOcorrencia() {
         const dVal = document.getElementById('dataOcorrenciaManual').value;
         if(!dVal) return alert("Selecione a data!");
+        
         const [ano, mes, dia] = dVal.split("-");
         const dFormat = `${dia}/${mes}/${ano}`;
-        const nomeFinal = `Prof(a): ${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`;
         
-        const tTexto = document.getElementById('tratativaTexto'); // Pega o elemento
-    const dados = {
-        acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
-        id: idEditando || Date.now(),
-        professor: nomeFinal,
-        dataManual: dFormat,
-        turma: document.getElementById('selTurma').value,
-        aluno: document.getElementById('selAluno').value,
-        texto: document.getElementById('relatoTexto').value,
-        advertencia: document.getElementById('chkAdvertencia').checked ? "SIM" : "NÃO",
-        tratativa: tTexto ? tTexto.value : "" // Pega o valor se o campo existir
-    };
+        let textoTratativa = "";
+        const selT = document.getElementById('selTratativa');
+        if (selT) {
+            textoTratativa = selT.value;
+            const dtC = document.getElementById('dataConvocacao');
+            if (textoTratativa === "Família Convocada" && dtC && dtC.value) {
+                const p = dtC.value.split('-');
+                textoTratativa += ` (Data: ${p[2]}/${p[1]}/${p[0]})`;
+            }
+        }
 
-    if (navigator.onLine) { enviarParaGoogle(dados); } else { salvarFilaOffline(dados); }
-}
+        const rGestao = document.getElementById('relatoGestaoTexto');
+
+        const dados = {
+            acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
+            id: idEditando || Date.now(),
+            professor: `Prof: ${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`,
+            dataManual: dFormat,
+            turma: document.getElementById('selTurma').value,
+            aluno: document.getElementById('selAluno').value,
+            texto: document.getElementById('relatoTexto').value,
+            advertencia: document.getElementById('chkAdvertencia').checked ? "SIM" : "NÃO",
+            tratativa: textoTratativa,
+            relatoGestao: rGestao ? rGestao.value : ""
+        };
+
+        if (navigator.onLine) { enviarParaGoogle(dados); } else { salvarFilaOffline(dados); }
+    }
 
     async function enviarParaGoogle(dados) {
         const p = new URLSearchParams();
@@ -252,7 +210,7 @@
         let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
         fila.push(dados);
         localStorage.setItem('filaOfflineSobral', JSON.stringify(fila));
-        alert("Offline: Registro salvo no celular. Ele subirá sozinho com internet!");
+        alert("Offline: Salvo no celular. Enviará com internet.");
         limparForm();
     }
 
@@ -265,138 +223,120 @@
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
         }
         localStorage.removeItem('filaOfflineSobral');
-        alert("Sincronização concluída!");
     }
 
     async function consultarHistorico() {
         const t = document.getElementById('selTurmaCons').value, a = document.getElementById('selAlunoCons').value;
-        const p = document.getElementById('selPeriodoCons').value, vT = document.getElementById('chkTodosRegistros').checked;
-        const rDiv = document.getElementById('resConsulta');
         if (!t || !a) return alert("Selecione Turma e Aluno.");
-        rDiv.innerHTML = "Buscando...";
-        const cacheKey = `cache_hist_${t}_${a}`;
+        document.getElementById('resConsulta').innerHTML = "Buscando...";
         try {
             const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
             const data = await res.json();
-            localStorage.setItem(cacheKey, JSON.stringify(data));
-            exibirDados(data, t, a, p, vT);
-        } catch (e) {
-            const cache = localStorage.getItem(cacheKey);
-            if (cache) { alert("Offline: Exibindo histórico salvo."); exibirDados(JSON.parse(cache), t, a, p, vT); }
-            else rDiv.innerHTML = "Sem internet e sem dados salvos.";
+            exibirDados(data, t, a, document.getElementById('selPeriodoCons').value);
+        } catch (e) { document.getElementById('resConsulta').innerHTML = "Erro ao carregar."; }
+    }
+
+    function exibirDados(data, t, a, p) {
+        const rDiv = document.getElementById('resConsulta');
+        let filtrados = data.filter(r => r[3] && String(r[3]).trim() === t && String(r[4]).trim() === a);
+        
+        filtrados.sort((m, n) => {
+            const c = (txt) => { const pt = txt.split('/'); return new Date(pt[2], pt[1]-1, pt[0]); };
+            return c(m[1]) - c(n[1]);
+        });
+
+        if (p !== "Ano Todo") filtrados = filtrados.filter(r => identificarTrimestre(r[1]) === p);
+
+        let html = `<h3>Histórico: ${a}</h3>`;
+        let grupos = { "1º Trimestre": [], "2º Trimestre": [], "3º Trimestre": [], "Fora de Período": [] };
+        filtrados.forEach(r => {
+            const tri = identificarTrimestre(r[1]);
+            if(grupos[tri]) grupos[tri].push(r); else grupos["Fora de Período"].push(r);
+        });
+
+        for (let tri in grupos) {
+            if (grupos[tri].length > 0) {
+                html += `<div class="titulo-trimestre">${tri}</div>`;
+                grupos[tri].forEach(r => {
+                    const souGestor = (cargoLogado === "Diretor");
+                    const adv = (r[6] === "SIM") ? `<p style="color:red; font-weight:bold;">⚠️ Advertência por Escrito Enviada</p>` : "";
+                    const trat = r[7] ? `<div style="background:#e8f5e9; padding:10px; border-left:4px solid #4caf50; margin-top:10px;"><strong>Ação da Gestão:</strong> ${r[7]}</div>` : "";
+                    const priv = (souGestor && r[8]) ? `<div style="background:#fff3e0; padding:10px; border:1px dashed #ff9800; margin-top:5px; font-size:13px;"><strong>🔒 Relato Privado:</strong> ${r[8]}</div>` : "";
+
+                    html += `<div class="item-ocorrencia">
+                        <div style="float:right;">
+                            <button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', true)" style="background:#1976d2; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Tratar/Editar</button>
+                        </div>
+                        <strong>${r[1]} - ${r[2]}</strong><br><br>${r[5]}${adv}${trat}${priv}
+                    </div>`;
+                });
+            }
         }
+        rDiv.innerHTML = html;
+        document.getElementById('btnImp').style.display = "block";
     }
 
-    function exibirDados(data, t, a, p, vT) {
-    const rDiv = document.getElementById('resConsulta');
-    
-    // Filtro inicial
-    let filtrados = data.filter(r => r[3] && r[4] && String(r[3]).trim() === t && String(r[4]).trim() === a);
-    
-    if (filtrados.length === 0) {
-        rDiv.innerHTML = "Nenhum registro encontrado para este aluno.";
-        return;
-    }
+    function carregarParaEdicao(id, data, turma, aluno, texto, tratativa, relatoGestao, focar) {
+        idEditando = id; tab(1);
+        const p = data.split('/');
+        document.getElementById('dataOcorrenciaManual').value = `${p[2]}-${p[1]}-${p[0]}`;
+        document.getElementById('selTurma').value = turma;
+        atualizarAlunos('selTurma', 'selAluno');
+        setTimeout(() => document.getElementById('selAluno').value = aluno, 150);
+        document.getElementById('relatoTexto').value = texto;
+        
+        const cont = document.getElementById('containerTratativa');
+        if (cargoLogado === "Diretor") {
+            let opcaoSalva = tratativa;
+            if (tratativa.includes("Data:")) opcaoSalva = "Família Convocada";
 
-    // Ordenação por data
-    filtrados.sort((m, n) => {
-        const conv = (txt) => { 
-            if(!txt) return new Date(0);
-            const pt = txt.split('/'); 
-            return new Date(pt[2], pt[1]-1, pt[0]); 
-        };
-        return conv(m[1]) - conv(n[1]);
-    });
-
-    // Filtros de período e professor
-    if (p !== "Ano Todo") filtrados = filtrados.filter(r => identificarTrimestre(r[1]) === p);
-    if (!vT) {
-        const meu = profNomeLogado.split(" ")[0];
-        filtrados = filtrados.filter(r => String(r[2]).includes(meu));
-    }
-
-    // Organização por trimestres
-    let grupos = { "1º Trimestre": [], "2º Trimestre": [], "3º Trimestre": [], "Fora de Período": [] };
-    filtrados.forEach(r => {
-        const tri = identificarTrimestre(r[1]);
-        if(grupos[tri]) grupos[tri].push(r); else grupos["Fora de Período"].push(r);
-    });
-
-    let html = `<h2>Histórico: ${a}</h2>`;
-    for (let tri in grupos) {
-        if (grupos[tri].length > 0) {
-            html += `<div class="titulo-trimestre">${tri}</div>`;
-            grupos[tri].forEach(r => {
-                const souDono = String(r[2]).includes(profNomeLogado.split(" ")[0]);
-                const souGestor = (cargoLogado === "Diretor");
-                
-                // r[6] é Advertência, r[7] é Tratativa
-                const adv = (r[6] === "SIM") ? `<div style="margin-top:8px; color:#d32f2f; font-weight:bold; font-size:12px;">⚠️ ADVERTÊNCIA ENVIADA</div>` : "";
-                const tratTexto = r[7] ? `<div style="margin-top:10px; padding:10px; background:#e3f2fd; border-left:4px solid #1976d2; font-style:italic; font-size:13px;"><strong>Retorno da Coordenação:</strong><br>${r[7]}</div>` : "";
-                
-                html += `<div class="item-ocorrencia" id="card-${r[0]}">
-                    <div style="float:right; display:flex; gap:5px;">
-                        ${(souDono || souGestor) ? `<button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}', false)" style="background:orange; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; color:white;">Editar</button>` : ''}
-                        ${souGestor ? `<button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}', true)" style="background:#1976d2; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Tratar</button>` : ''}
-                        ${souGestor ? `<button onclick="apagarRegistro('${r[0]}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">X</button>` : ''}
+            cont.innerHTML = `
+                <div style="background:#f0f7ff; padding:15px; border-radius:8px; margin:15px 0; border:1px solid #1976d2;">
+                    <label style="color:#1976d2; margin-top:0;">🛠️ Ação da Gestão (Visível para todos):</label>
+                    <select id="selTratativa" onchange="verificarDataConvocacao()">
+                        <option value="">Selecione...</option>
+                        <option value="Conversa com o Aluno" ${opcaoSalva === "Conversa com o Aluno" ? "selected" : ""}>Conversa com o Aluno</option>
+                        <option value="Advertência Verbal" ${opcaoSalva === "Advertência Verbal" ? "selected" : ""}>Advertência Verbal</option>
+                        <option value="Advertência por Escrito" ${opcaoSalva === "Advertência por Escrito" ? "selected" : ""}>Advertência por Escrito</option>
+                        <option value="Família Convocada" ${opcaoSalva === "Família Convocada" ? "selected" : ""}>Família Convocada</option>
+                        <option value="Encaminhamento Psicológico" ${opcaoSalva === "Encaminhamento Psicológico" ? "selected" : ""}>Encaminhamento Psicológico</option>
+                    </select>
+                    <div id="divDataConvocacao" style="display: ${opcaoSalva === "Família Convocada" ? "block" : "none"};">
+                        <label>Data da Convocação:</label>
+                        <input type="date" id="dataConvocacao">
                     </div>
-                    <strong>Data:</strong> ${r[1]} | <strong>${r[2]}</strong><br><br>${r[5]}
-                    ${adv}
-                    ${tratTexto}
+                    <label style="color:#0d47a1; margin-top:15px;">🔒 Relato Interno (PRIVADO):</label>
+                    <textarea id="relatoGestaoTexto" rows="3">${relatoGestao || ""}</textarea>
                 </div>`;
-            });
         }
+        document.getElementById('btnGravar').innerText = "💾 Salvar Alteração";
     }
-    rDiv.innerHTML = html;
-    document.getElementById('btnImp').style.display = "block";
-}
 
-    function limparForm() { 
-        document.getElementById('relatoTexto').value = ""; 
-        document.getElementById('chkAdvertencia').checked = false; 
+    function verificarDataConvocacao() {
+        document.getElementById('divDataConvocacao').style.display = (document.getElementById('selTratativa').value === "Família Convocada") ? "block" : "none";
+    }
+
+    function limparForm() {
+        document.getElementById('relatoTexto').value = "";
+        document.getElementById('chkAdvertencia').checked = false;
         document.getElementById('containerTratativa').innerHTML = "";
-        cancelarEdicao(); 
-        definirDataHoje(); 
+        idEditando = null;
+        document.getElementById('btnGravar').innerText = "Gravar no Diário";
+        definirDataHoje();
     }
 
-    function carregarParaEdicao(id, data, turma, aluno, texto, tratativa, focarTratativa) {
-    idEditando = id; 
-    tab(1);
-    const p = data.split('/');
-    document.getElementById('dataOcorrenciaManual').value = `${p[2]}-${p[1]}-${p[0]}`;
-    document.getElementById('selTurma').value = turma;
-    atualizarAlunos('selTurma', 'selAluno');
-    setTimeout(() => { document.getElementById('selAluno').value = aluno; }, 150);
-    document.getElementById('relatoTexto').value = texto;
-    
-    // Posiciona a tratativa APÓS o relato
-    const cont = document.getElementById('containerTratativa');
-    if (cargoLogado === "Diretor") {
-        cont.innerHTML = `
-            <label style="color:#1976d2; margin-top:20px;">Tratativa da Coordenação:</label>
-            <textarea id="tratativaTexto" rows="3" style="border: 2px solid #1976d2;">${tratativa}</textarea>
-        `;
-        if(focarTratativa) setTimeout(() => document.getElementById('tratativaTexto').focus(), 300);
-    } else {
-        cont.innerHTML = tratativa ? `<p style="font-size:13px; color:gray"><i>Tratativa registrada pela coordenação: ${tratativa}</i></p>` : "";
+    function identificarTrimestre(ds) { 
+        const p = ds.split('/'); const d = new Date(p[2], p[1]-1, p[0]);
+        if (d >= new Date(2026, 1, 4) && d <= new Date(2026, 4, 15)) return "1º Trimestre";
+        if (d >= new Date(2026, 4, 18) && d <= new Date(2026, 7, 31)) return "2º Trimestre";
+        if (d >= new Date(2026, 8, 1) && d <= new Date(2026, 11, 15)) return "3º Trimestre";
+        return "Fora de Período";
     }
 
-    const b = document.getElementById('btnGravar');
-    b.innerText = focarTratativa ? "💾 Gravar Tratativa" : "💾 Salvar Alteração";
-    b.style.background = focarTratativa ? "#1976d2" : "orange";
-}
-
-    function identificarTrimestre(ds) { const p = ds.split('/'); const d = new Date(p[2], p[1]-1, p[0]); if (d >= new Date(2026, 1, 4) && d <= new Date(2026, 4, 15)) return "1º Trimestre"; if (d >= new Date(2026, 4, 18) && d <= new Date(2026, 7, 31)) return "2º Trimestre"; if (d >= new Date(2026, 8, 1) && d <= new Date(2026, 11, 15)) return "3º Trimestre"; return "Fora de Período"; }
-    function tab(n) { document.getElementById('aba1').classList.toggle('hidden', n !== 1); document.getElementById('aba2').classList.toggle('hidden', n !== 2); document.getElementById('t1').classList.toggle('active', n === 1); document.getElementById('t2').classList.toggle('active', n === 2); if(n===2) cancelarEdicao(); }
-    function irPara(id) { document.getElementById('telaLogin').classList.add('hidden'); document.getElementById('telaCadastro').classList.add('hidden'); document.getElementById(id).classList.remove('hidden'); }
+    function tab(n) { document.getElementById('aba1').classList.toggle('hidden', n !== 1); document.getElementById('aba2').classList.toggle('hidden', n !== 2); document.getElementById('t1').classList.toggle('active', n === 1); document.getElementById('t2').classList.toggle('active', n === 2); if(n===2) limparForm(); }
     function definirDataHoje() { document.getElementById('dataOcorrenciaManual').value = new Date().toISOString().split('T')[0]; }
-    function toggleAjuda() { document.getElementById('caixaAjuda').classList.toggle('hidden'); }
     function logout() { localStorage.removeItem('diarioAcessoSobral'); location.reload(); }
-    function cancelarEdicao() { idEditando = null; const b = document.getElementById('btnGravar'); b.innerText = "Gravar no Diário"; b.style.background = ""; document.getElementById('containerTratativa').innerHTML = ""; }
-    async function enviarWhatsApp() { const tel = "5531975580836"; const esc = document.getElementById('escolaDuvida').value; let nom = document.getElementById('nomeDuvida').value || profNomeLogado; const duv = document.getElementById('textoDuvida').value; if (!nom || !duv) return alert("Preencha nome e dúvida."); const msg = `*Suporte Diário*\n*Escola:* ${esc}\n*De:* ${nom}\n*Dúvida:* ${duv}`; window.open(`https://api.whatsapp.com/send?phone=${tel}&text=${encodeURIComponent(msg)}`, '_blank'); toggleAjuda(); }
-    async function apagarRegistro(id) { if (!confirm("Excluir?")) return; const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id); await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p }); document.getElementById(`card-${id}`).remove(); }
 </script>
+
 </body>
 </html>
-
-
