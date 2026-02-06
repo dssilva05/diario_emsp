@@ -10,12 +10,15 @@
     <style>
         :root { --blue: #0d47a1; --gold: #ffd600; --glass: rgba(255, 255, 255, 0.95); }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80') center/cover fixed; min-height: 100vh; }
+        
+        /* CABEÇALHO ORIGINAL RESTAURADO */
         header { background: var(--blue); color: white; padding: 15px 3%; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .img-topo { width: 80px; height: 80px; object-fit: contain; background: white; border-radius: 8px; padding: 5px; }
         .escola-txt { text-align: center; flex-grow: 1; padding: 0 15px; }
         .escola-txt h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
         .escola-txt p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; line-height: 1.4; }
-        .auth-wrapper { display: flex; justify-content: center; align-items: center; padding: 40px 20px; }
+
+        .auth-wrapper { display: flex; justify(content: center; align-items: center; padding: 40px 20px; }
         .box-auth { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
         .container { max-width: 650px; margin: 20px auto; padding: 15px; }
         .tabs { display: flex; background: rgba(255,255,255,0.2); border-radius: 12px 12px 0 0; backdrop-filter: blur(10px); padding: 5px 5px 0; }
@@ -28,12 +31,14 @@
         .btn-main { background: var(--blue); color: white; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; }
         .item-ocorrencia { background: white; padding: 15px; border-left: 5px solid var(--blue); margin-top: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
         .titulo-trimestre { background: var(--gold); color: #000; padding: 8px 15px; margin-top: 25px; border-radius: 6px; font-weight: bold; border-left: 10px solid var(--blue); }
+        
         .filtro-box { margin: 15px 0; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc; }
         .filtro-item { display: flex; align-items: center; cursor: pointer; font-size: 14px; margin-bottom: 5px; }
         .filtro-item input { width: 18px; height: 18px; margin-right: 10px; }
+
         .btn-ajuda-fixo { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; z-index: 9999; cursor: pointer; }
         .modal-ajuda { position: fixed; bottom: 90px; right: 20px; width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; }
-        @media print { .tabs, .btn-main, label, select, .box-auth, button, .btn-ajuda-fixo, .modal-ajuda, .filtro-box { display: none !important; } }
+        @media print { .tabs, .btn-main, label, select, .box-auth, button, .btn-ajuda-fixo, .modal-ajuda, .filtro-box { display: none !important; } header { display: flex !important; color: black !important; background: white !important; border-bottom: 2px solid #000 !important; } .card { background: white !important; box-shadow: none !important; } }
     </style>
 </head>
 <body>
