@@ -34,7 +34,7 @@
         .filtro-item input { width: 18px; height: 18px; margin-right: 10px; }
         .btn-ajuda-fixo { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; z-index: 9999; cursor: pointer; }
         .modal-ajuda { position: fixed; bottom: 90px; right: 20px; width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; }
-        @media print { .tabs, .btn-main, label, select, .box-auth, button, .btn-ajuda-fixo, .modal-ajuda, .filtro-box { display: none !important; } header { display: flex !important; color: black !important; background: white !important; border-bottom: 2px solid #000 !important; } }
+        @media print { .tabs, .btn-main, label, select, .box-auth, button, .btn-link, .btn-ajuda-fixo, .modal-ajuda, .filtro-box { display: none !important; } header { display: flex !important; color: black !important; background: white !important; border-bottom: 2px solid #000 !important; } }
     </style>
 </head>
 <body>
@@ -82,7 +82,7 @@
                     <option value="👪 Reunião com a Família">👪 Reunião com a Família</option>
                     <option value="🏥 Saúde">🏥 Saúde (Doente / Machucou)</option>
                     <option value="🧠 Equipe PAS">🧠 Equipe PAS (Psicologia)</option>
-                    <option value="Outro">📎 Outros Atendimentos</option>
+                    <option value="OUTRO">📎 Outros Atendimentos</option>
                 </select>
             </div>
 
@@ -168,7 +168,7 @@
         p.append('acao', 'cadastrar'); p.append('cpf', cpf); p.append('nascimento', nasc);
         p.append('usuario', document.getElementById('cadUser').value); p.append('senha', document.getElementById('cadPass').value);
         await fetch(SCRIPT_URL, { method: 'POST', body: p });
-        alert("Cadastro processado! Tente fazer login."); irPara('telaLogin');
+        alert("Cadastro processado!"); irPara('telaLogin');
     }
 
     function alternarCheckboxes(quem) {
@@ -236,7 +236,7 @@
         const tipo = document.getElementById('selTipoRegistro').value;
         const label = document.getElementById('labelRelato');
         const boxAdv = document.getElementById('boxAdvertencia');
-        if(tipo === "OCORRENCIA") {
+        if(tipo === "📝 Ocorrência Disciplinar") {
             label.innerText = "Relato do Professor:";
             boxAdv.classList.remove('hidden');
         } else {
@@ -250,8 +250,10 @@
         if(!dVal) return alert("Selecione a data!");
         const dFormat = dVal.split("-").reverse().join("/");
         
-        const tipo = document.getElementById('selTipoRegistro').value;
-        let prefixo = (tipo !== "OCORRENCIA") ? `[${tipo}] ` : "";
+        // Pega o tipo se for gestão, se for professor assume OCORRENCIA
+        const selTipo = document.getElementById('selTipoRegistro');
+        const tipo = selTipo ? selTipo.value : "OCORRENCIA";
+        let prefixo = `[${tipo}] `;
 
         const selT = document.getElementById('selTratativa');
         let textoTratativa = selT ? selT.value : "";
@@ -265,6 +267,7 @@
         const dados = {
             acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
             id: idEditando || Date.now(),
+            // Garante que o prefixo sempre exista
             professor: `${prefixo}Prof: ${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`,
             dataManual: dFormat, turma: document.getElementById('selTurma').value,
             aluno: document.getElementById('selAluno').value, texto: document.getElementById('relatoTexto').value,
@@ -399,7 +402,8 @@
     function limparForm() {
         document.getElementById('relatoTexto').value = ""; document.getElementById('chkAdvertencia').checked = false;
         document.getElementById('containerTratativa').innerHTML = ""; idEditando = null;
-        document.getElementById('selTipoRegistro').value = "OCORRENCIA"; ajustarCamposRegistro();
+        if(document.getElementById('selTipoRegistro')) document.getElementById('selTipoRegistro').value = "OCORRENCIA";
+        ajustarCamposRegistro();
         document.getElementById('btnGravar').innerText = "Gravar no Diário"; document.getElementById('btnGravar').style.background = "";
         definirDataHoje();
     }
