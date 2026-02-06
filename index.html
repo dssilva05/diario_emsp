@@ -75,6 +75,17 @@
     </div>
     <div class="card">
         <div id="aba1">
+            <div id="tipoRegistroContainer" class="hidden" style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #1976d2;">
+                <label style="color: #1d4e89; margin-top: 0;">Tipo de Registro:</label>
+                <select id="selTipoRegistro" onchange="ajustarCamposRegistro()" style="border: 2px solid #1976d2;">
+                    <option value="OCORRENCIA">📝 Ocorrência Disciplinar</option>
+                    <option value="REUNIAO">👪 Reunião com a Família</option>
+                    <option value="SAUDE">🏥 Saúde (Doente / Machucou)</option>
+                    <option value="PAS">🧠 Equipe PAS (Psicologia)</option>
+                    <option value="OUTRO">📎 Outros Atendimentos</option>
+                </select>
+            </div>
+
             <label>Responsável:</label>
             <input type="text" id="nomeProfLogado" readonly style="background:#e9ecef">
             <label>Data:</label>
@@ -84,12 +95,14 @@
             <label>Aluno:</label>
             <select id="selAluno"><option value="">Selecione a turma...</option></select>
             
-            <label style="display: flex; align-items: center; cursor: pointer; background: #fff3cd; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba; margin-top: 15px;">
-                <input type="checkbox" id="chkAdvertencia" style="width: auto; margin: 0 10px 0 0;"> 
-                <span>Advertência por Escrito enviada?</span>
-            </label>
+            <div id="boxAdvertencia">
+                <label style="display: flex; align-items: center; cursor: pointer; background: #fff3cd; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba; margin-top: 15px;">
+                    <input type="checkbox" id="chkAdvertencia" style="width: auto; margin: 0 10px 0 0;"> 
+                    <span>Foi enviada Advertência por Escrito?</span>
+                </label>
+            </div>
 
-            <label>Relato do Professor:</label>
+            <label id="labelRelato">Relato do Professor:</label>
             <textarea id="relatoTexto" rows="5"></textarea>
 
             <div id="containerTratativa"></div>
@@ -138,7 +151,6 @@
         const salvo = localStorage.getItem('diarioAcessoSobral');
         if (salvo) aplicarLogin(JSON.parse(salvo));
         carregarDadosIniciais();
-        if (navigator.onLine) sincronizarDados();
     };
 
     function irPara(id) {
@@ -213,7 +225,23 @@
         document.getElementById('secaoAcesso').classList.add('hidden');
         document.getElementById('conteudoDiario').classList.remove('hidden');
         document.getElementById('nomeProfLogado').value = profNomeLogado;
+        if(cargoLogado === "Diretor") {
+            document.getElementById('tipoRegistroContainer').classList.remove('hidden');
+        }
         definirDataHoje();
+    }
+
+    function ajustarCamposRegistro() {
+        const tipo = document.getElementById('selTipoRegistro').value;
+        const label = document.getElementById('labelRelato');
+        const boxAdv = document.getElementById('boxAdvertencia');
+        if(tipo === "OCORRENCIA") {
+            label.innerText = "Relato do Professor:";
+            boxAdv.classList.remove('hidden');
+        } else {
+            label.innerText = "Detalhamento do Atendimento / Registro:";
+            boxAdv.classList.add('hidden');
+        }
     }
 
     async function gravarOcorrencia() {
@@ -221,6 +249,9 @@
         if(!dVal) return alert("Selecione a data!");
         const dFormat = dVal.split("-").reverse().join("/");
         
+        const tipo = document.getElementById('selTipoRegistro').value;
+        let prefixo = tipo !== "OCORRENCIA" ? `[${tipo}] ` : "";
+
         let textoTratativa = "";
         const selT = document.getElementById('selTratativa');
         if (selT) {
@@ -235,34 +266,17 @@
         const dados = {
             acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
             id: idEditando || Date.now(),
-            professor: `Prof: ${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`,
+            professor: `${prefixo}Prof: ${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`,
             dataManual: dFormat, turma: document.getElementById('selTurma').value,
             aluno: document.getElementById('selAluno').value, texto: document.getElementById('relatoTexto').value,
             advertencia: document.getElementById('chkAdvertencia').checked ? "SIM" : "NÃO",
             tratativa: textoTratativa, relatoGestao: rGestao ? rGestao.value : ""
         };
 
-        if (navigator.onLine) {
-            const p = new URLSearchParams();
-            for (let key in dados) p.append(key, dados[key]);
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
-            alert("Sucesso!"); limparForm();
-        } else {
-            let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
-            fila.push(dados); localStorage.setItem('filaOfflineSobral', JSON.stringify(fila));
-            alert("Offline: Registro salvo no celular."); limparForm();
-        }
-    }
-
-    async function sincronizarDados() {
-        let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
-        if (fila.length === 0) return;
-        for (let item of fila) {
-            const p = new URLSearchParams();
-            for (let key in item) p.append(key, item[key]);
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
-        }
-        localStorage.removeItem('filaOfflineSobral');
+        const p = new URLSearchParams();
+        for (let key in dados) p.append(key, dados[key]);
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        alert("Sucesso!"); limparForm();
     }
 
     async function consultarHistorico() {
@@ -290,6 +304,7 @@
             filtrados = filtrados.filter(r => String(r[2]).includes(meuNome));
         }
         if (filtrados.length === 0) { rDiv.innerHTML = "<p>Nada encontrado.</p>"; return; }
+        
         let html = `<h3>Histórico: ${a}</h3>`;
         let grupos = { "1º Trimestre": [], "2º Trimestre": [], "3º Trimestre": [], "Fora de Período": [] };
         filtrados.forEach(r => {
@@ -301,7 +316,6 @@
             if (grupos[tri].length > 0) {
                 html += `<div class="titulo-trimestre">${tri}</div>`;
                 grupos[tri].forEach(r => {
-                    const souDono = String(r[2]).includes(profNomeLogado.split(" ")[0]);
                     const souGestor = (cargoLogado === "Diretor");
                     const adv = (r[6] === "SIM") ? `<p style="color:red; font-weight:bold;">⚠️ Advertência por Escrito Enviada</p>` : "";
                     const trat = r[7] ? `<div style="background:#e8f5e9; padding:10px; border-left:4px solid #4caf50; margin-top:10px;"><strong>Ação da Gestão:</strong> ${r[7]}</div>` : "";
@@ -309,17 +323,15 @@
 
                     html += `<div class="item-ocorrencia">
                         <div style="float:right; display:flex; gap:5px;">
-                            ${souDono || souGestor ? `<button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', false)" style="background:orange; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Editar</button>` : ''}
+                            <button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', false)" style="background:orange; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Editar</button>
                             ${souGestor ? `<button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', true)" style="background:#1976d2; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Tratar</button>` : ''}
-                            ${souGestor ? `<button onclick="apagarRegistro('${r[0]}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">X</button>` : ''}
                         </div>
                         <strong>${r[1]} - ${r[2]}</strong><br><br>${r[5]}${adv}${trat}${priv}
                     </div>`;
                 });
             }
         }
-        rDiv.innerHTML = html;
-        document.getElementById('btnImp').style.display = "block";
+        rDiv.innerHTML = html; document.getElementById('btnImp').style.display = "block";
     }
 
     function carregarParaEdicao(id, data, turma, aluno, texto, tratativa, relatoGestao, focarTratativa) {
@@ -337,7 +349,7 @@
             if (tratativa.includes("Data:")) opcaoSalva = "Família Convocada";
             cont.innerHTML = `
                 <div style="background:#f0f7ff; padding:15px; border-radius:8px; margin:15px 0; border:1px solid #1976d2;">
-                    <label style="color:#1976d2; margin-top:0;">🛠️ Ação da Gestão (Público):</label>
+                    <label style="color:#1976d2; margin-top:0;">🛠️ Ação da Gestão:</label>
                     <select id="selTratativa" onchange="verificarDataConvocacao()" style="width:100%; border:2px solid #1976d2;">
                         <option value="">Selecione...</option>
                         <option value="Conversa com o Aluno" ${opcaoSalva === "Conversa com o Aluno" ? "selected" : ""}>Conversa com o Aluno</option>
@@ -354,11 +366,8 @@
                     <textarea id="relatoGestaoTexto" rows="3">${relatoGestao || ""}</textarea>
                 </div>`;
             if(focarTratativa) setTimeout(() => document.getElementById('selTratativa').focus(), 300);
-        } else {
-            cont.innerHTML = tratativa ? `<div style="background:#f5f5f5; padding:10px; border-radius:5px; margin:15px 0;"><strong>Tratativa:</strong> ${tratativa}</div>` : "";
         }
-        document.getElementById('btnGravar').innerText = focarTratativa ? "💾 Gravar Tratativa" : "💾 Salvar Alteração";
-        document.getElementById('btnGravar').style.background = focarTratativa ? "#1976d2" : "orange";
+        document.getElementById('btnGravar').innerText = "💾 Salvar Alteração";
     }
 
     function verificarDataConvocacao() {
@@ -368,8 +377,8 @@
     function limparForm() {
         document.getElementById('relatoTexto').value = ""; document.getElementById('chkAdvertencia').checked = false;
         document.getElementById('containerTratativa').innerHTML = ""; idEditando = null;
-        document.getElementById('btnGravar').innerText = "Gravar no Diário"; document.getElementById('btnGravar').style.background = "";
-        definirDataHoje();
+        document.getElementById('selTipoRegistro').value = "OCORRENCIA"; ajustarCamposRegistro();
+        document.getElementById('btnGravar').innerText = "Gravar no Diário"; definirDataHoje();
     }
 
     function identificarTrimestre(ds) { 
@@ -383,7 +392,6 @@
     function tab(n) { document.getElementById('aba1').classList.toggle('hidden', n !== 1); document.getElementById('aba2').classList.toggle('hidden', n !== 2); document.getElementById('t1').classList.toggle('active', n === 1); document.getElementById('t2').classList.toggle('active', n === 2); if(n===2) limparForm(); }
     function definirDataHoje() { document.getElementById('dataOcorrenciaManual').value = new Date().toISOString().split('T')[0]; }
     function logout() { localStorage.removeItem('diarioAcessoSobral'); location.reload(); }
-    async function apagarRegistro(id) { if (!confirm("Excluir definitivamente?")) return; const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id); await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p }); consultarHistorico(); }
     function toggleAjuda() { document.getElementById('caixaAjuda').classList.toggle('hidden'); }
     async function enviarWhatsApp() { const msg = `*Suporte Sobral*\n*Dúvida:* ${document.getElementById('textoDuvida').value}`; window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank'); }
 </script>
