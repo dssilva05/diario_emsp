@@ -10,15 +10,12 @@
     <style>
         :root { --blue: #0d47a1; --gold: #ffd600; --glass: rgba(255, 255, 255, 0.95); }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80') center/cover fixed; min-height: 100vh; }
-        
-        /* CABEÇALHO ORIGINAL RESTAURADO */
         header { background: var(--blue); color: white; padding: 15px 3%; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .img-topo { width: 80px; height: 80px; object-fit: contain; background: white; border-radius: 8px; padding: 5px; }
         .escola-txt { text-align: center; flex-grow: 1; padding: 0 15px; }
         .escola-txt h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
         .escola-txt p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; line-height: 1.4; }
-
-        .auth-wrapper { display: flex; justify(content: center; align-items: center; padding: 40px 20px; }
+        .auth-wrapper { display: flex; justify-content: center; align-items: center; padding: 40px 20px; }
         .box-auth { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
         .container { max-width: 650px; margin: 20px auto; padding: 15px; }
         .tabs { display: flex; background: rgba(255,255,255,0.2); border-radius: 12px 12px 0 0; backdrop-filter: blur(10px); padding: 5px 5px 0; }
@@ -29,16 +26,15 @@
         label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
         input, select, textarea, .btn-main { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
         .btn-main { background: var(--blue); color: white; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; }
-        .item-ocorrencia { background: white; padding: 15px; border-left: 5px solid var(--blue); margin-top: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
+        .btn-link { background: none; border: none; color: var(--blue); text-decoration: underline; cursor: pointer; margin-top: 15px; font-size: 14px; width: auto; }
         .titulo-trimestre { background: var(--gold); color: #000; padding: 8px 15px; margin-top: 25px; border-radius: 6px; font-weight: bold; border-left: 10px solid var(--blue); }
-        
+        .item-ocorrencia { background: white; padding: 15px; border-left: 5px solid var(--blue); margin-top: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
         .filtro-box { margin: 15px 0; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc; }
         .filtro-item { display: flex; align-items: center; cursor: pointer; font-size: 14px; margin-bottom: 5px; }
         .filtro-item input { width: 18px; height: 18px; margin-right: 10px; }
-
         .btn-ajuda-fixo { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; z-index: 9999; cursor: pointer; }
         .modal-ajuda { position: fixed; bottom: 90px; right: 20px; width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; }
-        @media print { .tabs, .btn-main, label, select, .box-auth, button, .btn-ajuda-fixo, .modal-ajuda, .filtro-box { display: none !important; } header { display: flex !important; color: black !important; background: white !important; border-bottom: 2px solid #000 !important; } .card { background: white !important; box-shadow: none !important; } }
+        @media print { .tabs, .btn-main, label, select, .box-auth, button, .btn-link, .btn-ajuda-fixo, .modal-ajuda, .filtro-box { display: none !important; } header { display: flex !important; color: black !important; background: white !important; border-bottom: 2px solid #000 !important; } }
     </style>
 </head>
 <body>
@@ -57,6 +53,17 @@
         <input type="text" id="userLogin" placeholder="Usuário">
         <input type="password" id="passLogin" placeholder="Senha">
         <button class="btn-main" onclick="executarLogin()">Entrar</button>
+        <button class="btn-link" onclick="irPara('telaCadastro')">Primeiro Acesso / Recuperar</button>
+    </div>
+
+    <div id="telaCadastro" class="box-auth hidden">
+        <h2 style="color:var(--blue)">📝 Cadastro</h2>
+        <input type="text" id="cadCpf" placeholder="CPF (apenas números)">
+        <input type="text" id="cadNasc" placeholder="Nascimento (DD/MM/AAAA)">
+        <input type="text" id="cadUser" placeholder="Defina seu Usuário">
+        <input type="password" id="cadPass" placeholder="Defina sua Senha">
+        <button class="btn-main" onclick="executarCadastro()">Validar e Gravar</button>
+        <button class="btn-link" onclick="irPara('telaLogin')">Voltar ao Login</button>
     </div>
 </div>
 
@@ -79,7 +86,7 @@
             
             <label style="display: flex; align-items: center; cursor: pointer; background: #fff3cd; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba; margin-top: 15px;">
                 <input type="checkbox" id="chkAdvertencia" style="width: auto; margin: 0 10px 0 0;"> 
-                <span>Foi enviada Advertência por Escrito?</span>
+                <span>Advertência por Escrito enviada?</span>
             </label>
 
             <label>Relato do Professor:</label>
@@ -91,11 +98,8 @@
         </div>
 
         <div id="aba2" class="hidden">
-            <label>Turma:</label>
             <select id="selTurmaCons" onchange="atualizarAlunos('selTurmaCons', 'selAlunoCons')"><option value="">Turma...</option></select>
-            <label>Aluno:</label>
             <select id="selAlunoCons" style="margin-top:10px;"><option value="">Aluno...</option></select>
-            <label>Período:</label>
             <select id="selPeriodoCons" style="margin-top:10px;">
                 <option value="Ano Todo">Ano Todo</option>
                 <option value="1º Trimestre">1º Trimestre</option>
@@ -110,7 +114,7 @@
                 </label>
                 <label class="filtro-item">
                     <input type="checkbox" id="chkTodosRegistros" onclick="alternarCheckboxes('todos')"> 
-                    Ver registros de todos os professores
+                    Ver todas as ocorrências
                 </label>
             </div>
 
@@ -123,7 +127,7 @@
 
 <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(() => console.log("Offline OK"));
+        navigator.serviceWorker.register('sw.js').then(() => console.log("Motor Offline OK"));
     }
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlVbz3C-bdKUbRvuWx4SrL9eiFdmyRwwZwUYVhi9u8u2df9NSgNRNjsYx7gD5q1qef7g/exec"; 
@@ -136,6 +140,23 @@
         carregarDadosIniciais();
         if (navigator.onLine) sincronizarDados();
     };
+
+    function irPara(id) {
+        document.getElementById('telaLogin').classList.add('hidden');
+        document.getElementById('telaCadastro').classList.add('hidden');
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    async function executarCadastro() {
+        let cpf = document.getElementById('cadCpf').value.replace(/\D/g, '');
+        let nascRaw = document.getElementById('cadNasc').value;
+        let nasc = nascRaw.includes("-") ? nascRaw.split("-").reverse().join("/") : nascRaw;
+        const p = new URLSearchParams();
+        p.append('acao', 'cadastrar'); p.append('cpf', cpf); p.append('nascimento', nasc);
+        p.append('usuario', document.getElementById('cadUser').value); p.append('senha', document.getElementById('cadPass').value);
+        await fetch(SCRIPT_URL, { method: 'POST', body: p });
+        alert("Cadastro processado! Tente fazer login."); irPara('telaLogin');
+    }
 
     function alternarCheckboxes(quem) {
         const cMeu = document.getElementById('chkMeusRegistros');
@@ -170,7 +191,7 @@
         const t = document.getElementById(idT).value;
         const s = document.getElementById(idA);
         s.innerHTML = '<option value="">Selecione o Aluno...</option>';
-        if(ALUNOS[t]) { ALUNOS[t].forEach(al => s.add(new Option(al, al))); }
+        if(ALUNOS[t]) ALUNOS[t].forEach(al => s.add(new Option(al, al)));
     }
 
     async function executarLogin() {
@@ -209,20 +230,16 @@
                 textoTratativa += ` (Data: ${dtC.value.split("-").reverse().join("/")})`;
             }
         }
-
         const rGestao = document.getElementById('relatoGestaoTexto');
 
         const dados = {
             acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
             id: idEditando || Date.now(),
             professor: `Prof: ${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`,
-            dataManual: dFormat,
-            turma: document.getElementById('selTurma').value,
-            aluno: document.getElementById('selAluno').value,
-            texto: document.getElementById('relatoTexto').value,
+            dataManual: dFormat, turma: document.getElementById('selTurma').value,
+            aluno: document.getElementById('selAluno').value, texto: document.getElementById('relatoTexto').value,
             advertencia: document.getElementById('chkAdvertencia').checked ? "SIM" : "NÃO",
-            tratativa: textoTratativa,
-            relatoGestao: rGestao ? rGestao.value : ""
+            tratativa: textoTratativa, relatoGestao: rGestao ? rGestao.value : ""
         };
 
         if (navigator.onLine) {
@@ -232,8 +249,7 @@
             alert("Sucesso!"); limparForm();
         } else {
             let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
-            fila.push(dados);
-            localStorage.setItem('filaOfflineSobral', JSON.stringify(fila));
+            fila.push(dados); localStorage.setItem('filaOfflineSobral', JSON.stringify(fila));
             alert("Offline: Registro salvo no celular."); limparForm();
         }
     }
@@ -263,23 +279,17 @@
     function exibirDados(data, t, a, p) {
         const rDiv = document.getElementById('resConsulta');
         const vT = document.getElementById('chkTodosRegistros').checked;
-        
         let filtrados = data.filter(r => r[3] && String(r[3]).trim() === t && String(r[4]).trim() === a);
-        
         filtrados.sort((m, n) => {
             const c = (txt) => { const pt = txt.split('/'); return new Date(pt[2], pt[1]-1, pt[0]); };
             return c(m[1]) - c(n[1]);
         });
-
         if (p !== "Ano Todo") filtrados = filtrados.filter(r => identificarTrimestre(r[1]) === p);
-        
         if (!vT) {
             const meuNome = profNomeLogado.split(" ")[0];
             filtrados = filtrados.filter(r => String(r[2]).includes(meuNome));
         }
-
         if (filtrados.length === 0) { rDiv.innerHTML = "<p>Nada encontrado.</p>"; return; }
-
         let html = `<h3>Histórico: ${a}</h3>`;
         let grupos = { "1º Trimestre": [], "2º Trimestre": [], "3º Trimestre": [], "Fora de Período": [] };
         filtrados.forEach(r => {
@@ -293,7 +303,6 @@
                 grupos[tri].forEach(r => {
                     const souDono = String(r[2]).includes(profNomeLogado.split(" ")[0]);
                     const souGestor = (cargoLogado === "Diretor");
-                    
                     const adv = (r[6] === "SIM") ? `<p style="color:red; font-weight:bold;">⚠️ Advertência por Escrito Enviada</p>` : "";
                     const trat = r[7] ? `<div style="background:#e8f5e9; padding:10px; border-left:4px solid #4caf50; margin-top:10px;"><strong>Ação da Gestão:</strong> ${r[7]}</div>` : "";
                     const priv = (souGestor && r[8]) ? `<div style="background:#fff3e0; padding:10px; border:1px dashed #ff9800; margin-top:5px; font-size:13px;"><strong>🔒 Relato Privado:</strong> ${r[8]}</div>` : "";
@@ -326,7 +335,6 @@
         if (cargoLogado === "Diretor") {
             let opcaoSalva = tratativa;
             if (tratativa.includes("Data:")) opcaoSalva = "Família Convocada";
-
             cont.innerHTML = `
                 <div style="background:#f0f7ff; padding:15px; border-radius:8px; margin:15px 0; border:1px solid #1976d2;">
                     <label style="color:#1976d2; margin-top:0;">🛠️ Ação da Gestão (Público):</label>
@@ -343,13 +351,13 @@
                         <input type="date" id="dataConvocacao">
                     </div>
                     <label style="color:#0d47a1; margin-top:15px;">🔒 Relato Interno (PRIVADO):</label>
-                    <textarea id="relatoGestaoTexto" rows="3" placeholder="Apenas gestão lê...">${relatoGestao || ""}</textarea>
+                    <textarea id="relatoGestaoTexto" rows="3">${relatoGestao || ""}</textarea>
                 </div>`;
             if(focarTratativa) setTimeout(() => document.getElementById('selTratativa').focus(), 300);
         } else {
             cont.innerHTML = tratativa ? `<div style="background:#f5f5f5; padding:10px; border-radius:5px; margin:15px 0;"><strong>Tratativa:</strong> ${tratativa}</div>` : "";
         }
-        document.getElementById('btnGravar').innerText = "💾 Salvar Alteração";
+        document.getElementById('btnGravar').innerText = focarTratativa ? "💾 Gravar Tratativa" : "💾 Salvar Alteração";
         document.getElementById('btnGravar').style.background = focarTratativa ? "#1976d2" : "orange";
     }
 
@@ -358,12 +366,9 @@
     }
 
     function limparForm() {
-        document.getElementById('relatoTexto').value = "";
-        document.getElementById('chkAdvertencia').checked = false;
-        document.getElementById('containerTratativa').innerHTML = "";
-        idEditando = null;
-        document.getElementById('btnGravar').innerText = "Gravar no Diário";
-        document.getElementById('btnGravar').style.background = "";
+        document.getElementById('relatoTexto').value = ""; document.getElementById('chkAdvertencia').checked = false;
+        document.getElementById('containerTratativa').innerHTML = ""; idEditando = null;
+        document.getElementById('btnGravar').innerText = "Gravar no Diário"; document.getElementById('btnGravar').style.background = "";
         definirDataHoje();
     }
 
