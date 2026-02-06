@@ -13,8 +13,6 @@
         header { background: var(--blue); color: white; padding: 15px 3%; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .img-topo { width: 80px; height: 80px; object-fit: contain; background: white; border-radius: 8px; padding: 5px; }
         .escola-txt { text-align: center; flex-grow: 1; padding: 0 15px; }
-        .escola-txt h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
-        .escola-txt p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; line-height: 1.4; }
         .auth-wrapper { display: flex; justify-content: center; align-items: center; padding: 40px 20px; }
         .box-auth { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
         .container { max-width: 650px; margin: 20px auto; padding: 15px; }
@@ -26,14 +24,13 @@
         label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
         input, select, textarea, .btn-main { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
         .btn-main { background: var(--blue); color: white; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; }
-        .btn-main:hover { background: #1565c0; }
-        .titulo-trimestre { background: var(--gold); color: #000; padding: 8px 15px; margin-top: 25px; border-radius: 6px; font-weight: bold; border-left: 10px solid var(--blue); }
         .item-ocorrencia { background: white; padding: 15px; border-left: 5px solid var(--blue); margin-top: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
-        .filtro-box { margin-top: 15px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc; display: flex; flex-direction: column; gap: 12px; }
-        .filtro-item { display: flex; align-items: center; cursor: pointer; font-size: 14px; color: #444; }
-        .filtro-item input { width: 18px; height: 18px; margin: 0 12px 0 0; cursor: pointer; }
-        .btn-ajuda-fixo { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 10px 20px; border-radius: 30px; display: flex; align-items: center; gap: 10px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 9999; border: none; }
-        .modal-ajuda { position: fixed; bottom: 90px; right: 20px; width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; text-align: left; }
+        .titulo-trimestre { background: var(--gold); color: #000; padding: 8px 15px; margin-top: 25px; border-radius: 6px; font-weight: bold; border-left: 10px solid var(--blue); }
+        .filtro-box { margin: 15px 0; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc; }
+        .filtro-item { display: flex; align-items: center; cursor: pointer; font-size: 14px; margin-bottom: 5px; }
+        .filtro-item input { width: 18px; height: 18px; margin-right: 10px; }
+        .btn-ajuda-fixo { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; z-index: 9999; cursor: pointer; }
+        .modal-ajuda { position: fixed; bottom: 90px; right: 20px; width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; }
         @media print { .tabs, .btn-main, label, select, .box-auth, button, .btn-ajuda-fixo, .modal-ajuda, .filtro-box { display: none !important; } }
     </style>
 </head>
@@ -42,14 +39,14 @@
 <header>
     <img src="https://lh3.googleusercontent.com/u/0/d/16JafsMd81Ho26kkaqCI-YTvsCGIXQ2Fy" alt="Prefeitura" class="img-topo">
     <div class="escola-txt">
-        <h1>Escola Municipal Sobral Pinto</h1>
-        <p>Belo Horizonte - MG | Diário de Bordo Digital</p>
+        <h1 style="font-size: 18px; margin:0;">E. M. Sobral Pinto</h1>
+        <p style="font-size: 12px; margin: 5px 0 0;">Diário de Bordo Digital</p>
     </div>
 </header>
 
 <div id="secaoAcesso" class="auth-wrapper">
     <div id="telaLogin" class="box-auth">
-        <h2 style="color:var(--blue)">🔒 Login</h2>
+        <h2>🔒 Login</h2>
         <input type="text" id="userLogin" placeholder="Usuário">
         <input type="password" id="passLogin" placeholder="Senha">
         <button class="btn-main" onclick="executarLogin()">Entrar</button>
@@ -75,7 +72,7 @@
             
             <label style="display: flex; align-items: center; cursor: pointer; background: #fff3cd; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba; margin-top: 15px;">
                 <input type="checkbox" id="chkAdvertencia" style="width: auto; margin: 0 10px 0 0;"> 
-                <span style="color: #856404; font-size: 14px;">Foi enviada Advertência por Escrito?</span>
+                <span>Foi enviada Advertência por Escrito?</span>
             </label>
 
             <label>Relato do Professor:</label>
@@ -88,9 +85,9 @@
 
         <div id="aba2" class="hidden">
             <label>Turma:</label>
-            <select id="selTurmaCons" onchange="atualizarAlunos('selTurmaCons', 'selAlunoCons')"><option value="">Carregando...</option></select>
+            <select id="selTurmaCons" onchange="atualizarAlunos('selTurmaCons', 'selAlunoCons')"><option value="">Turma...</option></select>
             <label>Aluno:</label>
-            <select id="selAlunoCons" style="margin-top:10px;"><option value="">Selecione a turma...</option></select>
+            <select id="selAlunoCons" style="margin-top:10px;"><option value="">Aluno...</option></select>
             <label>Período:</label>
             <select id="selPeriodoCons" style="margin-top:10px;">
                 <option value="Ano Todo">Ano Todo</option>
@@ -102,16 +99,16 @@
             <div class="filtro-box">
                 <label class="filtro-item">
                     <input type="checkbox" id="chkMeusRegistros" checked onclick="alternarCheckboxes('meu')"> 
-                    Ver apenas minhas ocorrências
+                    Ver apenas meus registros
                 </label>
                 <label class="filtro-item">
                     <input type="checkbox" id="chkTodosRegistros" onclick="alternarCheckboxes('todos')"> 
-                    Ver todas as ocorrências
+                    Ver registros de todos os professores
                 </label>
             </div>
 
-            <button class="btn-main" style="margin-top: 20px;" onclick="consultarHistorico()">🔍 Buscar Histórico</button>
-            <div id="areaImpressao"><div id="resConsulta"></div></div>
+            <button class="btn-main" onclick="consultarHistorico()">🔍 Buscar Histórico</button>
+            <div id="resConsulta"></div>
             <button class="btn-main" id="btnImp" style="background:#444; display:none; margin-top:20px" onclick="window.print()">🖨️ PDF / Imprimir</button>
         </div>
     </div>
@@ -133,7 +130,13 @@
         if (navigator.onLine) sincronizarDados();
     };
 
-    window.addEventListener('online', sincronizarDados);
+    function alternarCheckboxes(quem) {
+        const cMeu = document.getElementById('chkMeusRegistros');
+        const cTodos = document.getElementById('chkTodosRegistros');
+        if (quem === 'meu' && cMeu.checked) cTodos.checked = false;
+        else if (quem === 'todos' && cTodos.checked) cMeu.checked = false;
+        if (!cMeu.checked && !cTodos.checked) cMeu.checked = true;
+    }
 
     async function carregarDadosIniciais() {
         try {
@@ -161,14 +164,6 @@
         const s = document.getElementById(idA);
         s.innerHTML = '<option value="">Selecione o Aluno...</option>';
         if(ALUNOS[t]) { ALUNOS[t].forEach(al => s.add(new Option(al, al))); }
-    }
-
-    function alternarCheckboxes(quem) {
-        const cMeu = document.getElementById('chkMeusRegistros');
-        const cTodos = document.getElementById('chkTodosRegistros');
-        if (quem === 'meu' && cMeu.checked) cTodos.checked = false;
-        else if (quem === 'todos' && cTodos.checked) cMeu.checked = false;
-        if (!cMeu.checked && !cTodos.checked) cMeu.checked = true;
     }
 
     async function executarLogin() {
@@ -223,23 +218,17 @@
             relatoGestao: rGestao ? rGestao.value : ""
         };
 
-        if (navigator.onLine) { enviarParaGoogle(dados); } else { salvarFilaOffline(dados); }
-    }
-
-    async function enviarParaGoogle(dados) {
-        const p = new URLSearchParams();
-        for (let key in dados) p.append(key, dados[key]);
-        try {
+        if (navigator.onLine) {
+            const p = new URLSearchParams();
+            for (let key in dados) p.append(key, dados[key]);
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
             alert("Sucesso!"); limparForm();
-        } catch (e) { salvarFilaOffline(dados); }
-    }
-
-    function salvarFilaOffline(dados) {
-        let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
-        fila.push(dados);
-        localStorage.setItem('filaOfflineSobral', JSON.stringify(fila));
-        alert("Offline: Salvo no celular."); limparForm();
+        } else {
+            let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
+            fila.push(dados);
+            localStorage.setItem('filaOfflineSobral', JSON.stringify(fila));
+            alert("Offline: Registro salvo no celular."); limparForm();
+        }
     }
 
     async function sincronizarDados() {
@@ -261,12 +250,13 @@
             const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
             const data = await res.json();
             exibirDados(data, t, a, document.getElementById('selPeriodoCons').value);
-        } catch (e) { document.getElementById('resConsulta').innerHTML = "Erro ao carregar."; }
+        } catch (e) { document.getElementById('resConsulta').innerHTML = "Erro de conexão."; }
     }
 
     function exibirDados(data, t, a, p) {
         const rDiv = document.getElementById('resConsulta');
         const vT = document.getElementById('chkTodosRegistros').checked;
+        
         let filtrados = data.filter(r => r[3] && String(r[3]).trim() === t && String(r[4]).trim() === a);
         
         filtrados.sort((m, n) => {
@@ -275,10 +265,14 @@
         });
 
         if (p !== "Ano Todo") filtrados = filtrados.filter(r => identificarTrimestre(r[1]) === p);
+        
+        // APLICA FILTRO DE AUTOR
         if (!vT) {
-            const meu = profNomeLogado.split(" ")[0];
-            filtrados = filtrados.filter(r => String(r[2]).includes(meu));
+            const meuNome = profNomeLogado.split(" ")[0];
+            filtrados = filtrados.filter(r => String(r[2]).includes(meuNome));
         }
+
+        if (filtrados.length === 0) { rDiv.innerHTML = "<p>Nada encontrado com os filtros selecionados.</p>"; return; }
 
         let html = `<h3>Histórico: ${a}</h3>`;
         let grupos = { "1º Trimestre": [], "2º Trimestre": [], "3º Trimestre": [], "Fora de Período": [] };
@@ -293,6 +287,7 @@
                 grupos[tri].forEach(r => {
                     const souDono = String(r[2]).includes(profNomeLogado.split(" ")[0]);
                     const souGestor = (cargoLogado === "Diretor");
+                    
                     const adv = (r[6] === "SIM") ? `<p style="color:red; font-weight:bold;">⚠️ Advertência por Escrito Enviada</p>` : "";
                     const trat = r[7] ? `<div style="background:#e8f5e9; padding:10px; border-left:4px solid #4caf50; margin-top:10px;"><strong>Ação da Gestão:</strong> ${r[7]}</div>` : "";
                     const priv = (souGestor && r[8]) ? `<div style="background:#fff3e0; padding:10px; border:1px dashed #ff9800; margin-top:5px; font-size:13px;"><strong>🔒 Relato Privado:</strong> ${r[8]}</div>` : "";
@@ -348,7 +343,7 @@
         } else {
             cont.innerHTML = tratativa ? `<div style="background:#f5f5f5; padding:10px; border-radius:5px; margin:15px 0;"><strong>Tratativa:</strong> ${tratativa}</div>` : "";
         }
-        document.getElementById('btnGravar').innerText = focarTratativa ? "💾 Gravar Tratativa" : "💾 Salvar Alteração";
+        document.getElementById('btnGravar').innerText = "💾 Salvar Alteração";
         document.getElementById('btnGravar').style.background = focarTratativa ? "#1976d2" : "orange";
     }
 
@@ -377,17 +372,16 @@
     function tab(n) { document.getElementById('aba1').classList.toggle('hidden', n !== 1); document.getElementById('aba2').classList.toggle('hidden', n !== 2); document.getElementById('t1').classList.toggle('active', n === 1); document.getElementById('t2').classList.toggle('active', n === 2); if(n===2) limparForm(); }
     function definirDataHoje() { document.getElementById('dataOcorrenciaManual').value = new Date().toISOString().split('T')[0]; }
     function logout() { localStorage.removeItem('diarioAcessoSobral'); location.reload(); }
-    async function apagarRegistro(id) { if (!confirm("Excluir definitivamente?")) return; const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id); await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p }); alert("Apagado!"); consultarHistorico(); }
+    async function apagarRegistro(id) { if (!confirm("Excluir?")) return; const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id); await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p }); consultarHistorico(); }
     function toggleAjuda() { document.getElementById('caixaAjuda').classList.toggle('hidden'); }
-    async function enviarWhatsApp() { const nom = document.getElementById('nomeDuvida').value || profNomeLogado; const duv = document.getElementById('textoDuvida').value; if (!nom || !duv) return alert("Preencha tudo."); const msg = `*Suporte Sobral*\n*De:* ${nom}\n*Dúvida:* ${duv}`; window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank'); toggleAjuda(); }
+    async function enviarWhatsApp() { const msg = `*Suporte Sobral*\n*Dúvida:* ${document.getElementById('textoDuvida').value}`; window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank'); }
 </script>
 
 <button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas?</button>
 <div id="caixaAjuda" class="modal-ajuda hidden">
     <h3>Suporte Técnico</h3>
-    <input type="text" id="nomeDuvida" placeholder="Seu nome">
     <textarea id="textoDuvida" rows="4" placeholder="Sua dúvida..."></textarea>
-    <button class="btn-main" style="background:#25d366;" onclick="enviarWhatsApp()">WhatsApp</button>
+    <button class="btn-main" style="background:#25d366; margin-top:10px;" onclick="enviarWhatsApp()">WhatsApp</button>
 </div>
 
 </body>
