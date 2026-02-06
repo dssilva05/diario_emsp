@@ -34,7 +34,7 @@
         .filtro-item input { width: 18px; height: 18px; margin-right: 10px; }
         .btn-ajuda-fixo { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; z-index: 9999; cursor: pointer; }
         .modal-ajuda { position: fixed; bottom: 90px; right: 20px; width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; }
-        @media print { .tabs, .btn-main, label, select, .box-auth, button, .btn-link, .btn-ajuda-fixo, .modal-ajuda, .filtro-box { display: none !important; } header { display: flex !important; color: black !important; background: white !important; border-bottom: 2px solid #000 !important; } }
+        @media print { .tabs, .btn-main, label, select, .box-auth, button, .btn-ajuda-fixo, .modal-ajuda, .filtro-box { display: none !important; } header { display: flex !important; color: black !important; background: white !important; border-bottom: 2px solid #000 !important; } }
     </style>
 </head>
 <body>
@@ -82,7 +82,7 @@
                     <option value="👪 Reunião com a Família">👪 Reunião com a Família</option>
                     <option value="🏥 Saúde">🏥 Saúde (Doente / Machucou)</option>
                     <option value="🧠 Equipe PAS">🧠 Equipe PAS (Psicologia)</option>
-                    <option value="Outros">📎 Outros Atendimentos</option>
+                    <option value="Outro">📎 Outros Atendimentos</option>
                 </select>
             </div>
 
@@ -151,6 +151,7 @@
         const salvo = localStorage.getItem('diarioAcessoSobral');
         if (salvo) aplicarLogin(JSON.parse(salvo));
         carregarDadosIniciais();
+        if (navigator.onLine) sincronizarDados();
     };
 
     function irPara(id) {
@@ -250,17 +251,15 @@
         const dFormat = dVal.split("-").reverse().join("/");
         
         const tipo = document.getElementById('selTipoRegistro').value;
-        let prefixo = tipo !== "OCORRENCIA" ? `[${tipo}] ` : "";
+        let prefixo = (tipo !== "OCORRENCIA") ? `[${tipo}] ` : "";
 
-        let textoTratativa = "";
         const selT = document.getElementById('selTratativa');
-        if (selT) {
-            textoTratativa = selT.value;
-            const dtC = document.getElementById('dataConvocacao');
-            if (textoTratativa === "Família Convocada" && dtC && dtC.value) {
-                textoTratativa += ` (Data: ${dtC.value.split("-").reverse().join("/")})`;
-            }
+        let textoTratativa = selT ? selT.value : "";
+        const dtC = document.getElementById('dataConvocacao');
+        if (textoTratativa === "Família Convocada" && dtC && dtC.value) {
+            textoTratativa += ` (Data: ${dtC.value.split("-").reverse().join("/")})`;
         }
+        
         const rGestao = document.getElementById('relatoGestaoTexto');
 
         const dados = {
@@ -273,10 +272,27 @@
             tratativa: textoTratativa, relatoGestao: rGestao ? rGestao.value : ""
         };
 
-        const p = new URLSearchParams();
-        for (let key in dados) p.append(key, dados[key]);
-        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
-        alert("Sucesso!"); limparForm();
+        if (navigator.onLine) {
+            const p = new URLSearchParams();
+            for (let key in dados) p.append(key, dados[key]);
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+            alert("Sucesso!"); limparForm();
+        } else {
+            let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
+            fila.push(dados); localStorage.setItem('filaOfflineSobral', JSON.stringify(fila));
+            alert("Offline: Registro salvo no celular."); limparForm();
+        }
+    }
+
+    async function sincronizarDados() {
+        let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
+        if (fila.length === 0) return;
+        for (let item of fila) {
+            const p = new URLSearchParams();
+            for (let key in item) p.append(key, item[key]);
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        }
+        localStorage.removeItem('filaOfflineSobral');
     }
 
     async function consultarHistorico() {
@@ -316,6 +332,7 @@
             if (grupos[tri].length > 0) {
                 html += `<div class="titulo-trimestre">${tri}</div>`;
                 grupos[tri].forEach(r => {
+                    const souDono = String(r[2]).includes(profNomeLogado.split(" ")[0]);
                     const souGestor = (cargoLogado === "Diretor");
                     const adv = (r[6] === "SIM") ? `<p style="color:red; font-weight:bold;">⚠️ Advertência por Escrito Enviada</p>` : "";
                     const trat = r[7] ? `<div style="background:#e8f5e9; padding:10px; border-left:4px solid #4caf50; margin-top:10px;"><strong>Ação da Gestão:</strong> ${r[7]}</div>` : "";
@@ -323,8 +340,11 @@
 
                     html += `<div class="item-ocorrencia">
                         <div style="float:right; display:flex; gap:5px;">
-                            <button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', false)" style="background:orange; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Editar</button>
-                            ${souGestor ? `<button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', true)" style="background:#1976d2; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Tratar</button>` : ''}
+                            ${souDono || souGestor ? `<button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', false)" style="background:orange; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Editar</button>` : ''}
+                            ${souGestor ? `
+                                <button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', true)" style="background:#1976d2; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Tratar</button>
+                                <button onclick="apagarRegistro('${r[0]}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">X</button>
+                            ` : ''}
                         </div>
                         <strong>${r[1]} - ${r[2]}</strong><br><br>${r[5]}${adv}${trat}${priv}
                     </div>`;
@@ -368,17 +388,20 @@
             if(focarTratativa) setTimeout(() => document.getElementById('selTratativa').focus(), 300);
         }
         document.getElementById('btnGravar').innerText = "💾 Salvar Alteração";
+        document.getElementById('btnGravar').style.background = focarTratativa ? "#1976d2" : "orange";
     }
 
     function verificarDataConvocacao() {
-        document.getElementById('divDataConvocacao').style.display = (document.getElementById('selTratativa').value === "Família Convocada") ? "block" : "none";
+        const d = document.getElementById('divDataConvocacao');
+        if(d) d.style.display = (document.getElementById('selTratativa').value === "Família Convocada") ? "block" : "none";
     }
 
     function limparForm() {
         document.getElementById('relatoTexto').value = ""; document.getElementById('chkAdvertencia').checked = false;
         document.getElementById('containerTratativa').innerHTML = ""; idEditando = null;
         document.getElementById('selTipoRegistro').value = "OCORRENCIA"; ajustarCamposRegistro();
-        document.getElementById('btnGravar').innerText = "Gravar no Diário"; definirDataHoje();
+        document.getElementById('btnGravar').innerText = "Gravar no Diário"; document.getElementById('btnGravar').style.background = "";
+        definirDataHoje();
     }
 
     function identificarTrimestre(ds) { 
@@ -392,6 +415,7 @@
     function tab(n) { document.getElementById('aba1').classList.toggle('hidden', n !== 1); document.getElementById('aba2').classList.toggle('hidden', n !== 2); document.getElementById('t1').classList.toggle('active', n === 1); document.getElementById('t2').classList.toggle('active', n === 2); if(n===2) limparForm(); }
     function definirDataHoje() { document.getElementById('dataOcorrenciaManual').value = new Date().toISOString().split('T')[0]; }
     function logout() { localStorage.removeItem('diarioAcessoSobral'); location.reload(); }
+    async function apagarRegistro(id) { if (!confirm("Excluir definitivamente?")) return; const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id); await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p }); consultarHistorico(); }
     function toggleAjuda() { document.getElementById('caixaAjuda').classList.toggle('hidden'); }
     async function enviarWhatsApp() { const msg = `*Suporte Sobral*\n*Dúvida:* ${document.getElementById('textoDuvida').value}`; window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank'); }
 </script>
@@ -405,4 +429,3 @@
 
 </body>
 </html>
-
