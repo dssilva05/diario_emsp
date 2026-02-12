@@ -1,16 +1,30 @@
-const CACHE_NAME = 'sobral-diario-v2';
-const assets = [
+const CACHE_NAME = 'sobral-pinto-v3'; // <--- Sempre que mudar o site, aumente esse número
+const urlsToCache = [
   './',
   './index.html',
-  'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80'
+  './manifest.json'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(assets);
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+  );
+  self.skipWaiting(); // Força o novo SW a assumir o controle imediatamente
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName); // Apaga caches antigos
+          }
+        })
+      );
     })
   );
+  return self.clients.claim(); // Assume o controle das abas abertas na hora
 });
 
 self.addEventListener('fetch', event => {
