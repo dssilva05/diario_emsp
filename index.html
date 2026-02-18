@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0d47a1">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/u/0/d/16JafsMd81Ho26kkaqCI-YTvsCGIXQ2Fy">
     <title>Diário de Bordo - E. M. Sobral Pinto</title>
     <style>
         :root { --blue: #0d47a1; --gold: #ffd600; --glass: rgba(255, 255, 255, 0.95); }
@@ -129,21 +127,13 @@
 </div>
 
 <script>
-    // 1. REGISTRO COM FILTRO ANTI-CACHE
+    // --- DESATIVAÇÃO FORÇADA DE CACHE E SERVICE WORKER ---
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=' + Date.now()).then(reg => {
-            reg.onupdatefound = () => {
-                const installingWorker = reg.installing;
-                installingWorker.onstatechange = () => {
-                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        if (confirm("Nova versão disponível! Atualizar agora?")) {
-                            window.location.reload();
-                        }
-                    }
-                };
-            };
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let reg of registrations) reg.unregister();
         });
     }
+    // -----------------------------------------------------
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlVbz3C-bdKUbRvuWx4SrL9eiFdmyRwwZwUYVhi9u8u2df9NSgNRNjsYx7gD5q1qef7g/exec"; 
     let ALUNOS = {};
@@ -153,7 +143,6 @@
         const salvo = localStorage.getItem('diarioAcessoSobral');
         if (salvo) aplicarLogin(JSON.parse(salvo));
         carregarDadosIniciais();
-        if (navigator.onLine) sincronizarDados();
     };
 
     function irPara(id) {
@@ -193,12 +182,8 @@
         try {
             const res = await fetch(`${SCRIPT_URL}?acao=getListaAlunos`);
             ALUNOS = await res.json();
-            localStorage.setItem('cache_alunos_sobral', JSON.stringify(ALUNOS));
             popularTurmas();
-        } catch (e) {
-            const cache = localStorage.getItem('cache_alunos_sobral');
-            if (cache) { ALUNOS = JSON.parse(cache); popularTurmas(); }
-        }
+        } catch (e) { console.log("Erro carregar alunos"); }
     }
 
     function popularTurmas() {
@@ -219,12 +204,17 @@
 
     async function executarLogin() {
         const u = document.getElementById('userLogin').value, s = document.getElementById('passLogin').value;
+        if(!u || !s) return alert("Preencha usuário e senha.");
         try {
             const res = await fetch(`${SCRIPT_URL}?acao=login&usuario=${u}&senha=${s}`);
             const d = await res.json();
-            if(d.status === "Autorizado") { localStorage.setItem('diarioAcessoSobral', JSON.stringify(d)); aplicarLogin(d); }
-            else alert("Acesso negado.");
-        } catch (e) { alert("Erro de conexão."); }
+            if(d.status === "Autorizado") { 
+                localStorage.setItem('diarioAcessoSobral', JSON.stringify(d)); 
+                aplicarLogin(d); 
+            } else {
+                alert("Usuário ou senha incorretos.");
+            }
+        } catch (e) { alert("Erro de conexão ao servidor."); }
     }
 
     function aplicarLogin(d) {
@@ -245,7 +235,7 @@
 
         if (cargoPlanilha.includes("PAS")) {
             selTipo.value = "🧠 Equipe PAS";
-            selTipo.disabled = false; // PAS PODE EDITAR
+            selTipo.disabled = false;
             containerTipo.style.background = "#fff3e0";
         } else if (cargoLogado === "Diretor") {
             selTipo.value = "📝 Ocorrência Disciplinar";
@@ -303,16 +293,10 @@
             tratativa: textoTratativa, relatoGestao: rGestao ? rGestao.value : ""
         };
 
-        if (navigator.onLine) {
-            const p = new URLSearchParams();
-            for (let key in dados) p.append(key, dados[key]);
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
-            alert("Sucesso!"); limparForm();
-        } else {
-            let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
-            fila.push(dados); localStorage.setItem('filaOfflineSobral', JSON.stringify(fila));
-            alert("Offline: Registro salvo."); limparForm();
-        }
+        const p = new URLSearchParams();
+        for (let key in dados) p.append(key, dados[key]);
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        alert("Sucesso!"); limparForm();
     }
 
     async function consultarHistorico() {
@@ -391,7 +375,6 @@
             let opcaoSalva = tratativa;
             if (tratativa.includes("Data:")) opcaoSalva = "Família Convocada";
             cont.innerHTML = `<div style="background:#f0f7ff; padding:15px; border-radius:8px; margin:15px 0; border:1px solid #1976d2;"><label style="color:#1976d2; margin-top:0;">🛠️ Ação da Gestão:</label><select id="selTratativa" onchange="verificarDataConvocacao()" style="width:100%; border:2px solid #1976d2;"><option value="">Selecione...</option><option value="Conversa com o Aluno">Conversa com o Aluno</option><option value="Advertência Verbal">Advertência Verbal</option><option value="Advertência por Escrito">Advertência por Escrito</option><option value="Família Convocada">Família Convocada</option><option value="Encaminhamento Psicológico">Encaminhamento Psicológico</option></select><div id="divDataConvocacao" style="display:none; margin-top:10px;"><label>Data da Convocação:</label><input type="date" id="dataConvocacao"></div><label style="color:#0d47a1; margin-top:15px;">🔒 Relato Interno (PRIVADO):</label><textarea id="relatoGestaoTexto" rows="3">${relatoGestao || ""}</textarea></div>`;
-            if(focarTratativa) setTimeout(() => document.getElementById('selTratativa').focus(), 300);
         }
         document.getElementById('btnGravar').innerText = "💾 Salvar Alteração";
     }
@@ -424,16 +407,6 @@
     function toggleAjuda() { document.getElementById('caixaAjuda').classList.toggle('hidden'); }
     async function apagarRegistro(id) { if (!confirm("Excluir definitivamente?")) return; const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id); await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p }); consultarHistorico(); }
     async function enviarWhatsApp() { const msg = `*Suporte Sobral*\n*Dúvida:* ${document.getElementById('textoDuvida').value}`; window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank'); }
-    async function sincronizarDados() {
-        let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
-        if (fila.length === 0) return;
-        for (let item of fila) {
-            const p = new URLSearchParams();
-            for (let key in item) p.append(key, item[key]);
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
-        }
-        localStorage.removeItem('filaOfflineSobral');
-    }
 </script>
 
 <button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas?</button>
