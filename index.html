@@ -8,6 +8,12 @@
     <style>
         :root { --blue: #0d47a1; --gold: #ffd600; --glass: rgba(255, 255, 255, 0.95); }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80') center/cover fixed; min-height: 100vh; }
+        
+        /* BARRA DE STATUS OFFLINE */
+        #status-bar { width: 100%; padding: 5px; text-align: center; font-size: 12px; font-weight: bold; color: white; transition: 0.5s; position: sticky; top: 0; z-index: 10000; }
+        .online { background: #4caf50; display: none; }
+        .offline { background: #ff9800; display: block; }
+
         header { background: var(--blue); color: white; padding: 15px 3%; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .img-topo { width: 80px; height: 80px; object-fit: contain; background: white; border-radius: 50%; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
         .escola-txt { text-align: center; flex-grow: 1; padding: 0 15px; }
@@ -32,10 +38,12 @@
         .filtro-item input { width: 18px; height: 18px; margin-right: 10px; }
         .btn-ajuda-fixo { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; z-index: 9999; cursor: pointer; }
         .modal-ajuda { position: fixed; bottom: 90px; right: 20px; width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; }
-        @media print { .tabs, .btn-main, label, select, .box-auth, button, .btn-link, .btn-ajuda-fixo, .modal-ajuda, .filtro-box { display: none !important; } header { display: flex !important; color: black !important; background: white !important; border-bottom: 2px solid #000 !important; } .card { background: white !important; box-shadow: none !important; } }
+        @media print { #status-bar, .tabs, .btn-main, label, select, .box-auth, button, .btn-link, .btn-ajuda-fixo, .modal-ajuda, .filtro-box { display: none !important; } header { display: flex !important; color: black !important; background: white !important; border-bottom: 2px solid #000 !important; } .card { background: white !important; box-shadow: none !important; } }
     </style>
 </head>
 <body>
+
+<div id="status-bar" class="online">Você está Online</div>
 
 <header>
     <img src="https://lh3.googleusercontent.com/u/0/d/16JafsMd81Ho26kkaqCI-YTvsCGIXQ2Fy" alt="Prefeitura" class="img-topo">
@@ -127,19 +135,32 @@
 </div>
 
 <script>
-    // --- DESATIVAÇÃO FORÇADA DE CACHE E SERVICE WORKER ---
+    // --- LÓGICA DE LIMPEZA E MONITORAMENTO DE REDE ---
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-            for (let reg of registrations) reg.unregister();
-        });
+        navigator.serviceWorker.getRegistrations().then(regs => { for(let reg of regs) reg.unregister(); });
     }
-    // -----------------------------------------------------
+
+    function updateOnlineStatus() {
+        const bar = document.getElementById('status-bar');
+        if (navigator.onLine) {
+            bar.className = 'online';
+            bar.innerText = 'Você está Online';
+            sincronizarDados();
+        } else {
+            bar.className = 'offline';
+            bar.innerText = 'Você está Offline - O uso é limitado ao registro';
+        }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    // ------------------------------------------------
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlVbz3C-bdKUbRvuWx4SrL9eiFdmyRwwZwUYVhi9u8u2df9NSgNRNjsYx7gD5q1qef7g/exec"; 
     let ALUNOS = {};
     let cargoLogado = "", profNomeLogado = "", disciplinaLogada = "", idEditando = null;
 
     window.onload = function() {
+        updateOnlineStatus();
         const salvo = localStorage.getItem('diarioAcessoSobral');
         if (salvo) aplicarLogin(JSON.parse(salvo));
         carregarDadosIniciais();
@@ -179,11 +200,25 @@
     }
 
     async function carregarDadosIniciais() {
-        try {
-            const res = await fetch(`${SCRIPT_URL}?acao=getListaAlunos`);
-            ALUNOS = await res.json();
+        // Tenta carregar do cache local primeiro
+        const cache = localStorage.getItem('cache_alunos_sobral');
+        if (cache) {
+            ALUNOS = JSON.parse(cache);
             popularTurmas();
-        } catch (e) { console.log("Erro carregar alunos"); }
+        }
+
+        // Se estiver online, atualiza o cache silenciosamente
+        if (navigator.onLine) {
+            try {
+                const res = await fetch(`${SCRIPT_URL}?acao=getListaAlunos`);
+                const novosDados = await res.json();
+                if (JSON.stringify(novosDados) !== cache) {
+                    ALUNOS = novosDados;
+                    localStorage.setItem('cache_alunos_sobral', JSON.stringify(novosDados));
+                    popularTurmas();
+                }
+            } catch (e) { console.log("Erro ao atualizar alunos"); }
+        }
     }
 
     function popularTurmas() {
@@ -203,18 +238,33 @@
     }
 
     async function executarLogin() {
-        const u = document.getElementById('userLogin').value, s = document.getElementById('passLogin').value;
+        const u = document.getElementById('userLogin').value.trim().toLowerCase();
+        const s = document.getElementById('passLogin').value.trim();
         if(!u || !s) return alert("Preencha usuário e senha.");
-        try {
-            const res = await fetch(`${SCRIPT_URL}?acao=login&usuario=${u}&senha=${s}`);
-            const d = await res.json();
-            if(d.status === "Autorizado") { 
-                localStorage.setItem('diarioAcessoSobral', JSON.stringify(d)); 
-                aplicarLogin(d); 
-            } else {
-                alert("Usuário ou senha incorretos.");
-            }
-        } catch (e) { alert("Erro de conexão ao servidor."); }
+
+        // 1. TENTATIVA ONLINE
+        if (navigator.onLine) {
+            try {
+                const res = await fetch(`${SCRIPT_URL}?acao=login&usuario=${u}&senha=${s}`);
+                const d = await res.json();
+                if(d.status === "Autorizado") { 
+                    localStorage.setItem('diarioAcessoSobral', JSON.stringify(d)); 
+                    localStorage.setItem('ultimoUsuarioSucesso', JSON.stringify({u: u, s: s, dados: d})); 
+                    aplicarLogin(d); 
+                    return;
+                }
+            } catch (e) { console.log("Tentando login local..."); }
+        }
+
+        // 2. TENTATIVA OFFLINE
+        const backup = localStorage.getItem('ultimoUsuarioSucesso');
+        if (backup) {
+            const check = JSON.parse(backup);
+            if (u === check.u && s === check.s) {
+                alert("Login validado offline.");
+                aplicarLogin(check.dados);
+            } else alert("Usuário ou senha incorretos ou não validados online neste aparelho.");
+        } else alert("Sem conexão. É necessário logar online uma vez neste aparelho.");
     }
 
     function aplicarLogin(d) {
@@ -233,15 +283,27 @@
         const selTipo = document.getElementById('selTipoRegistro');
         const containerTipo = document.getElementById('tipoRegistroContainer');
 
+        // REGRA PARA EQUIPE PAS
         if (cargoPlanilha.includes("PAS")) {
             selTipo.value = "🧠 Equipe PAS";
             selTipo.disabled = false;
             containerTipo.style.background = "#fff3e0";
-        } else if (cargoLogado === "Diretor") {
+        } 
+        // NOVA REGRA: PROF. AEE (Fixa em Atendimento AEE)
+        else if (cargoPlanilha.includes("PROF. AEE")) {
+            selTipo.value = "📖 Atendimento AEE";
+            selTipo.disabled = false; // Mantém fixado
+            containerTipo.style.background = "#f3e5f5"; // Lilás suave para combinar com a cor do card
+            containerTipo.style.borderColor = "#9c27b0";
+        }
+        // REGRA PARA GESTÃO TOTAL
+        else if (cargoLogado === "Diretor") {
             selTipo.value = "📝 Ocorrência Disciplinar";
             selTipo.disabled = false;
             containerTipo.style.background = "#e3f2fd";
-        } else {
+        } 
+        // REGRA PARA PROFESSORES REGULARES
+        else {
             selTipo.value = "📝 Ocorrência Disciplinar";
             selTipo.disabled = true;
             containerTipo.style.background = "#f8f9fa";
@@ -269,18 +331,15 @@
         const dFormat = dVal.split("-").reverse().join("/");
         const tipo = document.getElementById('selTipoRegistro').value;
         let prefixoTipo = `[${tipo}] `;
-        
         const salvo = JSON.parse(localStorage.getItem('diarioAcessoSobral'));
         const cargoPlanilha = String(salvo.cargo).trim().toUpperCase();
         let rotuloUsuario = cargoPlanilha.includes("PAS") ? "PAS:" : "Prof:";
-
         const selT = document.getElementById('selTratativa');
         let textoTratativa = selT ? selT.value : "";
         const dtC = document.getElementById('dataConvocacao');
         if (textoTratativa === "Família Convocada" && dtC && dtC.value) {
             textoTratativa += ` (Data: ${dtC.value.split("-").reverse().join("/")})`;
         }
-        
         const rGestao = document.getElementById('relatoGestaoTexto');
 
         const dados = {
@@ -293,13 +352,32 @@
             tratativa: textoTratativa, relatoGestao: rGestao ? rGestao.value : ""
         };
 
-        const p = new URLSearchParams();
-        for (let key in dados) p.append(key, dados[key]);
-        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
-        alert("Sucesso!"); limparForm();
+        if (navigator.onLine) {
+            const p = new URLSearchParams();
+            for (let key in dados) p.append(key, dados[key]);
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+            alert("Sucesso!"); limparForm();
+        } else {
+            let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
+            fila.push(dados); localStorage.setItem('filaOfflineSobral', JSON.stringify(fila));
+            alert("Offline: Registro salvo localmente. Sincronização ocorrerá ao voltar à rede."); limparForm();
+        }
+    }
+
+    async function sincronizarDados() {
+        let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
+        if (fila.length === 0) return;
+        for (let item of fila) {
+            const p = new URLSearchParams();
+            for (let key in item) p.append(key, item[key]);
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        }
+        localStorage.removeItem('filaOfflineSobral');
+        alert("Dados offline sincronizados com sucesso!");
     }
 
     async function consultarHistorico() {
+        if (!navigator.onLine) return alert("Busca de histórico disponível apenas online.");
         const t = document.getElementById('selTurmaCons').value, a = document.getElementById('selAlunoCons').value;
         if (!t || !a) return alert("Selecione Turma e Aluno.");
         document.getElementById('resConsulta').innerHTML = "Buscando...";
@@ -324,7 +402,6 @@
             filtrados = filtrados.filter(r => String(r[2]).includes(meuNome));
         }
         if (filtrados.length === 0) { rDiv.innerHTML = "<p>Nada encontrado.</p>"; return; }
-        
         let html = `<h3>Histórico: ${a}</h3>`;
         let grupos = { "1º Trimestre": [], "2º Trimestre": [], "3º Trimestre": [], "Fora de Período": [] };
         filtrados.forEach(r => {
@@ -406,7 +483,7 @@
     function logout() { localStorage.removeItem('diarioAcessoSobral'); location.reload(); }
     function toggleAjuda() { document.getElementById('caixaAjuda').classList.toggle('hidden'); }
     async function apagarRegistro(id) { if (!confirm("Excluir definitivamente?")) return; const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id); await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p }); consultarHistorico(); }
-    async function enviarWhatsApp() { const msg = `*Suporte Sobral*\n*Dúvida:* ${document.getElementById('textoDuvida').value}`; window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank'); }
+    async function enviarWhatsApp() { const msg = `*Suporte EMSP*\n*Dúvida:* ${document.getElementById('textoDuvida').value}`; window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank'); }
 </script>
 
 <button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas?</button>
@@ -418,3 +495,4 @@
 
 </body>
 </html>
+
