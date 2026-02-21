@@ -463,34 +463,82 @@
     }
 
     async function gerarAlertaCritico() {
-        if (!navigator.onLine) return alert("Conecte-se à internet.");
-        const resDiv = document.getElementById('resAlertaCritico');
-        resDiv.innerHTML = "<p>⏳ Processando...</p>";
-        try {
-            const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
-            const data = await res.json();
-            let contagem = {};
-            for (let i = 1; i < data.length; i++) {
-                const nomeAluno = data[i][4];
-                const nomeTurma = data[i][3];
-                if (nomeAluno) {
-                    const chave = `${nomeAluno.trim().toUpperCase()} (${nomeTurma})`;
-                    contagem[chave] = (contagem[chave] || 0) + 1;
-                }
+    if (!navigator.onLine) return alert("Conecte-se à internet para processar os alertas.");
+    const resDiv = document.getElementById('resAlertaCritico');
+    resDiv.innerHTML = "<p>⏳ Analisando dados e tratativas... por favor, aguarde.</p>";
+
+    try {
+        // Busca os dados das ocorrências
+        const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
+        const data = await res.json();
+        
+        // Busca as tratativas já registradas para esses alertas
+        const resTrat = await fetch(`${SCRIPT_URL}?acao=getTratativasAlertas`);
+        const tratativasSalvas = await resTrat.json(); // Objeto { "NOME (TURMA)": "texto" }
+
+        let contagem = {};
+        for (let i = 1; i < data.length; i++) {
+            const nomeAluno = data[i][4];
+            const nomeTurma = data[i][3];
+            if (nomeAluno) {
+                const chave = `${nomeAluno.trim().toUpperCase()} (${nomeTurma.trim().toUpperCase()})`;
+                contagem[chave] = (contagem[chave] || 0) + 1;
             }
-            let lista = Object.entries(contagem).filter(item => item[1] >= 10).sort((a,b) => b[1] - a[1]);
-            if (lista.length === 0) {
-                resDiv.innerHTML = "<p>✅ Tudo em ordem.</p>";
-                return;
-            }
-            let html = '<table style="width:100%; border-collapse: collapse; background: white;">';
-            html += '<tr style="background: #d32f2f; color: white;"> <th style="padding: 10px; text-align:left;">Aluno</th> <th style="padding: 10px;">Total</th> </tr>';
-            lista.forEach(([aluno, total]) => {
-                html += `<tr style="border-bottom: 1px solid #ddd;"> <td style="padding: 10px;">${aluno}</td> <td style="padding: 10px; text-align: center; font-weight: bold; color:red;">${total}</td> </tr>`;
-            });
-            resDiv.innerHTML = html + '</table>';
-        } catch (e) { resDiv.innerHTML = "Erro ao carregar dados."; }
+        }
+
+        let lista = Object.entries(contagem).filter(item => item[1] >= 10).sort((a,b) => b[1] - a[1]);
+
+        if (lista.length === 0) {
+            resDiv.innerHTML = "<div style='padding:20px; background:#e8f5e9; border-radius:8px; color:green; text-align:center;'>✅ Nenhum aluno atingiu o limite de 10 ocorrências.</div>";
+            return;
+        }
+
+        let html = '<table style="width:100%; border-collapse: collapse; background: white; font-size: 13px;">';
+        html += '<tr style="background: #d32f2f; color: white;"> <th style="padding: 10px; text-align:left;">Aluno</th> <th style="padding: 10px;">Total</th> <th style="padding: 10px;">Tratativa da Gestão</th> </tr>';
+        
+        lista.forEach(([aluno, total]) => {
+            const textoTratativa = tratativasSalvas[aluno] || "";
+            const campoId = `tratAlerta_${btoa(aluno).replace(/=/g, "")}`; // ID seguro para o campo
+            
+            html += `<tr style="border-bottom: 1px solid #ddd;"> 
+                        <td style="padding: 10px; font-weight:bold;">${aluno}</td> 
+                        <td style="padding: 10px; text-align: center; font-weight: bold; color:red;">${total}</td> 
+                        <td style="padding: 10px;">
+                            <textarea id="${campoId}" rows="2" style="width:100%; font-size:12px;" placeholder="Digite a ação tomada...">${textoTratativa}</textarea>
+                            <button onclick="salvarTratativaAlerta('${aluno}', '${campoId}')" style="background:#4caf50; color:white; border:none; padding:5px; width:100%; border-radius:4px; cursor:pointer; margin-top:5px;">Gravar Tratativa</button>
+                        </td> 
+                     </tr>`;
+        });
+        resDiv.innerHTML = html + '</table>';
+    } catch (e) { resDiv.innerHTML = "Erro ao processar dados."; console.error(e); }
+}
+
+    async function salvarTratativaAlerta(aluno, campoId) {
+    if (cargoLogado !== "Diretor") return alert("Apenas a gestão pode gravar tratativas de alerta.");
+    const texto = document.getElementById(campoId).value;
+    if (!texto) return alert("Digite o texto da tratativa antes de salvar.");
+
+    const btn = document.querySelector(`button[onclick*="${campoId}"]`);
+    btn.innerText = "⏳ Gravando...";
+    btn.disabled = true;
+
+    const p = new URLSearchParams();
+    p.append('acao', 'salvarTratativaAlerta');
+    p.append('alunoTurma', aluno);
+    p.append('texto', texto);
+    p.append('responsavel', profNomeLogado);
+
+    try {
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        alert("Tratativa de alerta salva com sucesso!");
+        btn.innerText = "✅ Gravado";
+        btn.style.background = "#2e7d32";
+    } catch (e) {
+        alert("Erro ao conectar ao servidor.");
+        btn.innerText = "Gravar Tratativa";
+        btn.disabled = false;
     }
+}
 
     function tab(n) { 
         document.getElementById('aba1').classList.toggle('hidden', n !== 1); 
@@ -525,3 +573,4 @@
 
 </body>
 </html>
+
