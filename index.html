@@ -672,7 +672,7 @@ if ('serviceWorker' in navigator) {
 
             // Contagem de Tratativas da Gestão (Baseado na Coluna H)
             let tLimpa = tratativaOficial.split(" (")[0].trim();
-            if (!tLimpa || tLimpa === "") tLimpa = "Pendente";
+            if (!tLimpa || tLimpa === "") tLimpa = "Nenhuma ação da gestão";
             contTratativas[tLimpa] = (contTratativas[tLimpa] || 0) + 1;
         }
 
@@ -837,3 +837,4 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
