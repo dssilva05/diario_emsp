@@ -385,7 +385,7 @@
         const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
         const data = await res.json();
         
-        // Busca as tratativas já registradas
+        // Busca as tratativas já registradas no servidor
         const resTrat = await fetch(`${SCRIPT_URL}?acao=getTratativasAlertas`);
         const tratativasSalvas = await resTrat.json();
 
@@ -409,24 +409,23 @@
             }
         }
 
-        // Função auxiliar para gerar HTML do gráfico
+        // Gráficos (Manhã e Tarde)
         const gerarHTMLGrafico = (contagem, titulo) => {
             const ordenadas = Object.entries(contagem).sort((a,b) => b[1] - a[1]);
-            if (ordenadas.length === 0) return `<p style="font-size:12px; color:#666;">Sem dados para o turno da ${titulo}.</p>`;
+            if (ordenadas.length === 0) return `<p style="font-size:11px;">Sem dados: ${titulo}.</p>`;
             const max = ordenadas[0][1];
-            let html = `<div style="margin-bottom:15px;"><b style="font-size:13px; color:#555;">Turno: ${titulo}</b>`;
+            let html = `<div style="margin-bottom:10px;"><b style="font-size:12px;">Turno: ${titulo}</b>`;
             ordenadas.forEach(([t, v]) => {
                 const perc = (v / max) * 100;
                 html += `<div class="chart-row">
-                    <div style="display:flex; justify-content:space-between; font-size:11px;"><span>${t}</span><b>${v}</b></div>
-                    <div class="bar-bg" style="height:8px;"><div class="bar-fill" style="width:${perc}%"></div></div>
+                    <div style="display:flex; justify-content:space-between; font-size:10px;"><span>${t}</span><b>${v}</b></div>
+                    <div class="bar-bg" style="height:6px;"><div class="bar-fill" style="width:${perc}%"></div></div>
                 </div>`;
             });
             return html + `</div>`;
         };
 
-        document.getElementById('graficoTurmas').innerHTML = 
-            gerarHTMLGrafico(contManha, "Manhã") + gerarHTMLGrafico(contTarde, "Tarde");
+        document.getElementById('graficoTurmas').innerHTML = gerarHTMLGrafico(contManha, "Manhã") + gerarHTMLGrafico(contTarde, "Tarde");
 
         // Top 5 Alunos
         const topAlunos = Object.entries(contAlunos).sort((a,b) => b[1] - a[1]).slice(0, 5);
@@ -436,33 +435,74 @@
         });
         document.getElementById('tabelaTopAlunos').innerHTML = htmlTop + '</table>';
 
-        // Alunos Críticos com TRATATIVA
+        // Alunos Críticos com Tratativa
         const alertas = Object.entries(contAlunos).filter(item => item[1] >= 10).sort((a,b) => b[1] - a[1]);
         const eGestor = (cargoLogado === "Diretor");
         
         let htmlAlertas = '<table style="width:100%; border-collapse: collapse; font-size: 12px; background: white;">';
-        htmlAlertas += '<tr style="background: #d32f2f; color: white;"> <th style="padding: 8px; text-align:left;">Aluno</th> <th style="padding: 8px;">Total</th> <th style="padding: 8px;">Tratativa da Gestão</th> </tr>';
+        htmlAlertas += '<tr style="background: #d32f2f; color: white;"> <th style="padding: 8px; text-align:left;">Aluno</th> <th style="padding: 8px;">Total</th> <th style="padding: 8px;">Tratativa</th> </tr>';
 
         alertas.forEach(([aluno, total]) => {
             const textoTratativa = tratativasSalvas[aluno] || "";
-            const campoId = `tratAlerta_${btoa(aluno).replace(/=/g, "")}`;
+            // Cria um ID único para o campo de texto baseado no nome do aluno
+            const campoId = `inputTrat_${btoa(unescape(encodeURIComponent(aluno))).replace(/[^a-zA-Z0-9]/g, "")}`;
             
-            let acaoHTML = eGestor ? 
+            let colunaTratativa = eGestor ? 
                 `<textarea id="${campoId}" rows="2" style="width:100%; font-size:11px;">${textoTratativa}</textarea>
-                 <button onclick="salvarTratativaAlerta('${aluno}', '${campoId}')" style="background:#4caf50; color:white; border:none; padding:4px; width:100%; border-radius:4px; cursor:pointer; margin-top:3px;">Gravar</button>` :
+                 <button id="btn_${campoId}" onclick="salvarTratativaAlerta('${aluno}', '${campoId}')" style="background:#4caf50; color:white; border:none; padding:5px; width:100%; border-radius:4px; cursor:pointer; margin-top:3px;">Gravar</button>` :
                 `<div style="color:#666; font-style:italic;">${textoTratativa || "Sem registro."}</div>`;
 
             htmlAlertas += `<tr style="border-bottom: 1px solid #ddd;"> 
                 <td style="padding: 8px; font-weight:bold;">${aluno}</td> 
                 <td style="padding: 8px; text-align: center; color:red; font-weight:bold;">${total}</td> 
-                <td style="padding: 8px;">${acaoHTML}</td> 
+                <td style="padding: 8px;">${colunaTratativa}</td> 
             </tr>`;
         });
 
         document.getElementById('resAlertaCritico').innerHTML = alertas.length > 0 ? htmlAlertas + '</table>' : "<p>Nenhum aluno crítico.</p>";
         dashboard.classList.remove('hidden');
 
-    } catch (e) { alert("Erro ao atualizar."); }
+    } catch (e) { alert("Erro ao carregar painel."); console.error(e); }
+}
+
+    async function salvarTratativaAlerta(alunoTurma, campoId) {
+    if (cargoLogado !== "Diretor") return alert("Acesso negado.");
+    
+    const texto = document.getElementById(campoId).value;
+    if (!texto) return alert("Por favor, digite a tratativa.");
+
+    const btn = document.getElementById(`btn_${campoId}`);
+    const originalText = btn.innerText;
+    
+    btn.innerText = "⏳ Gravando...";
+    btn.disabled = true;
+
+    const p = new URLSearchParams();
+    p.append('acao', 'salvarTratativaAlerta');
+    p.append('alunoTurma', alunoTurma);
+    p.append('texto', texto);
+    p.append('responsavel', profNomeLogado);
+
+    try {
+        // Envia para o Google Apps Script
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        
+        alert("Tratativa gravada com sucesso!");
+        btn.innerText = "✅ Gravado";
+        btn.style.background = "#2e7d32";
+        
+        // Reabilita após 3 segundos
+        setTimeout(() => {
+            btn.innerText = "Gravar";
+            btn.style.background = "#4caf50";
+            btn.disabled = false;
+        }, 3000);
+        
+    } catch (e) {
+        alert("Erro ao conectar com o servidor.");
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
 }
 
     function tab(n) { 
@@ -496,4 +536,5 @@
 
 </body>
 </html>
+
 
