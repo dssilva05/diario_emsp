@@ -173,11 +173,13 @@
     window.addEventListener('offline', updateOnlineStatus);
 
     window.onload = function() {
-        updateOnlineStatus();
-        const salvo = localStorage.getItem('diarioAcessoSobral');
-        if (salvo) aplicarLogin(JSON.parse(salvo));
-        carregarDadosIniciais();
-    };
+    updateOnlineStatus();
+    const salvo = localStorage.getItem('diarioAcessoSobral');
+    if (salvo) {
+        aplicarLogin(JSON.parse(salvo));
+    }
+    carregarDadosIniciais(); // Busca os alunos do cache ou servidor
+};
 
     // --- FUNÇÕES DE ACESSO (ORIGINAIS) ---
     function irPara(id) {
@@ -197,15 +199,23 @@
     }
 
     function aplicarLogin(d) {
-        profNomeLogado = d.nome; disciplinaLogada = d.disciplina;
-        const cp = String(d.cargo).trim().toUpperCase();
-        const gestores = ["DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA", "COORDENADOR", "COORDENADORA", "SUPERVISOR", "SUPERVISORA", "PAS"];
-        cargoLogado = gestores.some(c => cp.includes(c)) ? "Diretor" : "Professor";
-        document.getElementById('secaoAcesso').classList.add('hidden');
-        document.getElementById('conteudoDiario').classList.remove('hidden');
-        document.getElementById('nomeProfLogado').value = profNomeLogado;
-        ajustarCamposRegistro(); definirDataHoje();
-    }
+    profNomeLogado = d.nome;
+    disciplinaLogada = d.disciplina;
+    const cp = String(d.cargo).trim().toUpperCase();
+    const gestores = ["DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA", "COORDENADOR", "COORDENADORA", "SUPERVISOR", "SUPERVISORA", "PAS"];
+    cargoLogado = gestores.some(c => cp.includes(c)) ? "Diretor" : "Professor";
+    
+    document.getElementById('secaoAcesso').classList.add('hidden');
+    document.getElementById('conteudoDiario').classList.remove('hidden');
+    document.getElementById('nomeProfLogado').value = profNomeLogado;
+
+    // --- AS DUAS LINHAS ABAIXO SÃO AS QUE VOCÊ PRECISA ADICIONAR ---
+    definirDataHoje(); // Preenche a data automaticamente
+    popularTurmas();   // Carrega as turmas nos selects
+    // --------------------------------------------------------------
+
+    ajustarCamposRegistro(); 
+}
 
     // --- ABA 1 & 2: LOGICA ORIGINAL RESTAURADA ---
     async function carregarDadosIniciais() {
@@ -400,7 +410,13 @@
         });
     }
 
-    function definirDataHoje() { document.getElementById('dataOcorrenciaManual').value = new Date().toISOString().split('T')[0]; }
+    // Esta função define a data atual no campo de data
+function definirDataHoje() { 
+    const campoData = document.getElementById('dataOcorrenciaManual');
+    if (campoData) {
+        campoData.value = new Date().toISOString().split('T')[0]; 
+    }
+}
     function limparForm() { idEditando = null; document.getElementById('relatoTexto').value = ""; document.getElementById('btnGravar').innerText = "Gravar no Diário"; }
     function logout() { localStorage.removeItem('diarioAcessoSobral'); location.reload(); }
     
@@ -421,3 +437,4 @@
 
 </body>
 </html>
+
