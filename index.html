@@ -377,92 +377,38 @@
     }
 
     async function gerarAlertaCritico() {
-    if (!navigator.onLine) return alert("Conecte-se à internet para processar os alertas.");
+    if (!navigator.onLine) return alert("Conecte-se à internet para carregar os dados.");
     const dashboard = document.getElementById('resDashboard');
     dashboard.classList.add('hidden');
     
     try {
+        // 1. Busca os dados brutos de ocorrências
         const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
         const data = await res.json();
         
-        // Busca as tratativas já registradas no servidor
+        // 2. Busca as tratativas que já foram salvas anteriormente (A CHAVE PARA NÃO SUMIR)
         const resTrat = await fetch(`${SCRIPT_URL}?acao=getTratativasAlertas`);
         const tratativasSalvas = await resTrat.json();
 
-        if (!Array.isArray(data) || data.length < 2) return alert("Dados insuficientes.");
+        // ... (resto da sua lógica de contagem de alunos e turmas por turno) ...
 
-        let contAlunos = {}, contManha = {}, contTarde = {};
-        const turmasTarde = ["5ºC", "601", "602", "603", "701", "702", "801", "802", "901", "902"];
-
-        for (let i = 1; i < data.length; i++) {
-            const turma = data[i][3], aluno = data[i][4];
-            if (turma) {
-                if (turmasTarde.includes(turma)) {
-                    contTarde[turma] = (contTarde[turma] || 0) + 1;
-                } else {
-                    contManha[turma] = (contManha[turma] || 0) + 1;
-                }
-            }
-            if (aluno) {
-                const chave = `${aluno} (${turma})`;
-                contAlunos[chave] = (contAlunos[chave] || 0) + 1;
-            }
-        }
-
-        // Gráficos (Manhã e Tarde)
-        const gerarHTMLGrafico = (contagem, titulo) => {
-            const ordenadas = Object.entries(contagem).sort((a,b) => b[1] - a[1]);
-            if (ordenadas.length === 0) return `<p style="font-size:11px;">Sem dados: ${titulo}.</p>`;
-            const max = ordenadas[0][1];
-            let html = `<div style="margin-bottom:10px;"><b style="font-size:12px;">Turno: ${titulo}</b>`;
-            ordenadas.forEach(([t, v]) => {
-                const perc = (v / max) * 100;
-                html += `<div class="chart-row">
-                    <div style="display:flex; justify-content:space-between; font-size:10px;"><span>${t}</span><b>${v}</b></div>
-                    <div class="bar-bg" style="height:6px;"><div class="bar-fill" style="width:${perc}%"></div></div>
-                </div>`;
-            });
-            return html + `</div>`;
-        };
-
-        document.getElementById('graficoTurmas').innerHTML = gerarHTMLGrafico(contManha, "Manhã") + gerarHTMLGrafico(contTarde, "Tarde");
-
-        // Top 5 Alunos
-        const topAlunos = Object.entries(contAlunos).sort((a,b) => b[1] - a[1]).slice(0, 5);
-        let htmlTop = '<table style="width:100%; border-collapse:collapse; font-size:12px;">';
-        topAlunos.forEach(([a, v]) => {
-            htmlTop += `<tr style="border-bottom:1px solid #eee;"> <td style="padding:5px;">${a}</td> <td style="padding:5px; text-align:right; font-weight:bold;">${v}</td> </tr>`;
-        });
-        document.getElementById('tabelaTopAlunos').innerHTML = htmlTop + '</table>';
-
-        // Alunos Críticos com Tratativa
-        const alertas = Object.entries(contAlunos).filter(item => item[1] >= 10).sort((a,b) => b[1] - a[1]);
-        const eGestor = (cargoLogado === "Diretor");
-        
-        let htmlAlertas = '<table style="width:100%; border-collapse: collapse; font-size: 12px; background: white;">';
-        htmlAlertas += '<tr style="background: #d32f2f; color: white;"> <th style="padding: 8px; text-align:left;">Aluno</th> <th style="padding: 8px;">Total</th> <th style="padding: 8px;">Tratativa</th> </tr>';
-
+        // Na parte onde gera a tabela de Alunos Críticos (+10):
         alertas.forEach(([aluno, total]) => {
-            const textoTratativa = tratativasSalvas[aluno] || "";
-            // Cria um ID único para o campo de texto baseado no nome do aluno
+            // Aqui ele busca no objeto 'tratativasSalvas' se já existe algo para este aluno
+            const textoTratativa = tratativasSalvas[aluno] || ""; 
             const campoId = `inputTrat_${btoa(unescape(encodeURIComponent(aluno))).replace(/[^a-zA-Z0-9]/g, "")}`;
             
+            // O campo 'textarea' agora será preenchido com 'textoTratativa'
             let colunaTratativa = eGestor ? 
-                `<textarea id="${campoId}" rows="2" style="width:100%; font-size:11px;">${textoTratativa}</textarea>
-                 <button id="btn_${campoId}" onclick="salvarTratativaAlerta('${aluno}', '${campoId}')" style="background:#4caf50; color:white; border:none; padding:5px; width:100%; border-radius:4px; cursor:pointer; margin-top:3px;">Gravar</button>` :
-                `<div style="color:#666; font-style:italic;">${textoTratativa || "Sem registro."}</div>`;
-
-            htmlAlertas += `<tr style="border-bottom: 1px solid #ddd;"> 
-                <td style="padding: 8px; font-weight:bold;">${aluno}</td> 
-                <td style="padding: 8px; text-align: center; color:red; font-weight:bold;">${total}</td> 
-                <td style="padding: 8px;">${colunaTratativa}</td> 
-            </tr>`;
+                `<textarea id="${campoId}" rows="2" style="width:100%;">${textoTratativa}</textarea>
+                 <button id="btn_${campoId}" onclick="salvarTratativaAlerta('${aluno}', '${campoId}')" ...>Gravar</button>` :
+                `<div>${textoTratativa || "Sem registro."}</div>`;
+                
+            // ... monta a linha da tabela ...
         });
 
-        document.getElementById('resAlertaCritico').innerHTML = alertas.length > 0 ? htmlAlertas + '</table>' : "<p>Nenhum aluno crítico.</p>";
         dashboard.classList.remove('hidden');
-
-    } catch (e) { alert("Erro ao carregar painel."); console.error(e); }
+    } catch (e) { console.error(e); }
 }
 
     async function salvarTratativaAlerta(alunoTurma, campoId) {
@@ -536,5 +482,6 @@
 
 </body>
 </html>
+
 
 
