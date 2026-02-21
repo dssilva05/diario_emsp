@@ -140,23 +140,20 @@
             <button class="btn-main" onclick="gerarAlertaCritico()">📊 Gerar Relatório de Alerta</button>
             <div id="resAlertaCritico" style="margin-top: 20px;"></div>
         </div>
-        
     </div>
 </div>
 
 <script>
+    const NOME_ESCOLA = "E. M. Sobral Pinto"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlVbz3C-bdKUbRvuWx4SrL9eiFdmyRwwZwUYVhi9u8u2df9NSgNRNjsYx7gD5q1qef7g/exec"; 
+    let ALUNOS = {};
+    let cargoLogado = "", profNomeLogado = "", disciplinaLogada = "", idEditando = null;
 
-    const NOME_ESCOLA = "E. M. Sobral Pinto"; // Altere aqui para o nome da outra escola no outro site
-    
-    // --- LÓGICA DE LIMPEZA E MONITORAMENTO DE REDE ---
     if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('Service Worker registrado!', reg))
-            .catch(err => console.log('Erro ao registrar:', err));
-    });
-}
-    
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').then(reg => console.log('SW OK')).catch(err => console.log('Erro SW', err));
+        });
+    }
 
     function updateOnlineStatus() {
         const bar = document.getElementById('status-bar');
@@ -171,11 +168,6 @@
     }
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
-    // ------------------------------------------------
-
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlVbz3C-bdKUbRvuWx4SrL9eiFdmyRwwZwUYVhi9u8u2df9NSgNRNjsYx7gD5q1qef7g/exec"; 
-    let ALUNOS = {};
-    let cargoLogado = "", profNomeLogado = "", disciplinaLogada = "", idEditando = null;
 
     window.onload = function() {
         updateOnlineStatus();
@@ -218,14 +210,11 @@
     }
 
     async function carregarDadosIniciais() {
-        // Tenta carregar do cache local primeiro
         const cache = localStorage.getItem('cache_alunos_sobral');
         if (cache) {
             ALUNOS = JSON.parse(cache);
             popularTurmas();
         }
-
-        // Se estiver online, atualiza o cache silenciosamente
         if (navigator.onLine) {
             try {
                 const res = await fetch(`${SCRIPT_URL}?acao=getListaAlunos`);
@@ -259,8 +248,6 @@
         const u = document.getElementById('userLogin').value.trim().toLowerCase();
         const s = document.getElementById('passLogin').value.trim();
         if(!u || !s) return alert("Preencha usuário e senha.");
-
-        // 1. TENTATIVA ONLINE
         if (navigator.onLine) {
             try {
                 const res = await fetch(`${SCRIPT_URL}?acao=login&usuario=${u}&senha=${s}`);
@@ -273,58 +260,36 @@
                 }
             } catch (e) { console.log("Tentando login local..."); }
         }
-
-        // 2. TENTATIVA OFFLINE
         const backup = localStorage.getItem('ultimoUsuarioSucesso');
         if (backup) {
             const check = JSON.parse(backup);
             if (u === check.u && s === check.s) {
                 alert("Login validado offline.");
                 aplicarLogin(check.dados);
-            } else alert("Usuário ou senha incorretos ou não validados online neste aparelho.");
-        } else alert("Sem conexão. É necessário logar online uma vez neste aparelho.");
+            } else alert("Dados incorretos.");
+        } else alert("Sem conexão.");
     }
 
     function aplicarLogin(d) {
         profNomeLogado = d.nome;
         disciplinaLogada = d.disciplina;
         const cargoPlanilha = String(d.cargo).trim().toUpperCase();
-        
         const cargosGestores = ["DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA", "COORDENADOR", "COORDENADORA", "SUPERVISOR", "SUPERVISORA", "PAS"];
         const eGestorTotal = cargosGestores.some(c => cargoPlanilha.includes(c));
         cargoLogado = eGestorTotal ? "Diretor" : "Professor";
-        
         document.getElementById('secaoAcesso').classList.add('hidden');
         document.getElementById('conteudoDiario').classList.remove('hidden');
         document.getElementById('nomeProfLogado').value = profNomeLogado;
-        
         const selTipo = document.getElementById('selTipoRegistro');
         const containerTipo = document.getElementById('tipoRegistroContainer');
-
-        // REGRA PARA EQUIPE PAS
         if (cargoPlanilha.includes("PAS")) {
-            selTipo.value = "🧠 Equipe PAS";
-            selTipo.disabled = false;
-            containerTipo.style.background = "#fff3e0";
-        } 
-        // NOVA REGRA: PROF. AEE (Fixa em Atendimento AEE)
-        else if (cargoPlanilha.includes("PROF. AEE")) {
-            selTipo.value = "📖 Atendimento AEE";
-            selTipo.disabled = false; // Mantém fixado
-            containerTipo.style.background = "#f3e5f5"; // Lilás suave para combinar com a cor do card
-            containerTipo.style.borderColor = "#9c27b0";
-        }
-        // REGRA PARA GESTÃO TOTAL
-        else if (cargoLogado === "Diretor") {
-            selTipo.value = "📝 Ocorrência Disciplinar";
-            selTipo.disabled = false;
-            containerTipo.style.background = "#e3f2fd";
-        } 
-        // REGRA PARA PROFESSORES REGULARES
-        else {
-            selTipo.value = "📝 Ocorrência Disciplinar";
-            selTipo.disabled = true;
-            containerTipo.style.background = "#f8f9fa";
+            selTipo.value = "🧠 Equipe PAS"; selTipo.disabled = false; containerTipo.style.background = "#fff3e0";
+        } else if (cargoPlanilha.includes("PROF. AEE")) {
+            selTipo.value = "📖 Atendimento AEE"; selTipo.disabled = false; containerTipo.style.background = "#f3e5f5";
+        } else if (cargoLogado === "Diretor") {
+            selTipo.value = "📝 Ocorrência Disciplinar"; selTipo.disabled = false; containerTipo.style.background = "#e3f2fd";
+        } else {
+            selTipo.value = "📝 Ocorrência Disciplinar"; selTipo.disabled = true; containerTipo.style.background = "#f8f9fa";
         }
         ajustarCamposRegistro();
         definirDataHoje();
@@ -359,7 +324,6 @@
             textoTratativa += ` (Data: ${dtC.value.split("-").reverse().join("/")})`;
         }
         const rGestao = document.getElementById('relatoGestaoTexto');
-
         const dados = {
             acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
             id: idEditando || Date.now(),
@@ -369,7 +333,6 @@
             advertencia: document.getElementById('chkAdvertencia').checked ? "SIM" : "NÃO",
             tratativa: textoTratativa, relatoGestao: rGestao ? rGestao.value : ""
         };
-
         if (navigator.onLine) {
             const p = new URLSearchParams();
             for (let key in dados) p.append(key, dados[key]);
@@ -378,7 +341,7 @@
         } else {
             let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
             fila.push(dados); localStorage.setItem('filaOfflineSobral', JSON.stringify(fila));
-            alert("Offline: Registro salvo localmente. Sincronização ocorrerá ao voltar à rede."); limparForm();
+            alert("Offline: Registro salvo localmente."); limparForm();
         }
     }
 
@@ -391,41 +354,38 @@
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
         }
         localStorage.removeItem('filaOfflineSobral');
-        alert("Dados offline sincronizados com sucesso!");
+        alert("Dados sincronizados!");
     }
 
     async function consultarHistorico() {
         if (!navigator.onLine) return alert("Busca de histórico disponível apenas online.");
         const t = document.getElementById('selTurmaCons').value;
         const a = document.getElementById('selAlunoCons').value;
-
-        if (!t) return alert("Selecione pelo menos a Turma."); // Agora permite sem aluno
-    
+        if (!t) return alert("Selecione pelo menos a Turma.");
         document.getElementById('resConsulta').innerHTML = "Buscando...";
         try {
-        const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
-        const data = await res.json();
-        exibirDados(data, t, a, document.getElementById('selPeriodoCons').value);
-    } catch (e) { document.getElementById('resConsulta').innerHTML = "Erro de conexão."; }
-}
+            const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
+            const data = await res.json();
+            exibirDados(data, t, a, document.getElementById('selPeriodoCons').value);
+        } catch (e) { document.getElementById('resConsulta').innerHTML = "Erro de conexão."; }
+    }
 
     function exibirDados(data, t, a, p) {
         const rDiv = document.getElementById('resConsulta');
         const vT = document.getElementById('chkTodosRegistros').checked;
-    
-        // FILTRO DINÂMICO: Se 'a' (aluno) estiver vazio, filtra apenas por 't' (turma)
         let filtrados = data.filter(r => {
             const bateTurma = r[3] && String(r[3]).trim() === t;
             const bateAluno = a ? (r[4] && String(r[4]).trim() === a) : true;
-        return bateTurma && bateAluno;
-    });
+            return bateTurma && bateAluno;
+        });
         if (p !== "Ano Todo") filtrados = filtrados.filter(r => identificarTrimestre(r[1]) === p);
         if (!vT) {
             const meuNome = profNomeLogado.split(" ")[0];
             filtrados = filtrados.filter(r => String(r[2]).includes(meuNome));
         }
         if (filtrados.length === 0) { rDiv.innerHTML = "<p>Nada encontrado.</p>"; return; }
-        let html = `<h3>Histórico: ${a}</h3>`;
+        
+        let html = `<h3>Histórico: ${a || "Toda a Turma"}</h3>`;
         let grupos = { "1º Trimestre": [], "2º Trimestre": [], "3º Trimestre": [], "Fora de Período": [] };
         filtrados.forEach(r => {
             const tri = identificarTrimestre(r[1]);
@@ -475,6 +435,7 @@
             let opcaoSalva = tratativa;
             if (tratativa.includes("Data:")) opcaoSalva = "Família Convocada";
             cont.innerHTML = `<div style="background:#f0f7ff; padding:15px; border-radius:8px; margin:15px 0; border:1px solid #1976d2;"><label style="color:#1976d2; margin-top:0;">🛠️ Ação da Gestão:</label><select id="selTratativa" onchange="verificarDataConvocacao()" style="width:100%; border:2px solid #1976d2;"><option value="">Selecione...</option><option value="Conversa com o Aluno">Conversa com o Aluno</option><option value="Advertência Verbal">Advertência Verbal</option><option value="Advertência por Escrito">Advertência por Escrito</option><option value="Família Convocada">Família Convocada</option><option value="Encaminhamento Psicológico">Encaminhamento Psicológico</option></select><div id="divDataConvocacao" style="display:none; margin-top:10px;"><label>Data da Convocação:</label><input type="date" id="dataConvocacao"></div><label style="color:#0d47a1; margin-top:15px;">🔒 Relato Interno (PRIVADO):</label><textarea id="relatoGestaoTexto" rows="3">${relatoGestao || ""}</textarea></div>`;
+            if(focarTratativa) setTimeout(() => document.getElementById('selTratativa').focus(), 300);
         }
         document.getElementById('btnGravar').innerText = "💾 Salvar Alteração";
     }
@@ -489,7 +450,7 @@
         document.getElementById('containerTratativa').innerHTML = ""; idEditando = null;
         const salvo = localStorage.getItem('diarioAcessoSobral');
         if (salvo) aplicarLogin(JSON.parse(salvo));
-        document.getElementById('btnGravar').innerText = "Gravar no Diário"; document.getElementById('btnGravar').style.background = "";
+        document.getElementById('btnGravar').innerText = "Gravar no Diário";
         definirDataHoje();
     }
 
@@ -502,95 +463,57 @@
     }
 
     async function gerarAlertaCritico() {
-    if (!navigator.onLine) return alert("Conecte-se à internet para gerar alertas.");
-    const resDiv = document.getElementById('resAlertaCritico');
-    resDiv.innerHTML = "<p>⏳ Processando dados do servidor...</p>";
-
-    try {
-        const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
-        const data = await res.json();
-        
-        if (!Array.isArray(data) || data.length === 0) {
-            resDiv.innerHTML = "<p>📭 Nenhuma ocorrência encontrada na base de dados.</p>";
-            return;
-        }
-
-        let contagem = {};
-
-        // Começamos em 1 para pular o cabeçalho da planilha
-        for (let i = 1; i < data.length; i++) {
-            const linha = data[i];
-            const nomeAluno = linha[4];  // Coluna E (Aluno)
-            const nomeTurma = linha[3];  // Coluna D (Turma)
-
-            if (nomeAluno && nomeTurma) {
-                const chave = `${nomeAluno.trim().toUpperCase()} (${nomeTurma.trim().toUpperCase()})`;
-                contagem[chave] = (contagem[chave] || 0) + 1;
+        if (!navigator.onLine) return alert("Conecte-se à internet.");
+        const resDiv = document.getElementById('resAlertaCritico');
+        resDiv.innerHTML = "<p>⏳ Processando...</p>";
+        try {
+            const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
+            const data = await res.json();
+            let contagem = {};
+            for (let i = 1; i < data.length; i++) {
+                const nomeAluno = data[i][4];
+                const nomeTurma = data[i][3];
+                if (nomeAluno) {
+                    const chave = `${nomeAluno.trim().toUpperCase()} (${nomeTurma})`;
+                    contagem[chave] = (contagem[chave] || 0) + 1;
+                }
             }
-        }
-
-        let listaAcimaDeDez = Object.entries(contagem)
-            .filter(item => item[1] >= 10)
-            .sort((a, b) => b[1] - a[1]);
-
-        if (listaAcimaDeDez.length === 0) {
-            resDiv.innerHTML = "<div style='padding:15px; background:#f8f9fa; border-radius:8px; border:1px solid #ddd; text-align:center;'>✅ Nenhum aluno possui 10 ou mais ocorrências no momento.</div>";
-            return;
-        }
-
-        let html = `
-            <table style="width:100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
-                <tr style="background: #d32f2f; color: white;">
-                    <th style="padding: 10px; text-align: left;">Aluno (Turma)</th>
-                    <th style="padding: 10px; text-align: center;">Total</th>
-                </tr>`;
-
-        listaAcimaDeDez.forEach(([aluno, total]) => {
-            html += `
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td style="padding: 10px; font-weight: bold;">${aluno}</td>
-                    <td style="padding: 10px; text-align: center; color: red; font-size: 1.2em;">${total}</td>
-                </tr>`;
-        });
-
-        resDiv.innerHTML = html + "</table>";
-
-    } catch (e) {
-        resDiv.innerHTML = "<p style='color:red;'>❌ Erro ao buscar dados. Verifique o Apps Script.</p>";
-        console.error("Erro no Alerta:", e);
+            let lista = Object.entries(contagem).filter(item => item[1] >= 10).sort((a,b) => b[1] - a[1]);
+            if (lista.length === 0) {
+                resDiv.innerHTML = "<p>✅ Tudo em ordem.</p>";
+                return;
+            }
+            let html = '<table style="width:100%; border-collapse: collapse; background: white;">';
+            html += '<tr style="background: #d32f2f; color: white;"> <th style="padding: 10px; text-align:left;">Aluno</th> <th style="padding: 10px;">Total</th> </tr>';
+            lista.forEach(([aluno, total]) => {
+                html += `<tr style="border-bottom: 1px solid #ddd;"> <td style="padding: 10px;">${aluno}</td> <td style="padding: 10px; text-align: center; font-weight: bold; color:red;">${total}</td> </tr>`;
+            });
+            resDiv.innerHTML = html + '</table>';
+        } catch (e) { resDiv.innerHTML = "Erro ao carregar dados."; }
     }
-}
 
-// Atualize sua função tab(n) para suportar a aba 3
-function tab(n) { 
-    document.getElementById('aba1').classList.toggle('hidden', n !== 1); 
-    document.getElementById('aba2').classList.toggle('hidden', n !== 2); 
-    document.getElementById('aba3').classList.toggle('hidden', n !== 3); // Aba 3
-    document.getElementById('t1').classList.toggle('active', n === 1); 
-    document.getElementById('t2').classList.toggle('active', n === 2); 
-    document.getElementById('t3').classList.toggle('active', n === 3); // Aba 3
-    if(n!==1) limparForm(); 
-}
+    function tab(n) { 
+        document.getElementById('aba1').classList.toggle('hidden', n !== 1); 
+        document.getElementById('aba2').classList.toggle('hidden', n !== 2); 
+        document.getElementById('aba3').classList.toggle('hidden', n !== 3); 
+        document.getElementById('t1').classList.toggle('active', n === 1); 
+        document.getElementById('t2').classList.toggle('active', n === 2); 
+        document.getElementById('t3').classList.toggle('active', n === 3); 
+        if(n !== 1) limparForm(); 
+    }
 
-    function tab(n) { document.getElementById('aba1').classList.toggle('hidden', n !== 1); document.getElementById('aba2').classList.toggle('hidden', n !== 2); document.getElementById('t1').classList.toggle('active', n === 1); document.getElementById('t2').classList.toggle('active', n === 2); if(n===2) limparForm(); }
     function definirDataHoje() { document.getElementById('dataOcorrenciaManual').value = new Date().toISOString().split('T')[0]; }
     function logout() { localStorage.removeItem('diarioAcessoSobral'); location.reload(); }
     function toggleAjuda() { document.getElementById('caixaAjuda').classList.toggle('hidden'); }
-    async function apagarRegistro(id) { if (!confirm("Excluir definitivamente?")) return; const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id); await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p }); consultarHistorico(); }
-    async function enviarWhatsApp() {
-    const duvida = document.getElementById('textoDuvida').value;
-    if(!duvida) return alert("Por favor, descreva sua dúvida.");
-
-    // Captura o nome do professor logado através da variável global do sistema
-    // Caso não esteja logado por algum motivo, aparecerá "Não identificado"
-    const nomeProfessor = profNomeLogado || "Não identificado";
+    async function apagarRegistro(id) { if (!confirm("Excluir?")) return; const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id); await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p }); consultarHistorico(); }
     
-    // Monta a mensagem com a estrutura que você solicitou
-    const msg = `*Suporte EMSP*\n*Nome:* ${nomeProfessor}\n*Dúvida:* ${duvida}`;
-
-    // Abre o WhatsApp com a mensagem formatada
-    window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank');
-}
+    async function enviarWhatsApp() {
+        const duvida = document.getElementById('textoDuvida').value;
+        if(!duvida) return alert("Por favor, descreva sua dúvida.");
+        const nomeProfessor = profNomeLogado || "Não identificado";
+        const msg = `*Suporte EMSP*\n*Nome:* ${nomeProfessor}\n*Dúvida:* ${duvida}`;
+        window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank');
+    }
 </script>
 
 <button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas ou sugestões?</button>
@@ -602,13 +525,3 @@ function tab(n) {
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
