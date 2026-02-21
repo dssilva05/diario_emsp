@@ -486,13 +486,15 @@
     async function enviarWhatsApp() { const msg = `*Suporte EMSP*\n*Dúvida:* ${document.getElementById('textoDuvida').value}`; window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank'); }
 </script>
 
-<button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas?</button>
+<button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas ou sugestões?</button>
 <div id="caixaAjuda" class="modal-ajuda hidden">
-    <h3>Suporte Técnico</h3>
-    <textarea id="textoDuvida" rows="4" placeholder="Sua dúvida..."></textarea>
+    <h3>Suporte EMSP</h3>
+    <textarea id="textoDuvida" rows="4" placeholder="Sua dúvida ou sugestão..."></textarea>
     <button class="btn-main" style="background:#25d366; margin-top:10px;" onclick="enviarWhatsApp()">WhatsApp</button>
 </div>
 
 </body>
 </html>
+
+
 
