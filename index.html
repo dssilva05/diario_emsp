@@ -232,7 +232,33 @@
         else alert("Acesso negado.");
     }
 
-    function aplicarLogin(d) {
+    async function carregarDadosIniciais() {
+    // 1. Tenta carregar do cache local imediatamente para uso offline
+    const cache = localStorage.getItem('cache_alunos_sobral');
+    if (cache) {
+        ALUNOS = JSON.parse(cache);
+        popularTurmas(); // Preenche os campos se já houver algo guardado
+    }
+
+    // 2. Se houver internet, busca a lista ATUALIZADA do servidor
+    if (navigator.onLine) {
+        try {
+            const res = await fetch(`${SCRIPT_URL}?acao=getListaAlunos`);
+            const novosDados = await res.json();
+            
+            // Só atualiza se os dados forem diferentes do cache
+            if (JSON.stringify(novosDados) !== cache) {
+                ALUNOS = novosDados;
+                localStorage.setItem('cache_alunos_sobral', JSON.stringify(novosDados));
+                popularTurmas(); // Recarrega as turmas com os dados novos do servidor
+            }
+        } catch (e) {
+            console.log("Erro ao buscar dados do servidor:", e);
+        }
+    }
+}
+
+function aplicarLogin(d) {
     profNomeLogado = d.nome;
     disciplinaLogada = d.disciplina;
     const cp = String(d.cargo).trim().toUpperCase();
@@ -244,41 +270,19 @@
     document.getElementById('secaoAcesso').classList.add('hidden');
     document.getElementById('conteudoDiario').classList.remove('hidden');
     
-    // Preenche o nome do professor
+    // Preenche o nome do professor no campo visual
     document.getElementById('nomeProfLogado').value = profNomeLogado;
 
-    // --- REATIVA AS TURMAS E A DATA ---
+    // --- GARANTIA DE CARREGAMENTO ---
     definirDataHoje(); 
-    popularTurmas();   
+    
+    // Se ALUNOS já tiver dados (do cache), popula agora. 
+    // Se não tiver, o popularTurmas() dentro do carregarDadosIniciais() cuidará disso assim que o fetch terminar.
+    if (Object.keys(ALUNOS).length > 0) {
+        popularTurmas();   
+    }
     
     if (typeof ajustarCamposRegistro === "function") ajustarCamposRegistro(); 
-}
-
-    // --- ABA 1 & 2: LOGICA ORIGINAL RESTAURADA ---
-    async function carregarDadosIniciais() {
-    // 1. Tenta carregar do cache local imediatamente
-    const cache = localStorage.getItem('cache_alunos_sobral');
-    if (cache) {
-        ALUNOS = JSON.parse(cache);
-        popularTurmas(); // Preenche os campos se houver cache
-    }
-
-    // 2. Se houver internet, busca a lista atualizada do servidor
-    if (navigator.onLine) {
-        try {
-            const res = await fetch(`${SCRIPT_URL}?acao=getListaAlunos`);
-            const novosDados = await res.json();
-            
-            // Atualiza a variável global e o cache
-            ALUNOS = novosDados;
-            localStorage.setItem('cache_alunos_sobral', JSON.stringify(novosDados));
-            
-            // Força o preenchimento dos campos novamente com os dados novos
-            popularTurmas();
-        } catch (e) {
-            console.log("Erro ao buscar dados do servidor:", e);
-        }
-    }
 }
 
     function popularTurmas() {
@@ -497,6 +501,7 @@ function definirDataHoje() {
 
 </body>
 </html>
+
 
 
 
