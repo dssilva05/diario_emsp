@@ -19,8 +19,6 @@
         .escola-txt { text-align: center; flex-grow: 1; padding: 0 15px; }
         .escola-txt h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
         .escola-txt p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; line-height: 1.4; }
-        .auth-wrapper { display: flex; justify-content: center; align-items: center; padding: 40px 20px; }
-        .box-auth { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
         .container { max-width: 650px; margin: 20px auto; padding: 15px; }
         .tabs { display: flex; background: rgba(255,255,255,0.2); border-radius: 12px 12px 0 0; backdrop-filter: blur(10px); padding: 5px 5px 0; }
         .tab-btn { flex: 1; padding: 12px; border: none; background: none; color: white; cursor: pointer; font-weight: bold; border-radius: 8px 8px 0 0; }
@@ -30,19 +28,19 @@
         label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
         input, select, textarea, .btn-main { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
         .btn-main { background: var(--blue); color: white; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; }
-        .btn-link { background: none; border: none; color: var(--blue); text-decoration: underline; cursor: pointer; margin-top: 15px; font-size: 14px; width: auto; }
-        .titulo-trimestre { background: var(--gold); color: #000; padding: 8px 15px; margin-top: 25px; border-radius: 6px; font-weight: bold; border-left: 10px solid var(--blue); }
-        .item-ocorrencia { background: white; padding: 15px; border-left: 5px solid var(--blue); margin-top: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
         
-        /* ESTILOS DO DASHBOARD (GRÁFICO) */
+        /* ESTILOS DO DASHBOARD E TRATATIVAS */
         .chart-row { margin-bottom: 10px; }
-        .bar-bg { background: #eee; border-radius: 5px; height: 12px; overflow: hidden; margin-top: 4px; }
+        .bar-bg { background: #eee; border-radius: 5px; height: 10px; overflow: hidden; margin-top: 4px; }
         .bar-fill { background: var(--blue); height: 100%; transition: width 0.5s; }
         .dashboard-title { font-size: 14px; font-weight: bold; color: var(--blue); border-left: 4px solid var(--gold); padding-left: 8px; margin: 20px 0 10px; }
         
+        .tratativa-box { background: #f9f9f9; border: 1px solid #ddd; padding: 8px; border-radius: 6px; font-size: 12px; color: #444; position: relative; min-height: 40px; }
+        .btn-edit-trat { position: absolute; top: 5px; right: 5px; background: none; border: none; cursor: pointer; font-size: 14px; }
+        .btn-save-disquete { background: none; border: none; cursor: pointer; font-size: 20px; color: #4caf50; padding: 0 5px; vertical-align: middle; }
+        
         .btn-ajuda-fixo { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; z-index: 9999; cursor: pointer; }
         .modal-ajuda { position: fixed; bottom: 90px; right: 20px; width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; }
-        @media print { #status-bar, .tabs, .btn-main, label, select, .box-auth, button, .btn-link, .btn-ajuda-fixo, .modal-ajuda { display: none !important; } header { background: white !important; border-bottom: 2px solid #000 !important; } .card { background: white !important; box-shadow: none !important; } }
     </style>
 </head>
 <body>
@@ -63,15 +61,15 @@
         <input type="text" id="userLogin" placeholder="Usuário">
         <input type="password" id="passLogin" placeholder="Senha">
         <button class="btn-main" onclick="executarLogin()">Entrar</button>
-        <button class="btn-link" onclick="irPara('telaRecuperar')">Alterar senha</button>
+        <button class="btn-link" onclick="irPara('telaRecuperar')" style="background:none; border:none; color:var(--blue); text-decoration:underline; cursor:pointer; margin-top:15px;">Alterar senha</button>
     </div>
     <div id="telaRecuperar" class="box-auth hidden">
-        <h2 style="color:var(--blue)">🔑 Recuperar Senha</h2>
+        <h2 style="color:var(--blue)">🔑 Recuperar</h2>
         <input type="text" id="recNome" placeholder="Nome Completo">
-        <input type="text" id="recBM" placeholder="BM (apenas números e X)">
+        <input type="text" id="recBM" placeholder="BM">
         <input type="password" id="recNovaPass" placeholder="Nova Senha">
-        <button class="btn-main" onclick="executarRecuperacao()">Alterar Senha</button>
-        <button class="btn-link" onclick="irPara('telaLogin')">Voltar ao Login</button>
+        <button class="btn-main" onclick="executarRecuperacao()">Alterar</button>
+        <button onclick="irPara('telaLogin')" style="background:none; border:none; color:var(--blue); cursor:pointer; margin-top:10px;">Voltar</button>
     </div>
 </div>
 
@@ -85,70 +83,36 @@
     <div class="card">
         <div id="aba1">
             <div id="tipoRegistroContainer" style="padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd;">
-                <label style="color: #1d4e89; margin-top: 0;">Tipo de Registro:</label>
-                <select id="selTipoRegistro" onchange="ajustarCamposRegistro()" style="border: 2px solid #ccc;">
-                    <option value="📝 Ocorrência Disciplinar">📝 Ocorrência Disciplinar</option>
-                    <option value="👪 Reunião com a Família">👪 Reunião com a Família</option>
-                    <option value="Saúde (Doente / Machucou)">🏥 Saúde (Doente / Machucou)</option>
-                    <option value="🧠 Equipe PAS">🧠 Equipe PAS</option>
-                    <option value="📖 Atendimento AEE">📖 Atendimento AEE</option>
-                    <option value="📎 Outros Atendimentos">📎 Outros Atendimentos</option>
-                </select>
+                <label>Tipo de Registro:</label>
+                <select id="selTipoRegistro" onchange="ajustarCamposRegistro()"><option value="📝 Ocorrência Disciplinar">📝 Ocorrência Disciplinar</option><option value="👪 Reunião com a Família">👪 Reunião com a Família</option><option value="Saúde (Doente / Machucou)">🏥 Saúde (Doente / Machucou)</option><option value="🧠 Equipe PAS">🧠 Equipe PAS</option><option value="📖 Atendimento AEE">📖 Atendimento AEE</option><option value="📎 Outros Atendimentos">📎 Outros Atendimentos</option></select>
             </div>
-            <label>Responsável:</label>
-            <input type="text" id="nomeProfLogado" readonly style="background:#e9ecef">
-            <label>Data:</label>
-            <input type="date" id="dataOcorrenciaManual">
-            <label>Turma:</label>
-            <select id="selTurma" onchange="atualizarAlunos('selTurma', 'selAluno')"><option value="">Carregando...</option></select>
-            <label>Aluno:</label>
-            <select id="selAluno"><option value="">Selecione a turma...</option></select>
-            <div id="boxAdvertencia">
-                <label style="display: flex; align-items: center; cursor: pointer; background: #fff3cd; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba; margin-top: 15px;">
-                    <input type="checkbox" id="chkAdvertencia" style="width: auto; margin: 0 10px 0 0;"> 
-                    <span>Foi enviada Advertência por Escrito?</span>
-                </label>
-            </div>
-            <label id="labelRelato">Relato do Professor:</label>
-            <textarea id="relatoTexto" rows="5"></textarea>
+            <label>Responsável:</label><input type="text" id="nomeProfLogado" readonly style="background:#e9ecef">
+            <label>Data:</label><input type="date" id="dataOcorrenciaManual">
+            <label>Turma:</label><select id="selTurma" onchange="atualizarAlunos('selTurma', 'selAluno')"></select>
+            <label>Aluno:</label><select id="selAluno"></select>
+            <div id="boxAdvertencia"><label style="display: flex; align-items: center; cursor: pointer; background: #fff3cd; padding: 10px; border-radius: 8px; margin-top: 15px;"><input type="checkbox" id="chkAdvertencia" style="width: auto; margin-right: 10px;">Advertência por Escrito?</label></div>
+            <label id="labelRelato">Relato:</label><textarea id="relatoTexto" rows="5"></textarea>
             <div id="containerTratativa"></div>
             <button class="btn-main" id="btnGravar" onclick="gravarOcorrencia()">Gravar no Diário</button>
         </div>
 
         <div id="aba2" class="hidden">
-            <select id="selTurmaCons" onchange="atualizarAlunos('selTurmaCons', 'selAlunoCons')"><option value="">Turma...</option></select>
-            <select id="selAlunoCons" style="margin-top:10px;"><option value="">Aluno...</option></select>
-            <select id="selPeriodoCons" style="margin-top:10px;">
-                <option value="Ano Todo">Ano Todo</option>
-                <option value="1º Trimestre">1º Trimestre</option>
-                <option value="2º Trimestre">2º Trimestre</option>
-                <option value="3º Trimestre">3º Trimestre</option>
-            </select>
-            <div class="filtro-box" style="margin: 15px 0; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc;">
-                <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px; margin-bottom: 5px;">
-                    <input type="checkbox" id="chkMeusRegistros" checked onclick="alternarCheckboxes('meu')" style="width:18px; height:18px; margin-right:10px;"> Ver apenas meus registros
-                </label>
-                <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px;">
-                    <input type="checkbox" id="chkTodosRegistros" onclick="alternarCheckboxes('todos')" style="width:18px; height:18px; margin-right:10px;"> Ver todas as ocorrências
-                </label>
-            </div>
-            <button class="btn-main" onclick="consultarHistorico()">🔍 Buscar Histórico</button>
+            <select id="selTurmaCons" onchange="atualizarAlunos('selTurmaCons', 'selAlunoCons')"></select>
+            <select id="selAlunoCons" style="margin-top:10px;"></select>
+            <select id="selPeriodoCons" style="margin-top:10px;"><option value="Ano Todo">Ano Todo</option><option value="1º Trimestre">1º Trimestre</option><option value="2º Trimestre">2º Trimestre</option><option value="3º Trimestre">3º Trimestre</option></select>
+            <button class="btn-main" style="margin-top:10px;" onclick="consultarHistorico()">🔍 Buscar</button>
             <div id="resConsulta"></div>
-            <button class="btn-main" id="btnImp" style="background:#444; display:none; margin-top:20px" onclick="window.print()">🖨️ PDF / Imprimir</button>
         </div>
 
         <div id="aba3" class="hidden">
             <h2 style="color:var(--blue); margin-top:0;">📊 Painel de Controle</h2>
-            <button class="btn-main" onclick="gerarAlertaCritico()">🔄 Atualizar Dados em Tempo Real</button>
-            
+            <button class="btn-main" onclick="gerarAlertaCritico()">🔄 Atualizar em Tempo Real</button>
             <div id="resDashboard" class="hidden">
                 <div class="dashboard-title">Turmas com mais ocorrências</div>
                 <div id="graficoTurmas"></div>
-
-                <div class="dashboard-title">Top 5 Alunos (Ranking Geral)</div>
+                <div class="dashboard-title">Top 5 Alunos</div>
                 <div id="tabelaTopAlunos"></div>
-
-                <div class="dashboard-title">Alunos Críticos (+10 Ocorrências)</div>
+                <div class="dashboard-title">Alunos Críticos (+10)</div>
                 <div id="resAlertaCritico"></div>
             </div>
         </div>
@@ -158,24 +122,7 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlVbz3C-bdKUbRvuWx4SrL9eiFdmyRwwZwUYVhi9u8u2df9NSgNRNjsYx7gD5q1qef7g/exec"; 
     let ALUNOS = {};
-    let cargoLogado = "", profNomeLogado = "", disciplinaLogada = "", idEditando = null;
-
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js').then(reg => console.log('SW OK')).catch(err => console.log('Erro SW', err));
-        });
-    }
-
-    function updateOnlineStatus() {
-        const bar = document.getElementById('status-bar');
-        if (navigator.onLine) {
-            bar.className = 'online'; bar.innerText = 'Você está Online'; sincronizarDados();
-        } else {
-            bar.className = 'offline'; bar.innerText = 'Você está Offline';
-        }
-    }
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
+    let cargoLogado = "", profNomeLogado = "", disciplinaLogada = "";
 
     window.onload = function() {
         updateOnlineStatus();
@@ -184,34 +131,10 @@
         carregarDadosIniciais();
     };
 
-    function irPara(id) {
-        document.getElementById('telaLogin').classList.add('hidden');
-        document.getElementById('telaRecuperar').classList.add('hidden');
-        document.getElementById(id).classList.remove('hidden');
-    }
-
-    function normalizarTexto(txt) { return txt.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim(); }
-
-    async function executarRecuperacao() {
-        const nome = normalizarTexto(document.getElementById('recNome').value);
-        const bm = document.getElementById('recBM').value.replace(/\D/g, '');
-        const novaSenha = document.getElementById('recNovaPass').value;
-        if(!nome || !bm || !novaSenha) return alert("Preencha todos os campos!");
-        const p = new URLSearchParams();
-        p.append('acao', 'recuperarSenha'); p.append('nome', nome); p.append('bm', bm); p.append('novaSenha', novaSenha);
-        try {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: p });
-            const d = await res.json();
-            if(d.status === "Sucesso") { alert("Senha alterada!"); irPara('telaLogin'); }
-            else alert("Dados incorretos.");
-        } catch (e) { alert("Erro de conexão."); }
-    }
-
-    function alternarCheckboxes(quem) {
-        const cMeu = document.getElementById('chkMeusRegistros'), cTodos = document.getElementById('chkTodosRegistros');
-        if (quem === 'meu' && cMeu.checked) cTodos.checked = false;
-        else if (quem === 'todos' && cTodos.checked) cMeu.checked = false;
-        if (!cMeu.checked && !cTodos.checked) cMeu.checked = true;
+    function updateOnlineStatus() {
+        const bar = document.getElementById('status-bar');
+        bar.className = navigator.onLine ? 'online' : 'offline';
+        bar.innerText = navigator.onLine ? 'Você está Online' : 'Você está Offline';
     }
 
     async function carregarDadosIniciais() {
@@ -221,12 +144,10 @@
             try {
                 const res = await fetch(`${SCRIPT_URL}?acao=getListaAlunos`);
                 const novosDados = await res.json();
-                if (JSON.stringify(novosDados) !== cache) {
-                    ALUNOS = novosDados;
-                    localStorage.setItem('cache_alunos_sobral', JSON.stringify(novosDados));
-                    popularTurmas();
-                }
-            } catch (e) { console.log("Erro ao atualizar alunos"); }
+                ALUNOS = novosDados;
+                localStorage.setItem('cache_alunos_sobral', JSON.stringify(novosDados));
+                popularTurmas();
+            } catch (e) { console.log("Erro offline"); }
         }
     }
 
@@ -234,37 +155,30 @@
         const selects = [document.getElementById('selTurma'), document.getElementById('selTurmaCons')];
         const turmas = Object.keys(ALUNOS).sort();
         selects.forEach(sel => {
-            sel.innerHTML = '<option value="">Selecione a Turma...</option>';
+            sel.innerHTML = '<option value="">Turma...</option>';
             turmas.forEach(t => sel.add(new Option(t, t)));
         });
     }
 
     function atualizarAlunos(idT, idA) {
         const t = document.getElementById(idT).value, s = document.getElementById(idA);
-        s.innerHTML = '<option value="">Selecione o Aluno...</option>';
+        s.innerHTML = '<option value="">Aluno...</option>';
         if(ALUNOS[t]) ALUNOS[t].forEach(al => s.add(new Option(al, al)));
     }
 
     async function executarLogin() {
         const u = document.getElementById('userLogin').value.trim().toLowerCase(), s = document.getElementById('passLogin').value.trim();
-        if(!u || !s) return alert("Preencha usuário e senha.");
         if (navigator.onLine) {
             try {
                 const res = await fetch(`${SCRIPT_URL}?acao=login&usuario=${u}&senha=${s}`);
                 const d = await res.json();
                 if(d.status === "Autorizado") { 
                     localStorage.setItem('diarioAcessoSobral', JSON.stringify(d)); 
-                    localStorage.setItem('ultimoUsuarioSucesso', JSON.stringify({u: u, s: s, dados: d})); 
                     aplicarLogin(d); return;
                 }
             } catch (e) { }
         }
-        const backup = localStorage.getItem('ultimoUsuarioSucesso');
-        if (backup) {
-            const check = JSON.parse(backup);
-            if (u === check.u && s === check.s) { alert("Login validado offline."); aplicarLogin(check.dados); }
-            else alert("Dados incorretos.");
-        } else alert("Sem conexão.");
+        alert("Erro de login ou sem conexão.");
     }
 
     function aplicarLogin(d) {
@@ -275,279 +189,137 @@
         document.getElementById('secaoAcesso').classList.add('hidden');
         document.getElementById('conteudoDiario').classList.remove('hidden');
         document.getElementById('nomeProfLogado').value = profNomeLogado;
-        const selTipo = document.getElementById('selTipoRegistro'), containerTipo = document.getElementById('tipoRegistroContainer');
-        if (cargoPlanilha.includes("PAS")) {
-            selTipo.value = "🧠 Equipe PAS"; selTipo.disabled = false; containerTipo.style.background = "#fff3e0";
-        } else if (cargoPlanilha.includes("PROF. AEE")) {
-            selTipo.value = "📖 Atendimento AEE"; selTipo.disabled = false; containerTipo.style.background = "#f3e5f5";
-        } else if (cargoLogado === "Diretor") {
-            selTipo.value = "📝 Ocorrência Disciplinar"; selTipo.disabled = false; containerTipo.style.background = "#e3f2fd";
-        } else {
-            selTipo.value = "📝 Ocorrência Disciplinar"; selTipo.disabled = true; containerTipo.style.background = "#f8f9fa";
-        }
         ajustarCamposRegistro(); definirDataHoje();
     }
 
     function ajustarCamposRegistro() {
         const tipo = document.getElementById('selTipoRegistro').value;
-        const label = document.getElementById('labelRelato'), boxAdv = document.getElementById('boxAdvertencia');
-        if(tipo === "📝 Ocorrência Disciplinar") { label.innerText = "Relato do Professor:"; boxAdv.classList.remove('hidden'); }
-        else { label.innerText = "Detalhamento:"; boxAdv.classList.add('hidden'); }
+        document.getElementById('boxAdvertencia').style.display = (tipo === "📝 Ocorrência Disciplinar") ? "block" : "none";
     }
 
     async function gravarOcorrencia() {
         const dVal = document.getElementById('dataOcorrenciaManual').value;
-        if(!dVal) return alert("Data!");
-        const dFormat = dVal.split("-").reverse().join("/");
-        const tipo = document.getElementById('selTipoRegistro').value;
-        const salvo = JSON.parse(localStorage.getItem('diarioAcessoSobral'));
-        const cargoPlanilha = String(salvo.cargo).trim().toUpperCase();
-        let rotuloUsuario = cargoPlanilha.includes("PAS") ? "PAS:" : "Prof:";
-        const selT = document.getElementById('selTratativa'), textoTratativa = selT ? selT.value : "";
+        if(!dVal) return alert("Selecione a data.");
         const dados = {
-            acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
-            id: idEditando || Date.now(),
-            professor: `[${tipo}] ${rotuloUsuario} ${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`,
-            dataManual: dFormat, turma: document.getElementById('selTurma').value,
-            aluno: document.getElementById('selAluno').value, texto: document.getElementById('relatoTexto').value,
-            advertencia: document.getElementById('chkAdvertencia').checked ? "SIM" : "NÃO",
-            tratativa: textoTratativa, relatoGestao: document.getElementById('relatoGestaoTexto')?.value || ""
+            acao: 'salvarOcorrencia',
+            id: Date.now(),
+            professor: profNomeLogado,
+            dataManual: dVal.split("-").reverse().join("/"),
+            turma: document.getElementById('selTurma').value,
+            aluno: document.getElementById('selAluno').value,
+            texto: document.getElementById('relatoTexto').value,
+            advertencia: document.getElementById('chkAdvertencia').checked ? "SIM" : "NÃO"
         };
-        if (navigator.onLine) {
-            const p = new URLSearchParams(); for (let k in dados) p.append(k, dados[k]);
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
-            alert("Sucesso!"); limparForm();
-        } else {
-            let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
-            fila.push(dados); localStorage.setItem('filaOfflineSobral', JSON.stringify(fila));
-            alert("Offline: Registro salvo localmente."); limparForm();
-        }
-    }
-
-    async function sincronizarDados() {
-        let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
-        if (fila.length === 0) return;
-        for (let item of fila) {
-            const p = new URLSearchParams(); for (let k in item) p.append(k, item[k]);
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
-        }
-        localStorage.removeItem('filaOfflineSobral'); alert("Dados sincronizados!");
-    }
-
-    async function consultarHistorico() {
-        if (!navigator.onLine) return alert("Apenas online.");
-        const t = document.getElementById('selTurmaCons').value, a = document.getElementById('selAlunoCons').value;
-        if (!t) return alert("Selecione a Turma.");
-        document.getElementById('resConsulta').innerHTML = "Buscando...";
-        try {
-            const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
-            const data = await res.json();
-            exibirDados(data, t, a, document.getElementById('selPeriodoCons').value);
-        } catch (e) { document.getElementById('resConsulta').innerHTML = "Erro."; }
-    }
-
-    function exibirDados(data, t, a, p) {
-        const rDiv = document.getElementById('resConsulta'), vT = document.getElementById('chkTodosRegistros').checked;
-        let filtrados = data.filter(r => {
-            const bateT = r[3] && String(r[3]).trim() === t;
-            const bateA = a ? (r[4] && String(r[4]).trim() === a) : true;
-            return bateT && bateA;
-        });
-        if (p !== "Ano Todo") filtrados = filtrados.filter(r => identificarTrimestre(r[1]) === p);
-        if (!vT) filtrados = filtrados.filter(r => String(r[2]).includes(profNomeLogado.split(" ")[0]));
-        if (filtrados.length === 0) { rDiv.innerHTML = "<p>Nada encontrado.</p>"; return; }
-        
-        let html = `<h3>Histórico: ${a || "Toda a Turma"}</h3>`;
-        let grupos = { "1º Trimestre": [], "2º Trimestre": [], "3º Trimestre": [], "Fora de Período": [] };
-        filtrados.forEach(r => { const tri = identificarTrimestre(r[1]); grupos[tri].push(r); });
-
-        for (let tri in grupos) {
-            if (grupos[tri].length > 0) {
-                html += `<div class="titulo-trimestre">${tri}</div>`;
-                grupos[tri].forEach(r => {
-                    const souG = (cargoLogado === "Diretor");
-                    html += `<div class="item-ocorrencia">
-                        <strong>${r[1]} - ${r[2]}</strong><br>${r[5]}
-                        ${r[7] ? `<br><b>Ação da Gestão:</b> ${r[7]}` : ""}
-                    </div>`;
-                });
-            }
-        }
-        rDiv.innerHTML = html; document.getElementById('btnImp').style.display = "block";
+        const p = new URLSearchParams(); for (let k in dados) p.append(k, dados[k]);
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        alert("Gravado!"); limparForm();
     }
 
     async function gerarAlertaCritico() {
-    if (!navigator.onLine) return alert("Conecte-se à internet para carregar o painel.");
-    
-    const dashboard = document.getElementById('resDashboard');
-    const resAlertaCritico = document.getElementById('resAlertaCritico');
-    
-    // Feedback visual de carregamento
-    resAlertaCritico.innerHTML = "<p>⏳ Processando dados e tratativas...</p>";
-    dashboard.classList.remove('hidden');
+        if (!navigator.onLine) return alert("Apenas online.");
+        const dashboard = document.getElementById('resDashboard');
+        dashboard.classList.remove('hidden');
+        try {
+            const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
+            const data = await res.json();
+            const resTrat = await fetch(`${SCRIPT_URL}?acao=getTratativasAlertas`);
+            const tratativasSalvas = await resTrat.json();
 
-    try {
-        // 1. Busca ocorrências e tratativas simultaneamente
-        const [resDados, resTrat] = await Promise.all([
-            fetch(`${SCRIPT_URL}?acao=getDados`),
-            fetch(`${SCRIPT_URL}?acao=getTratativasAlertas`)
-        ]);
+            let contAlunos = {}, contManha = {}, contTarde = {};
+            const turmasTarde = ["5ºC", "601", "602", "603", "701", "702", "801", "802", "901", "902"];
 
-        const data = await resDados.json();
-        const tratativasSalvas = await resTrat.json();
-
-        if (!Array.isArray(data) || data.length < 2) {
-            resAlertaCritico.innerHTML = "Poucos dados para gerar o painel.";
-            return;
-        }
-
-        let contAlunos = {}, contManha = {}, contTarde = {};
-        const turmasTarde = ["5ºC", "601", "602", "603", "701", "702", "801", "802", "901", "902"];
-
-        // Processamento dos dados
-        for (let i = 1; i < data.length; i++) {
-            const turma = data[i][3], aluno = data[i][4];
-            if (turma) {
-                if (turmasTarde.includes(turma)) {
-                    contTarde[turma] = (contTarde[turma] || 0) + 1;
-                } else {
-                    contManha[turma] = (contManha[turma] || 0) + 1;
+            for (let i = 1; i < data.length; i++) {
+                const turma = data[i][3], aluno = data[i][4];
+                if (turma) {
+                    if (turmasTarde.includes(turma)) contTarde[turma] = (contTarde[turma] || 0) + 1;
+                    else contManha[turma] = (contManha[turma] || 0) + 1;
+                }
+                if (aluno) {
+                    const chave = `${aluno} (${turma})`;
+                    contAlunos[chave] = (contAlunos[chave] || 0) + 1;
                 }
             }
-            if (aluno) {
-                const chave = `${aluno.trim().toUpperCase()} (${turma})`;
-                contAlunos[chave] = (contAlunos[chave] || 0) + 1;
-            }
-        }
 
-        // --- GERAR GRÁFICOS POR TURNO ---
-        const gerarHTMLGrafico = (contagem, titulo) => {
-            const ordenadas = Object.entries(contagem).sort((a,b) => b[1] - a[1]);
-            if (ordenadas.length === 0) return `<p style="font-size:11px;">Sem dados: ${titulo}.</p>`;
-            const max = ordenadas[0][1];
-            let html = `<div style="margin-bottom:10px;"><b style="font-size:12px;">Turno: ${titulo}</b>`;
-            ordenadas.forEach(([t, v]) => {
-                const perc = (v / max) * 100;
-                html += `<div class="chart-row">
-                    <div style="display:flex; justify-content:space-between; font-size:10px;"><span>${t}</span><b>${v}</b></div>
-                    <div class="bar-bg" style="height:6px;"><div class="bar-fill" style="width:${perc}%"></div></div>
-                </div>`;
-            });
-            return html + `</div>`;
-        };
-        document.getElementById('graficoTurmas').innerHTML = gerarHTMLGrafico(contManha, "Manhã") + gerarHTMLGrafico(contTarde, "Tarde");
+            // Gráfico Simplificado
+            const gerarHTMLGrafico = (contagem, titulo) => {
+                const ordenadas = Object.entries(contagem).sort((a,b) => b[1] - a[1]);
+                if (ordenadas.length === 0) return "";
+                let h = `<b style="font-size:12px;">${titulo}</b>`;
+                ordenadas.forEach(([t, v]) => {
+                    h += `<div class="chart-row"><span>${t} (${v})</span><div class="bar-bg"><div class="bar-fill" style="width:${(v/ordenadas[0][1])*100}%"></div></div></div>`;
+                });
+                return h;
+            };
+            document.getElementById('graficoTurmas').innerHTML = gerarHTMLGrafico(contManha, "Manhã") + gerarHTMLGrafico(contTarde, "Tarde");
 
-        // --- TOP 5 ALUNOS ---
-        const topAlunos = Object.entries(contAlunos).sort((a,b) => b[1] - a[1]).slice(0, 5);
-        let htmlTop = '<table style="width:100%; border-collapse:collapse; font-size:12px;">';
-        topAlunos.forEach(([a, v]) => {
-            htmlTop += `<tr style="border-bottom:1px solid #eee;"> <td style="padding:5px;">${a}</td> <td style="padding:5px; text-align:right; font-weight:bold;">${v}</td> </tr>`;
-        });
-        document.getElementById('tabelaTopAlunos').innerHTML = htmlTop + '</table>';
-
-        // --- ALUNOS CRÍTICOS (+10) COM TRATATIVA ---
-        const alertas = Object.entries(contAlunos).filter(item => item[1] >= 10).sort((a,b) => b[1] - a[1]);
-        const eGestor = (cargoLogado === "Diretor");
-        
-        let htmlAlertas = '<table style="width:100%; border-collapse: collapse; font-size: 12px; background: white;">';
-        htmlAlertas += '<tr style="background: #d32f2f; color: white;"> <th style="padding: 8px; text-align:left;">Aluno</th> <th style="padding: 8px;">Total</th> <th style="padding: 8px;">Tratativa</th> </tr>';
-
-        alertas.forEach(([aluno, total]) => {
-            const textoTratativa = tratativasSalvas[aluno] || "";
-            const campoId = `inputTrat_${btoa(unescape(encodeURIComponent(aluno))).replace(/[^a-zA-Z0-9]/g, "")}`;
+            // ALUNOS CRÍTICOS COM DISQUETE E MODO EDIÇÃO
+            const alertas = Object.entries(contAlunos).filter(item => item[1] >= 10).sort((a,b) => b[1] - a[1]);
+            const eGestor = (cargoLogado === "Diretor");
             
-            let colunaTratativa = eGestor ? 
-                `<textarea id="${campoId}" rows="2" style="width:100%; font-size:11px;">${textoTratativa}</textarea>
-                 <button id="btn_${campoId}" onclick="salvarTratativaAlerta('${aluno}', '${campoId}')" style="background:#4caf50; color:white; border:none; padding:5px; width:100%; border-radius:4px; cursor:pointer; margin-top:3px;">Gravar</button>` :
-                `<div style="color:#666; font-style:italic;">${textoTratativa || "Sem registro da gestão."}</div>`;
+            let htmlAlertas = '<table style="width:100%; border-collapse: collapse; font-size: 12px;">';
+            alertas.forEach(([aluno, total]) => {
+                const textoTratativa = tratativasSalvas[aluno] || "Nenhuma ação registrada.";
+                const campoId = `inputTrat_${btoa(unescape(encodeURIComponent(aluno))).replace(/[^a-zA-Z0-9]/g, "")}`;
+                
+                let acaoHTML = "";
+                if (eGestor) {
+                    // Modo visualização com botão de editar (lápis)
+                    acaoHTML = `
+                        <div id="view_${campoId}" class="tratativa-box">
+                            <span id="text_${campoId}">${textoTratativa}</span>
+                            <button class="btn-edit-trat" onclick="habilitarEdicaoTrat('${campoId}')">✏️</button>
+                        </div>
+                        <div id="edit_${campoId}" class="hidden" style="display:flex; align-items:center;">
+                            <textarea id="field_${campoId}" rows="2" style="flex:1; margin:0;">${textoTratativa === "Nenhuma ação registrada." ? "" : textoTratativa}</textarea>
+                            <button class="btn-save-disquete" onclick="salvarTratativaAlerta('${aluno}', '${campoId}')">💾</button>
+                        </div>`;
+                } else {
+                    acaoHTML = `<div class="tratativa-box">${textoTratativa}</div>`;
+                }
 
-            htmlAlertas += `<tr style="border-bottom: 1px solid #ddd;"> 
-                <td style="padding: 8px; font-weight:bold;">${aluno}</td> 
-                <td style="padding: 8px; text-align: center; color:red; font-weight:bold;">${total}</td> 
-                <td style="padding: 8px;">${colunaTratativa}</td> 
-            </tr>`;
+                htmlAlertas += `<tr style="border-bottom: 1px solid #ddd;"> 
+                    <td style="padding: 8px;"><b>${aluno}</b><br><span style="color:red">${total} ocorrências</span></td> 
+                    <td style="padding: 8px;">${acaoHTML}</td> 
+                </tr>`;
+            });
+            document.getElementById('resAlertaCritico').innerHTML = htmlAlertas + '</table>';
+        } catch (e) { alert("Erro ao carregar."); }
+    }
+
+    function habilitarEdicaoTrat(id) {
+        document.getElementById('view_' + id).classList.add('hidden');
+        document.getElementById('edit_' + id).classList.remove('hidden');
+    }
+
+    async function salvarTratativaAlerta(aluno, id) {
+        const texto = document.getElementById('field_' + id).value;
+        if (!texto) return alert("Digite algo.");
+
+        const p = new URLSearchParams();
+        p.append('acao', 'salvarTratativaAlerta');
+        p.append('alunoTurma', aluno);
+        p.append('texto', texto);
+        p.append('responsavel', profNomeLogado);
+
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+            // Atualiza o visual sem recarregar tudo
+            document.getElementById('text_' + id).innerText = texto;
+            document.getElementById('view_' + id).classList.remove('hidden');
+            document.getElementById('edit_' + id).classList.add('hidden');
+            alert("Salvo com sucesso!");
+        } catch (e) { alert("Erro ao salvar."); }
+    }
+
+    function tab(n) {
+        [1,2,3].forEach(i => {
+            document.getElementById('aba'+i).classList.toggle('hidden', i !== n);
+            document.getElementById('t'+i).classList.toggle('active', i === n);
         });
-
-        resAlertaCritico.innerHTML = alertas.length > 0 ? htmlAlertas + '</table>' : "<p>Nenhum aluno atingiu o limite crítico.</p>";
-
-    } catch (e) {
-        console.error(e);
-        resAlertaCritico.innerHTML = "Erro ao carregar o painel. Verifique a conexão.";
     }
-}
-
-    async function salvarTratativaAlerta(alunoTurma, campoId) {
-    if (cargoLogado !== "Diretor") return alert("Acesso negado.");
-    
-    const texto = document.getElementById(campoId).value;
-    if (!texto) return alert("Por favor, digite a tratativa.");
-
-    const btn = document.getElementById(`btn_${campoId}`);
-    const originalText = btn.innerText;
-    
-    btn.innerText = "⏳ Gravando...";
-    btn.disabled = true;
-
-    const p = new URLSearchParams();
-    p.append('acao', 'salvarTratativaAlerta');
-    p.append('alunoTurma', alunoTurma);
-    p.append('texto', texto);
-    p.append('responsavel', profNomeLogado);
-
-    try {
-        // Envia para o Google Apps Script
-        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
-        
-        alert("Tratativa gravada com sucesso!");
-        btn.innerText = "✅ Gravado";
-        btn.style.background = "#2e7d32";
-        
-        // Reabilita após 3 segundos
-        setTimeout(() => {
-            btn.innerText = "Gravar";
-            btn.style.background = "#4caf50";
-            btn.disabled = false;
-        }, 3000);
-        
-    } catch (e) {
-        alert("Erro ao conectar com o servidor.");
-        btn.innerText = originalText;
-        btn.disabled = false;
-    }
-}
-
-    function tab(n) { 
-        document.getElementById('aba1').classList.toggle('hidden', n !== 1); 
-        document.getElementById('aba2').classList.toggle('hidden', n !== 2); 
-        document.getElementById('aba3').classList.toggle('hidden', n !== 3); 
-        document.getElementById('t1').classList.toggle('active', n === 1); 
-        document.getElementById('t2').classList.toggle('active', n === 2); 
-        document.getElementById('t3').classList.toggle('active', n === 3); 
-        if(n !== 1) limparForm(); 
-    }
-
     function definirDataHoje() { document.getElementById('dataOcorrenciaManual').value = new Date().toISOString().split('T')[0]; }
+    function limparForm() { document.getElementById('relatoTexto').value = ""; }
     function logout() { localStorage.removeItem('diarioAcessoSobral'); location.reload(); }
-    function toggleAjuda() { document.getElementById('caixaAjuda').classList.toggle('hidden'); }
-    
-    async function enviarWhatsApp() {
-        const duvida = document.getElementById('textoDuvida').value;
-        if(!duvida) return alert("Descreva sua dúvida.");
-        const msg = `*Suporte EMSP*\n*Nome:* ${profNomeLogado}\n*Dúvida:* ${duvida}`;
-        window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank');
-    }
 </script>
-
-<button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas?</button>
-<div id="caixaAjuda" class="modal-ajuda hidden">
-    <h3>Suporte EMSP</h3>
-    <textarea id="textoDuvida" rows="4" placeholder="Sua dúvida..."></textarea>
-    <button class="btn-main" style="background:#25d366; margin-top:10px;" onclick="enviarWhatsApp()">WhatsApp</button>
-</div>
-
 </body>
 </html>
-
-
-
-
