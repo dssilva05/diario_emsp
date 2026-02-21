@@ -494,19 +494,17 @@
     async function apagarRegistro(id) { if (!confirm("Excluir definitivamente?")) return; const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id); await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p }); consultarHistorico(); }
     async function enviarWhatsApp() {
     const duvida = document.getElementById('textoDuvida').value;
-    if(!duvida) return alert("Por favor, descreva sua dúvida ou sugestão.");
+    if(!duvida) return alert("Por favor, descreva sua dúvida.");
 
-    // Captura o nome do professor logado. Se não houver, usa "Não identificado"
+    // Captura o nome do professor logado através da variável global do sistema
+    // Caso não esteja logado por algum motivo, aparecerá "Não identificado"
     const nomeProfessor = profNomeLogado || "Não identificado";
     
-    // Monta a mensagem estruturada
-    const msg = `*Suporte Diário de Bordo*\n` +
-                `*Escola:* ${NOME_ESCOLA}\n` +
-                `*Professor(a):* ${nomeProfessor}\n` +
-                `*Dúvida/Sugestão:* ${duvida}`;
+    // Monta a mensagem com a estrutura que você solicitou
+    const msg = `*Suporte EMSP*\n*Nome:* ${nomeProfessor}\n*Dúvida:* ${duvida}`;
 
-    const url = `https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`;
-    window.open(url, '_blank');
+    // Abre o WhatsApp com a mensagem formatada
+    window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank');
 }
 </script>
 
@@ -519,6 +517,7 @@
 
 </body>
 </html>
+
 
 
 
