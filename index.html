@@ -199,14 +199,20 @@
     window.onload = function() {
     updateOnlineStatus();
     
-    // Primeiro: Carrega os alunos na memória (ALUNOS)
-    carregarDadosIniciais(); 
-    
-    // Segundo: Se já estiver logado, mostra o sistema e popula as turmas
+    // 1. Tenta carregar os alunos do cache imediatamente
+    const cache = localStorage.getItem('cache_alunos_sobral');
+    if (cache) {
+        ALUNOS = JSON.parse(cache);
+    }
+
+    // 2. Se já estiver logado, entra no sistema
     const salvo = localStorage.getItem('diarioAcessoSobral');
     if (salvo) {
         aplicarLogin(JSON.parse(salvo));
     }
+    
+    // 3. Atualiza a lista do servidor em segundo plano
+    carregarDadosIniciais();
 };
 
     // --- FUNÇÕES DE ACESSO (ORIGINAIS) ---
@@ -276,13 +282,20 @@
 }
 
     function popularTurmas() {
-    const selects = [document.getElementById('selTurma'), document.getElementById('selTurmaCons')];
+    // IDs dos selects que precisam receber as turmas
+    const ids = ['selTurma', 'selTurmaCons'];
     const turmas = Object.keys(ALUNOS).sort();
-    
-    selects.forEach(sel => {
+
+    ids.forEach(id => {
+        const sel = document.getElementById(id);
         if (sel) {
             sel.innerHTML = '<option value="">Selecione a Turma...</option>';
-            turmas.forEach(t => sel.add(new Option(t, t)));
+            turmas.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                opt.textContent = t;
+                sel.appendChild(opt);
+            });
         }
     });
 }
@@ -484,6 +497,7 @@ function definirDataHoje() {
 
 </body>
 </html>
+
 
 
 
