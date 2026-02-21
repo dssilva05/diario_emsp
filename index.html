@@ -136,6 +136,9 @@
 </div>
 
 <script>
+
+    const NOME_ESCOLA = "E. M. Sobral Pinto"; // Altere aqui para o nome da outra escola no outro site
+    
     // --- LÓGICA DE LIMPEZA E MONITORAMENTO DE REDE ---
     if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -144,6 +147,7 @@
             .catch(err => console.log('Erro ao registrar:', err));
     });
 }
+    
 
     function updateOnlineStatus() {
         const bar = document.getElementById('status-bar');
@@ -488,7 +492,22 @@
     function logout() { localStorage.removeItem('diarioAcessoSobral'); location.reload(); }
     function toggleAjuda() { document.getElementById('caixaAjuda').classList.toggle('hidden'); }
     async function apagarRegistro(id) { if (!confirm("Excluir definitivamente?")) return; const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id); await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p }); consultarHistorico(); }
-    async function enviarWhatsApp() { const msg = `*Suporte EMSP*\n*Dúvida:* ${document.getElementById('textoDuvida').value}`; window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank'); }
+    async function enviarWhatsApp() {
+    const duvida = document.getElementById('textoDuvida').value;
+    if(!duvida) return alert("Por favor, descreva sua dúvida ou sugestão.");
+
+    // Captura o nome do professor logado. Se não houver, usa "Não identificado"
+    const nomeProfessor = profNomeLogado || "Não identificado";
+    
+    // Monta a mensagem estruturada
+    const msg = `*Suporte Diário de Bordo*\n` +
+                `*Escola:* ${NOME_ESCOLA}\n` +
+                `*Professor(a):* ${nomeProfessor}\n` +
+                `*Dúvida/Sugestão:* ${duvida}`;
+
+    const url = `https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+}
 </script>
 
 <button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas ou sugestões?</button>
@@ -500,6 +519,7 @@
 
 </body>
 </html>
+
 
 
 
