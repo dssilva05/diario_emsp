@@ -233,27 +233,34 @@
     }
 
     async function carregarDadosIniciais() {
-    // 1. Tenta carregar do cache local imediatamente para uso offline
+    const selTurma = document.getElementById('selTurma');
+    
+    // 1. Tenta carregar do cache local imediatamente
     const cache = localStorage.getItem('cache_alunos_sobral');
     if (cache) {
         ALUNOS = JSON.parse(cache);
-        popularTurmas(); // Preenche os campos se já houver algo guardado
+        popularTurmas();
     }
 
-    // 2. Se houver internet, busca a lista ATUALIZADA do servidor
+    // 2. Busca do servidor
     if (navigator.onLine) {
         try {
             const res = await fetch(`${SCRIPT_URL}?acao=getListaAlunos`);
             const novosDados = await res.json();
             
-            // Só atualiza se os dados forem diferentes do cache
-            if (JSON.stringify(novosDados) !== cache) {
-                ALUNOS = novosDados;
-                localStorage.setItem('cache_alunos_sobral', JSON.stringify(novosDados));
-                popularTurmas(); // Recarrega as turmas com os dados novos do servidor
+            // Verifica se o servidor retornou um erro (como aba não encontrada)
+            if (novosDados.erro) {
+                console.error("Erro no Apps Script:", novosDados.erro);
+                if(selTurma) selTurma.innerHTML = '<option>Erro ao carregar alunos</option>';
+                return;
             }
+
+            ALUNOS = novosDados;
+            localStorage.setItem('cache_alunos_sobral', JSON.stringify(novosDados));
+            popularTurmas();
         } catch (e) {
-            console.log("Erro ao buscar dados do servidor:", e);
+            console.error("Falha na rede:", e);
+            if(selTurma) selTurma.innerHTML = '<option>Erro de conexão</option>';
         }
     }
 }
@@ -286,13 +293,15 @@ function aplicarLogin(d) {
 }
 
     function popularTurmas() {
-    // IDs dos selects que precisam receber as turmas
     const ids = ['selTurma', 'selTurmaCons'];
     const turmas = Object.keys(ALUNOS).sort();
+
+    if (turmas.length === 0) return;
 
     ids.forEach(id => {
         const sel = document.getElementById(id);
         if (sel) {
+            // Limpa o "Carregando..." e adiciona as turmas
             sel.innerHTML = '<option value="">Selecione a Turma...</option>';
             turmas.forEach(t => {
                 const opt = document.createElement('option');
@@ -501,6 +510,7 @@ function definirDataHoje() {
 
 </body>
 </html>
+
 
 
 
