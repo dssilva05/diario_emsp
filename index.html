@@ -502,41 +502,56 @@
     }
 
     async function gerarAlertaCritico() {
-    if (!navigator.onLine) return alert("Esta função requer conexão com a internet.");
+    if (!navigator.onLine) return alert("Esta função requer conexão com a internet para ler a base de dados completa.");
     const resDiv = document.getElementById('resAlertaCritico');
-    resDiv.innerHTML = "Processando dados...";
+    resDiv.innerHTML = "<p>🔍 Analisando histórico completo... por favor, aguarde.</p>";
 
     try {
         const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
         const data = await res.json();
         
         let contagem = {};
-        // r[4] é o nome do aluno, r[3] é a turma
+
         data.forEach(r => {
-            const chave = `${r[4]} (${r[3]})`;
-            contagem[chave] = (contagem[chave] || 0) + 1;
+            // r[4] é o nome do aluno, r[3] é a turma
+            if (r[4] && r[3]) {
+                const nomeLimpo = String(r[4]).trim().toUpperCase();
+                const turmaLimpa = String(r[3]).trim().toUpperCase();
+                const chave = `${nomeLimpo} | Turma: ${turmaLimpa}`;
+                
+                contagem[chave] = (contagem[chave] || 0) + 1;
+            }
         });
 
-        let html = '<table style="width:100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">';
-        html += '<tr style="background: var(--blue); color: white;"> <th style="padding: 10px;">Aluno/Turma</th> <th style="padding: 10px;">Total</th> </tr>';
+        let html = '<table style="width:100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">';
+        html += '<tr style="background: var(--blue); color: white;"> <th style="padding: 12px; text-align: left;">Aluno e Turma</th> <th style="padding: 12px; text-align: center;">Total de Ocorrências</th> </tr>';
 
         let encontrou = false;
-        for (let aluno in contagem) {
-            if (contagem[aluno] >= 10) {
+        // Ordenar do maior para o menor número de ocorrências
+        const listaOrdenada = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
+
+        for (const [aluno, total] of listaOrdenada) {
+            if (total >= 10) {
                 encontrou = true;
-                html += `<tr style="border-bottom: 1px solid #ddd;">
-                            <td style="padding: 10px;">${aluno}</td>
-                            <td style="padding: 10px; text-align: center; color: red; font-weight: bold;">${contagem[aluno]}</td>
+                html += `<tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 12px; font-size: 14px;">${aluno}</td>
+                            <td style="padding: 12px; text-align: center; color: #d32f2f; font-weight: bold; font-size: 16px; background: #fff5f5;">${total}</td>
                          </tr>`;
             }
         }
 
         if (!encontrou) {
-            resDiv.innerHTML = "<p>Nenhum aluno atingiu o limite de 10 ocorrências.</p>";
+            resDiv.innerHTML = `
+                <div style="padding: 20px; background: #e8f5e9; border-radius: 8px; color: #2e7d32; text-align: center;">
+                    ✅ <strong>Tudo em ordem!</strong><br>Nenhum aluno possui 10 ou mais ocorrências no momento.
+                </div>`;
         } else {
             resDiv.innerHTML = html + '</table>';
         }
-    } catch (e) { resDiv.innerHTML = "Erro ao carregar dados."; }
+    } catch (e) { 
+        console.error(e);
+        resDiv.innerHTML = "<p style='color:red;'>❌ Erro ao processar os dados. Verifique sua conexão.</p>"; 
+    }
 }
 
 // Atualize sua função tab(n) para suportar a aba 3
@@ -580,6 +595,7 @@ function tab(n) {
 
 </body>
 </html>
+
 
 
 
