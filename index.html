@@ -19,26 +19,29 @@
         .escola-txt { text-align: center; flex-grow: 1; padding: 0 15px; }
         .escola-txt h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
         .escola-txt p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; line-height: 1.4; }
+        
         .container { max-width: 650px; margin: 20px auto; padding: 15px; }
         .tabs { display: flex; background: rgba(255,255,255,0.2); border-radius: 12px 12px 0 0; backdrop-filter: blur(10px); padding: 5px 5px 0; }
         .tab-btn { flex: 1; padding: 12px; border: none; background: none; color: white; cursor: pointer; font-weight: bold; border-radius: 8px 8px 0 0; }
         .tab-btn.active { background: var(--glass); color: var(--blue); }
         .card { background: var(--glass); padding: 25px; border-radius: 0 0 12px 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .hidden { display: none !important; }
+
         label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
         input, select, textarea, .btn-main { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
         .btn-main { background: var(--blue); color: white; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; }
         
-        /* ESTILOS DO DASHBOARD (ESTILO ANTERIOR VOLTANDO) */
         .chart-row { margin-bottom: 10px; }
         .bar-bg { background: #eee; border-radius: 5px; height: 12px; overflow: hidden; margin-top: 4px; }
         .bar-fill { background: var(--blue); height: 100%; transition: width 0.5s; }
         .dashboard-title { font-size: 14px; font-weight: bold; color: var(--blue); border-left: 4px solid var(--gold); padding-left: 8px; margin: 20px 0 10px; }
         
-        /* TRATATIVA VISUAL */
         .tratativa-box { background: #f9f9f9; border: 1px solid #ddd; padding: 8px; border-radius: 6px; font-size: 12px; color: #444; position: relative; min-height: 40px; }
         .btn-edit-trat { position: absolute; top: 5px; right: 5px; background: none; border: none; cursor: pointer; font-size: 14px; }
         .btn-save-disquete { background: none; border: none; cursor: pointer; font-size: 20px; color: #4caf50; padding: 0 5px; vertical-align: middle; }
+        
+        .titulo-trimestre { background: var(--gold); color: #000; padding: 8px 15px; margin-top: 25px; border-radius: 6px; font-weight: bold; border-left: 10px solid var(--blue); }
+        .item-ocorrencia { background: white; padding: 15px; border-left: 5px solid var(--blue); margin-top: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
     </style>
 </head>
 <body>
@@ -54,7 +57,7 @@
 </header>
 
 <div id="secaoAcesso" class="auth-wrapper">
-    <div id="telaLogin" class="box-auth">
+    <div id="telaLogin" class="box-auth" style="background:white; padding:30px; border-radius:12px; max-width:350px; margin: 40px auto; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
         <h2 style="color:var(--blue)">🔒 Login</h2>
         <input type="text" id="userLogin" placeholder="Usuário">
         <input type="password" id="passLogin" placeholder="Senha">
@@ -88,6 +91,9 @@
             <label>Aluno:</label><select id="selAluno"></select>
             <div id="boxAdvertencia"><label style="display: flex; align-items: center; cursor: pointer; background: #fff3cd; padding: 10px; border-radius: 8px; margin-top: 15px;"><input type="checkbox" id="chkAdvertencia" style="width: auto; margin-right: 10px;">Advertência por Escrito?</label></div>
             <label id="labelRelato">Relato:</label><textarea id="relatoTexto" rows="5"></textarea>
+            
+            <div id="containerTratativa"></div>
+
             <button class="btn-main" id="btnGravar" onclick="gravarOcorrencia()">Gravar no Diário</button>
         </div>
 
@@ -116,7 +122,7 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlVbz3C-bdKUbRvuWx4SrL9eiFdmyRwwZwUYVhi9u8u2df9NSgNRNjsYx7gD5q1qef7g/exec"; 
     let ALUNOS = {};
-    let cargoLogado = "", profNomeLogado = "";
+    let cargoLogado = "", profNomeLogado = "", disciplinaLogada = "", idEditando = null;
 
     window.onload = function() {
         updateOnlineStatus();
@@ -168,11 +174,103 @@
 
     function aplicarLogin(d) {
         profNomeLogado = d.nome;
+        disciplinaLogada = d.disciplina;
         cargoLogado = String(d.cargo).trim().toUpperCase().includes("DIRETOR") ? "Diretor" : "Professor";
         document.getElementById('secaoAcesso').classList.add('hidden');
         document.getElementById('conteudoDiario').classList.remove('hidden');
         document.getElementById('nomeProfLogado').value = profNomeLogado;
         definirDataHoje();
+    }
+
+    function ajustarCamposRegistro() {
+        const tipo = document.getElementById('selTipoRegistro').value;
+        document.getElementById('boxAdvertencia').style.display = (tipo === "📝 Ocorrência Disciplinar") ? "block" : "none";
+    }
+
+    async function gravarOcorrencia() {
+        const dVal = document.getElementById('dataOcorrenciaManual').value;
+        if(!dVal) return alert("Selecione a data.");
+        
+        const dados = {
+            acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
+            id: idEditando || Date.now(),
+            professor: profNomeLogado + (idEditando ? "" : ` (${disciplinaLogada})`),
+            dataManual: dVal.split("-").reverse().join("/"),
+            turma: document.getElementById('selTurma').value,
+            aluno: document.getElementById('selAluno').value,
+            texto: document.getElementById('relatoTexto').value,
+            advertencia: document.getElementById('chkAdvertencia').checked ? "SIM" : "NÃO",
+            tratativa: document.getElementById('selTratativa')?.value || "",
+            relatoGestao: document.getElementById('relatoGestaoTexto')?.value || ""
+        };
+
+        const p = new URLSearchParams(); for (let k in dados) p.append(k, dados[k]);
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        alert(idEditando ? "Alterado!" : "Gravado!");
+        limparForm();
+    }
+
+    async function consultarHistorico() {
+        if (!navigator.onLine) return alert("Apenas online.");
+        const t = document.getElementById('selTurmaCons').value, a = document.getElementById('selAlunoCons').value;
+        if (!t) return alert("Selecione a Turma.");
+        document.getElementById('resConsulta').innerHTML = "Buscando...";
+        try {
+            const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
+            const data = await res.json();
+            exibirDados(data, t, a);
+        } catch (e) { document.getElementById('resConsulta').innerHTML = "Erro."; }
+    }
+
+    function exibirDados(data, t, a) {
+        const rDiv = document.getElementById('resConsulta');
+        let filtrados = data.filter(r => r[3] === t && (a === "" || r[4] === a));
+        if (filtrados.length === 0) { rDiv.innerHTML = "Nada encontrado."; return; }
+        
+        let html = "";
+        filtrados.forEach(r => {
+            const souDono = String(r[2]).includes(profNomeLogado.split(" ")[0]);
+            const souGestor = (cargoLogado === "Diretor");
+            
+            html += `<div class="item-ocorrencia">
+                <div style="float:right">
+                    ${(souDono || souGestor) ? `<button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', false)" style="background:orange;color:white;border:none;padding:4px;border-radius:4px;cursor:pointer">Editar</button>` : ""}
+                    ${souGestor ? `<button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', true)" style="background:blue;color:white;border:none;padding:4px;border-radius:4px;cursor:pointer">Tratar</button>
+                                   <button onclick="apagarRegistro('${r[0]}')" style="background:red;color:white;border:none;padding:4px;border-radius:4px;cursor:pointer">X</button>` : ""}
+                </div>
+                <b>${r[1]} - ${r[2]}</b><br>${r[5]}
+                ${r[7] ? `<div style="background:#f0f7ff;padding:5px;border-left:3px solid blue;margin-top:5px"><b>Gestão:</b> ${r[7]}</div>` : ""}
+            </div>`;
+        });
+        rDiv.innerHTML = html;
+    }
+
+    function carregarParaEdicao(id, data, turma, aluno, texto, tratativa, relatoGestao, focarTratativa) {
+        idEditando = id;
+        tab(1);
+        const p = data.split('/');
+        document.getElementById('dataOcorrenciaManual').value = `${p[2]}-${p[1]}-${p[0]}`;
+        document.getElementById('selTurma').value = turma;
+        atualizarAlunos('selTurma', 'selAluno');
+        setTimeout(() => document.getElementById('selAluno').value = aluno, 200);
+        document.getElementById('relatoTexto').value = texto;
+
+        if (cargoLogado === "Diretor") {
+            document.getElementById('containerTratativa').innerHTML = `
+                <div style="background:#f0f7ff; padding:15px; border-radius:8px; border:1px solid #0d47a1; margin-top:10px;">
+                    <label>Ação da Gestão:</label>
+                    <select id="selTratativa">
+                        <option value="">Selecione...</option>
+                        <option value="Conversa com o Aluno">Conversa com o Aluno</option>
+                        <option value="Família Convocada">Família Convocada</option>
+                        <option value="Advertência Verbal">Advertência Verbal</option>
+                    </select>
+                    <label>Relato Interno:</label>
+                    <textarea id="relatoGestaoTexto" rows="2">${relatoGestao}</textarea>
+                </div>`;
+            if(focarTratativa) setTimeout(() => document.getElementById('selTratativa').focus(), 500);
+        }
+        document.getElementById('btnGravar').innerText = "💾 Salvar Alteração";
     }
 
     async function gerarAlertaCritico() {
@@ -199,7 +297,6 @@
                 if (a) { const c = `${a} (${t})`; contAlunos[c] = (contAlunos[c] || 0) + 1; }
             }
 
-            // VOLTANDO AO GRÁFICO DE BARRAS HORIZONTAIS COM FUNDO CINZA
             const gerarHTMLGrafico = (contagem, titulo) => {
                 const ordenadas = Object.entries(contagem).sort((a,b) => b[1] - a[1]);
                 if (ordenadas.length === 0) return "";
@@ -216,13 +313,11 @@
             };
             document.getElementById('graficoTurmas').innerHTML = gerarHTMLGrafico(contManha, "Manhã") + gerarHTMLGrafico(contTarde, "Tarde");
 
-            // TOP 5 ALUNOS
             const topAlunos = Object.entries(contAlunos).sort((a,b) => b[1] - a[1]).slice(0, 5);
             let hTop = '<table style="width:100%; font-size:12px; border-collapse:collapse; background:white;">';
             topAlunos.forEach(([a,v]) => hTop += `<tr style="border-bottom:1px solid #eee"><td style="padding:5px">${a}</td><td style="text-align:right; padding:5px"><b>${v}</b></td></tr>`);
             document.getElementById('tabelaTopAlunos').innerHTML = hTop + '</table>';
 
-            // ALERTAS +10 COM DISQUETE E EDIÇÃO
             const alertas = Object.entries(contAlunos).filter(it => it[1] >= 10).sort((a,b) => b[1] - a[1]);
             let hAlert = '<table style="width:100%; border-collapse:collapse; font-size:12px;">';
             alertas.forEach(([aluno, total]) => {
@@ -262,14 +357,28 @@
         alert("Salvo!");
     }
 
+    async function apagarRegistro(id) {
+        if (!confirm("Excluir definitivamente?")) return;
+        const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id);
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        consultarHistorico();
+    }
+
     function tab(n) {
         [1,2,3].forEach(i => {
             document.getElementById('aba'+i).classList.toggle('hidden', i !== n);
             document.getElementById('t'+i).classList.toggle('active', i === n);
         });
+        if(n === 1 && !idEditando) limparForm();
     }
     function definirDataHoje() { document.getElementById('dataOcorrenciaManual').value = new Date().toISOString().split('T')[0]; }
-    function gravarOcorrencia() { /* ... Lógica de gravação já existente no seu código ... */ }
+    function limparForm() { 
+        idEditando = null;
+        document.getElementById('relatoTexto').value = ""; 
+        document.getElementById('btnGravar').innerText = "Gravar no Diário";
+        document.getElementById('btnGravar').style.background = "var(--blue)";
+        document.getElementById('containerTratativa').innerHTML = "";
+    }
     function logout() { localStorage.removeItem('diarioAcessoSobral'); location.reload(); }
 </script>
 </body>
