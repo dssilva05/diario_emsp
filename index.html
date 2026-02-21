@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0d47a1">
     <title>Diário de Bordo - E. M. Sobral Pinto</title>
+    <link rel="manifest" href="manifest.json">
     <style>
         :root { --blue: #0d47a1; --gold: #ffd600; --glass: rgba(255, 255, 255, 0.95); }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80') center/cover fixed; min-height: 100vh; }
@@ -137,8 +138,11 @@
 <script>
     // --- LÓGICA DE LIMPEZA E MONITORAMENTO DE REDE ---
     if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js') // Certifique-se que o nome do arquivo no GitHub seja sw.js
-    .then(() => console.log("Service Worker Registrado"));
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registrado!', reg))
+            .catch(err => console.log('Erro ao registrar:', err));
+    });
 }
 
     function updateOnlineStatus() {
@@ -496,6 +500,7 @@
 
 </body>
 </html>
+
 
 
 
