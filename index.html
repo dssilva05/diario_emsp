@@ -377,62 +377,93 @@
     }
 
     async function gerarAlertaCritico() {
-        if (!navigator.onLine) return alert("Conecte-se à internet.");
-        const dashboard = document.getElementById('resDashboard');
-        dashboard.classList.add('hidden');
+    if (!navigator.onLine) return alert("Conecte-se à internet para processar os alertas.");
+    const dashboard = document.getElementById('resDashboard');
+    dashboard.classList.add('hidden');
+    
+    try {
+        const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
+        const data = await res.json();
         
-        try {
-            const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
-            const data = await res.json();
-            if (!Array.isArray(data) || data.length < 2) return alert("Poucos dados para gerar o painel.");
+        // Busca as tratativas já registradas
+        const resTrat = await fetch(`${SCRIPT_URL}?acao=getTratativasAlertas`);
+        const tratativasSalvas = await resTrat.json();
 
-            let contAlunos = {}, contTurmas = {};
+        if (!Array.isArray(data) || data.length < 2) return alert("Dados insuficientes.");
 
-            // Pula cabeçalho
-            for (let i = 1; i < data.length; i++) {
-                const turma = data[i][3], aluno = data[i][4];
-                if (turma) contTurmas[turma] = (contTurmas[turma] || 0) + 1;
-                if (aluno) {
-                    const chave = `${aluno} (${turma})`;
-                    contAlunos[chave] = (contAlunos[chave] || 0) + 1;
+        let contAlunos = {}, contManha = {}, contTarde = {};
+        const turmasTarde = ["5ºC", "601", "602", "603", "701", "702", "801", "802", "901", "902"];
+
+        for (let i = 1; i < data.length; i++) {
+            const turma = data[i][3], aluno = data[i][4];
+            if (turma) {
+                if (turmasTarde.includes(turma)) {
+                    contTarde[turma] = (contTarde[turma] || 0) + 1;
+                } else {
+                    contManha[turma] = (contManha[turma] || 0) + 1;
                 }
             }
+            if (aluno) {
+                const chave = `${aluno} (${turma})`;
+                contAlunos[chave] = (contAlunos[chave] || 0) + 1;
+            }
+        }
 
-            // 1. GERAR GRÁFICO DE TURMAS
-            const turmasOrdenadas = Object.entries(contTurmas).sort((a,b) => b[1] - a[1]);
-            const maxTurma = turmasOrdenadas[0][1];
-            let htmlGrafico = "";
-            turmasOrdenadas.forEach(([t, v]) => {
-                const perc = (v / maxTurma) * 100;
-                htmlGrafico += `<div class="chart-row">
-                    <div style="display:flex; justify-content:space-between; font-size:12px;"><span>${t}</span><b>${v} ocor.</b></div>
-                    <div class="bar-bg"><div class="bar-fill" style="width:${perc}%"></div></div>
+        // Função auxiliar para gerar HTML do gráfico
+        const gerarHTMLGrafico = (contagem, titulo) => {
+            const ordenadas = Object.entries(contagem).sort((a,b) => b[1] - a[1]);
+            if (ordenadas.length === 0) return `<p style="font-size:12px; color:#666;">Sem dados para o turno da ${titulo}.</p>`;
+            const max = ordenadas[0][1];
+            let html = `<div style="margin-bottom:15px;"><b style="font-size:13px; color:#555;">Turno: ${titulo}</b>`;
+            ordenadas.forEach(([t, v]) => {
+                const perc = (v / max) * 100;
+                html += `<div class="chart-row">
+                    <div style="display:flex; justify-content:space-between; font-size:11px;"><span>${t}</span><b>${v}</b></div>
+                    <div class="bar-bg" style="height:8px;"><div class="bar-fill" style="width:${perc}%"></div></div>
                 </div>`;
             });
-            document.getElementById('graficoTurmas').innerHTML = htmlGrafico;
+            return html + `</div>`;
+        };
 
-            // 2. GERAR TABELA TOP 5 ALUNOS
-            const topAlunos = Object.entries(contAlunos).sort((a,b) => b[1] - a[1]).slice(0, 5);
-            let htmlTop = '<table style="width:100%; border-collapse:collapse; background:white; font-size:13px; border-radius:8px; overflow:hidden;">';
-            htmlTop += '<tr style="background:#eee;"> <th style="padding:8px; text-align:left;">Aluno</th> <th style="padding:8px;">Total</th> </tr>';
-            topAlunos.forEach(([a, v]) => {
-                htmlTop += `<tr style="border-bottom:1px solid #eee;"> <td style="padding:8px;">${a}</td> <td style="padding:8px; text-align:center; font-weight:bold;">${v}</td> </tr>`;
-            });
-            document.getElementById('tabelaTopAlunos').innerHTML = htmlTop + '</table>';
+        document.getElementById('graficoTurmas').innerHTML = 
+            gerarHTMLGrafico(contManha, "Manhã") + gerarHTMLGrafico(contTarde, "Tarde");
 
-            // 3. ALERTAS (+10)
-            const alertas = Object.entries(contAlunos).filter(item => item[1] >= 10).sort((a,b) => b[1] - a[1]);
-            let htmlAlertas = alertas.length > 0 ? 
-                '<table style="width:100%; border-collapse:collapse; background:#fffafa;">' : '<p>Nenhum aluno no limite crítico.</p>';
-            alertas.forEach(([a, v]) => {
-                htmlAlertas += `<tr style="border-bottom:1px solid #ddd;"> <td style="padding:8px;">${a}</td> <td style="padding:8px; text-align:center; color:red; font-weight:bold;">${v}</td> </tr>`;
-            });
-            document.getElementById('resAlertaCritico').innerHTML = htmlAlertas + (alertas.length > 0 ? '</table>' : '');
+        // Top 5 Alunos
+        const topAlunos = Object.entries(contAlunos).sort((a,b) => b[1] - a[1]).slice(0, 5);
+        let htmlTop = '<table style="width:100%; border-collapse:collapse; font-size:12px;">';
+        topAlunos.forEach(([a, v]) => {
+            htmlTop += `<tr style="border-bottom:1px solid #eee;"> <td style="padding:5px;">${a}</td> <td style="padding:5px; text-align:right; font-weight:bold;">${v}</td> </tr>`;
+        });
+        document.getElementById('tabelaTopAlunos').innerHTML = htmlTop + '</table>';
 
-            dashboard.classList.remove('hidden');
+        // Alunos Críticos com TRATATIVA
+        const alertas = Object.entries(contAlunos).filter(item => item[1] >= 10).sort((a,b) => b[1] - a[1]);
+        const eGestor = (cargoLogado === "Diretor");
+        
+        let htmlAlertas = '<table style="width:100%; border-collapse: collapse; font-size: 12px; background: white;">';
+        htmlAlertas += '<tr style="background: #d32f2f; color: white;"> <th style="padding: 8px; text-align:left;">Aluno</th> <th style="padding: 8px;">Total</th> <th style="padding: 8px;">Tratativa da Gestão</th> </tr>';
 
-        } catch (e) { alert("Erro ao carregar dashboard."); }
-    }
+        alertas.forEach(([aluno, total]) => {
+            const textoTratativa = tratativasSalvas[aluno] || "";
+            const campoId = `tratAlerta_${btoa(aluno).replace(/=/g, "")}`;
+            
+            let acaoHTML = eGestor ? 
+                `<textarea id="${campoId}" rows="2" style="width:100%; font-size:11px;">${textoTratativa}</textarea>
+                 <button onclick="salvarTratativaAlerta('${aluno}', '${campoId}')" style="background:#4caf50; color:white; border:none; padding:4px; width:100%; border-radius:4px; cursor:pointer; margin-top:3px;">Gravar</button>` :
+                `<div style="color:#666; font-style:italic;">${textoTratativa || "Sem registro."}</div>`;
+
+            htmlAlertas += `<tr style="border-bottom: 1px solid #ddd;"> 
+                <td style="padding: 8px; font-weight:bold;">${aluno}</td> 
+                <td style="padding: 8px; text-align: center; color:red; font-weight:bold;">${total}</td> 
+                <td style="padding: 8px;">${acaoHTML}</td> 
+            </tr>`;
+        });
+
+        document.getElementById('resAlertaCritico').innerHTML = alertas.length > 0 ? htmlAlertas + '</table>' : "<p>Nenhum aluno crítico.</p>";
+        dashboard.classList.remove('hidden');
+
+    } catch (e) { alert("Erro ao atualizar."); }
+}
 
     function tab(n) { 
         document.getElementById('aba1').classList.toggle('hidden', n !== 1); 
@@ -465,3 +496,4 @@
 
 </body>
 </html>
+
