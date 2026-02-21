@@ -40,6 +40,30 @@
         .btn-save-disquete { background: none; border: none; cursor: pointer; font-size: 20px; color: #4caf50; padding: 0 5px; vertical-align: middle; }
 
         /* Estilos do Histórico (Original) */
+        /* Estilo da Caixinha de Login */
+.auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+    padding: 20px;
+}
+
+.box-auth {
+    background: var(--glass);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    width: 100%;
+    max-width: 350px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.box-auth input {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+}
         .titulo-trimestre { background: var(--gold); color: #000; padding: 8px 15px; margin-top: 25px; border-radius: 6px; font-weight: bold; border-left: 10px solid var(--blue); }
         .item-ocorrencia { background: white; padding: 15px; border-left: 5px solid var(--blue); margin-top: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
         .filtro-box { margin: 15px 0; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc; }
@@ -210,13 +234,18 @@
     
     cargoLogado = gestores.some(c => cp.includes(c)) ? "Diretor" : "Professor";
     
+    // Esconde o login e mostra o conteúdo
     document.getElementById('secaoAcesso').classList.add('hidden');
     document.getElementById('conteudoDiario').classList.remove('hidden');
+    
+    // Preenche o nome do professor
     document.getElementById('nomeProfLogado').value = profNomeLogado;
 
-    // --- ESTAS LINHAS SÃO OBRIGATÓRIAS AQUI ---
-    definirDataHoje(); // Preenche a data (YYYY-MM-DD)
-    popularTurmas();   // Preenche as turmas nos selects
+    // --- REATIVA AS TURMAS E A DATA ---
+    definirDataHoje(); 
+    popularTurmas();   
+    
+    if (typeof ajustarCamposRegistro === "function") ajustarCamposRegistro(); 
 }
 
     // --- ABA 1 & 2: LOGICA ORIGINAL RESTAURADA ---
@@ -455,6 +484,7 @@ function definirDataHoje() {
 
 </body>
 </html>
+
 
 
 
