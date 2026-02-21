@@ -175,20 +175,14 @@
     window.onload = function() {
     updateOnlineStatus();
     
-    // 1. Carrega os alunos do cache local (localStorage) para garantir acesso offline imediato
-    const cache = localStorage.getItem('cache_alunos_sobral');
-    if (cache) {
-        ALUNOS = JSON.parse(cache);
-    }
-
-    // 2. Verifica se o utilizador já estava logado
+    // Primeiro: Carrega os alunos na memória (ALUNOS)
+    carregarDadosIniciais(); 
+    
+    // Segundo: Se já estiver logado, mostra o sistema e popula as turmas
     const salvo = localStorage.getItem('diarioAcessoSobral');
     if (salvo) {
         aplicarLogin(JSON.parse(salvo));
     }
-    
-    // 3. Tenta atualizar a lista de alunos do servidor se houver internet
-    carregarDadosIniciais();
 };
 
     // --- FUNÇÕES DE ACESSO (ORIGINAIS) ---
@@ -220,27 +214,37 @@
     document.getElementById('conteudoDiario').classList.remove('hidden');
     document.getElementById('nomeProfLogado').value = profNomeLogado;
 
-    // --- ESTAS DUAS LINHAS SÃO ESSENCIAIS ---
-    popularTurmas();   // Faz aparecer as turmas nos campos de seleção
-    definirDataHoje(); // Preenche a data de hoje automaticamente
-    // ---------------------------------------
-
-    if (typeof ajustarCamposRegistro === "function") ajustarCamposRegistro(); 
+    // --- ESTAS LINHAS SÃO OBRIGATÓRIAS AQUI ---
+    definirDataHoje(); // Preenche a data (YYYY-MM-DD)
+    popularTurmas();   // Preenche as turmas nos selects
 }
 
     // --- ABA 1 & 2: LOGICA ORIGINAL RESTAURADA ---
     async function carregarDadosIniciais() {
-        const cache = localStorage.getItem('cache_alunos_sobral');
-        if (cache) { ALUNOS = JSON.parse(cache); popularTurmas(); }
-        if (navigator.onLine) {
-            try {
-                const res = await fetch(`${SCRIPT_URL}?acao=getListaAlunos`);
-                ALUNOS = await res.json();
-                localStorage.setItem('cache_alunos_sobral', JSON.stringify(ALUNOS));
-                popularTurmas();
-            } catch (e) { }
+    // 1. Tenta carregar do cache local imediatamente
+    const cache = localStorage.getItem('cache_alunos_sobral');
+    if (cache) {
+        ALUNOS = JSON.parse(cache);
+        popularTurmas(); // Preenche os campos se houver cache
+    }
+
+    // 2. Se houver internet, busca a lista atualizada do servidor
+    if (navigator.onLine) {
+        try {
+            const res = await fetch(`${SCRIPT_URL}?acao=getListaAlunos`);
+            const novosDados = await res.json();
+            
+            // Atualiza a variável global e o cache
+            ALUNOS = novosDados;
+            localStorage.setItem('cache_alunos_sobral', JSON.stringify(novosDados));
+            
+            // Força o preenchimento dos campos novamente com os dados novos
+            popularTurmas();
+        } catch (e) {
+            console.log("Erro ao buscar dados do servidor:", e);
         }
     }
+}
 
     function popularTurmas() {
     const selects = [document.getElementById('selTurma'), document.getElementById('selTurmaCons')];
@@ -451,5 +455,6 @@ function definirDataHoje() {
 
 </body>
 </html>
+
 
 
