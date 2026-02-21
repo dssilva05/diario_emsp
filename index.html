@@ -817,10 +817,13 @@ if ('serviceWorker' in navigator) {
     const caixa = document.getElementById('caixaAjuda');
     caixa.classList.toggle('hidden');
     
-    // Se a caixa estiver abrindo (não estiver oculta), preenche os dados
+    // Preenche os dados sempre que abrir a caixa
     if (!caixa.classList.contains('hidden')) {
-        document.getElementById('infoEscolaSuporte').innerText = NOME_ESCOLA;
-        document.getElementById('infoProfSuporte').innerText = profNomeLogado || "Não identificado";
+        // Usa a constante NOME_ESCOLA definida no início do seu script
+        document.getElementById('infoEscolaSuporte').innerText = typeof NOME_ESCOLA !== 'undefined' ? NOME_ESCOLA : "E. M. Sobral Pinto";
+        
+        // Usa a variável profNomeLogado que é preenchida no login
+        document.getElementById('infoProfSuporte').innerText = profNomeLogado || "Faça login para identificar";
     }
 }
 
@@ -831,42 +834,52 @@ if ('serviceWorker' in navigator) {
         consultarHistorico(); 
     }
 
-    async function enviarWhatsApp() {
+    function enviarWhatsApp() {
+    console.log("Iniciando envio WhatsApp..."); // Para teste no Console (Ctrl+Shift+J)
+    
     const duvida = document.getElementById('textoDuvida').value.trim();
-    if (!duvida) return alert("Por favor, descreva sua dúvida ou sugestão.");
+    if (!duvida) {
+        alert("Por favor, descreva sua dúvida ou sugestão.");
+        return;
+    }
 
     const nomeProfessor = profNomeLogado || "Não identificado";
+    const escola = typeof NOME_ESCOLA !== 'undefined' ? NOME_ESCOLA : "E. M. Sobral Pinto";
     
-    // Layout da mensagem formatado para o WhatsApp
+    // Layout da mensagem
     const msg = `*Suporte Diário de Bordo*\n` +
-                `*Escola:* ${NOME_ESCOLA}\n` +
+                `*Escola:* ${escola}\n` +
                 `*Professor(a):* ${nomeProfessor}\n` +
                 `*Dúvida/Sugestão:* ${duvida}`;
 
     const numeroSuporte = "5531975580836";
     const url = `https://api.whatsapp.com/send?phone=${numeroSuporte}&text=${encodeURIComponent(msg)}`;
     
+    console.log("URL Gerada:", url);
+    
+    // Abre em uma nova aba
     window.open(url, '_blank');
 }
 </script>
 
 <button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas ou sugestões?</button>
 <div id="caixaAjuda" class="modal-ajuda hidden">
-    <h3 style="margin-top:0; color:var(--blue);">Suporte Diário</h3>
+    <h3 style="margin-top:0; color:var(--blue); font-size:16px;">Suporte Técnico</h3>
     
-    <div style="text-align:left; font-size:12px; margin-bottom:10px; color:#555; background:#f0f0f0; padding:8px; border-radius:6px;">
-        <strong>Escola:</strong> <span id="infoEscolaSuporte"></span><br>
-        <strong>Professor(a):</strong> <span id="infoProfSuporte"></span>
+    <div style="text-align:left; font-size:12px; margin-bottom:10px; color:#444; background:#eee; padding:10px; border-radius:8px; line-height:1.5;">
+        <strong>Escola:</strong> <span id="infoEscolaSuporte">Pendente...</span><br>
+        <strong>Professor(a):</strong> <span id="infoProfSuporte">Pendente...</span>
     </div>
 
-    <textarea id="textoDuvida" rows="4" placeholder="Digite aqui sua dúvida ou sugestão..."></textarea>
-    <button class="btn-main" style="background:#25d366; border:none; margin-top:10px;" onclick="enviarWhatsApp()">
+    <textarea id="textoDuvida" rows="4" placeholder="Digite aqui sua dúvida ou sugestão..." style="width:100%; border:1px solid #ccc; border-radius:5px; padding:5px; box-sizing:border-box;"></textarea>
+    <button class="btn-main" style="background:#25d366; border:none; margin-top:10px; color:white; font-weight:bold;" onclick="enviarWhatsApp()">
         🚀 Enviar via WhatsApp
     </button>
 </div>
 
 </body>
 </html>
+
 
 
 
