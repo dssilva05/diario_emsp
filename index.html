@@ -824,18 +824,19 @@ if ('serviceWorker' in navigator) {
 
     async function enviarWhatsApp() {
     const duvida = document.getElementById('textoDuvida').value;
-    if(!duvida) return alert("Por favor, descreva sua dúvida ou sugestão.");
+    if (!duvida) return alert("Por favor, digite sua dúvida ou sugestão antes de enviar.");
 
-    // Captura o nome do professor logado. Se não houver, usa "Não identificado"
     const nomeProfessor = profNomeLogado || "Não identificado";
     
-    // Monta a mensagem estruturada
-    const msg = `*Suporte Diário de Bordo - EMSP*\n` +
+    // Layout da mensagem conforme solicitado
+    const msg = `*Suporte Diário de Bordo*\n` +
                 `*Escola:* ${NOME_ESCOLA}\n` +
                 `*Professor(a):* ${nomeProfessor}\n` +
                 `*Dúvida/Sugestão:* ${duvida}`;
 
-    const url = `https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`;
+    const numeroSuporte = "5531975580836"; // Seu número de suporte
+    const url = `https://api.whatsapp.com/send?phone=${numeroSuporte}&text=${encodeURIComponent(msg)}`;
+    
     window.open(url, '_blank');
 }
 </script>
@@ -849,6 +850,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
