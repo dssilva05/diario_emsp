@@ -174,11 +174,21 @@
 
     window.onload = function() {
     updateOnlineStatus();
+    
+    // 1. Carrega os alunos do cache local (localStorage) para garantir acesso offline imediato
+    const cache = localStorage.getItem('cache_alunos_sobral');
+    if (cache) {
+        ALUNOS = JSON.parse(cache);
+    }
+
+    // 2. Verifica se o utilizador já estava logado
     const salvo = localStorage.getItem('diarioAcessoSobral');
     if (salvo) {
         aplicarLogin(JSON.parse(salvo));
     }
-    carregarDadosIniciais(); // Busca os alunos do cache ou servidor
+    
+    // 3. Tenta atualizar a lista de alunos do servidor se houver internet
+    carregarDadosIniciais();
 };
 
     // --- FUNÇÕES DE ACESSO (ORIGINAIS) ---
@@ -203,18 +213,19 @@
     disciplinaLogada = d.disciplina;
     const cp = String(d.cargo).trim().toUpperCase();
     const gestores = ["DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA", "COORDENADOR", "COORDENADORA", "SUPERVISOR", "SUPERVISORA", "PAS"];
+    
     cargoLogado = gestores.some(c => cp.includes(c)) ? "Diretor" : "Professor";
     
     document.getElementById('secaoAcesso').classList.add('hidden');
     document.getElementById('conteudoDiario').classList.remove('hidden');
     document.getElementById('nomeProfLogado').value = profNomeLogado;
 
-    // --- AS DUAS LINHAS ABAIXO SÃO AS QUE VOCÊ PRECISA ADICIONAR ---
-    definirDataHoje(); // Preenche a data automaticamente
-    popularTurmas();   // Carrega as turmas nos selects
-    // --------------------------------------------------------------
+    // --- ESTAS DUAS LINHAS SÃO ESSENCIAIS ---
+    popularTurmas();   // Faz aparecer as turmas nos campos de seleção
+    definirDataHoje(); // Preenche a data de hoje automaticamente
+    // ---------------------------------------
 
-    ajustarCamposRegistro(); 
+    if (typeof ajustarCamposRegistro === "function") ajustarCamposRegistro(); 
 }
 
     // --- ABA 1 & 2: LOGICA ORIGINAL RESTAURADA ---
@@ -232,13 +243,16 @@
     }
 
     function popularTurmas() {
-        const selects = [document.getElementById('selTurma'), document.getElementById('selTurmaCons')];
-        const turmas = Object.keys(ALUNOS).sort();
-        selects.forEach(sel => {
-            sel.innerHTML = '<option value="">Turma...</option>';
+    const selects = [document.getElementById('selTurma'), document.getElementById('selTurmaCons')];
+    const turmas = Object.keys(ALUNOS).sort();
+    
+    selects.forEach(sel => {
+        if (sel) {
+            sel.innerHTML = '<option value="">Selecione a Turma...</option>';
             turmas.forEach(t => sel.add(new Option(t, t)));
-        });
-    }
+        }
+    });
+}
 
     function atualizarAlunos(idT, idA) {
         const t = document.getElementById(idT).value, s = document.getElementById(idA);
@@ -437,4 +451,5 @@ function definirDataHoje() {
 
 </body>
 </html>
+
 
