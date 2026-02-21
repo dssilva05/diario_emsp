@@ -186,6 +186,8 @@
     let ALUNOS = {};
     let cargoLogado = "", profNomeLogado = "", disciplinaLogada = "", idEditando = null;
 
+    
+
     // Monitoramento Offline (Original)
     function updateOnlineStatus() {
         const bar = document.getElementById('status-bar');
@@ -318,7 +320,26 @@ function aplicarLogin(d) {
         s.innerHTML = '<option value="">Aluno...</option>';
         if(ALUNOS[t]) ALUNOS[t].forEach(al => s.add(new Option(al, al)));
     }
+    
+    async function sincronizarDados() {
+    console.log("Verificando fila offline para sincronização...");
+    let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
+    if (fila.length === 0) return;
 
+    if (navigator.onLine) {
+        for (let item of fila) {
+            const p = new URLSearchParams(); 
+            for (let k in item) p.append(k, item[k]);
+            try {
+                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+            } catch (e) {
+                console.error("Erro ao sincronizar item:", e);
+            }
+        }
+        localStorage.removeItem('filaOfflineSobral');
+        console.log("Sincronização concluída com sucesso.");
+    }
+}
     async function gravarOcorrencia() {
         const dVal = document.getElementById('dataOcorrenciaManual').value;
         if(!dVal) return alert("Selecione a data.");
@@ -483,6 +504,15 @@ function aplicarLogin(d) {
         });
     }
 
+function identificarTrimestre(ds) { 
+        const p = ds.split('/'); const d = new Date(p[2], p[1]-1, p[0]);
+        if (d >= new Date(2026, 2, 4) && d <= new Date(2026, 5, 6)) return "1º Trimestre";
+        if (d >= new Date(2026, 5, 7) && d <= new Date(2026, 8, 31)) return "2º Trimestre";
+        if (d >= new Date(2026, 9, 1) && d <= new Date(2026, 11, 18)) return "3º Trimestre";
+        return "Fora de Período";
+    }
+
+    
     // Esta função define a data atual no campo de data
 function definirDataHoje() { 
     const campoData = document.getElementById('dataOcorrenciaManual');
@@ -510,6 +540,7 @@ function definirDataHoje() {
 
 </body>
 </html>
+
 
 
 
