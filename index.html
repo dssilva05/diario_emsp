@@ -10,7 +10,6 @@
         :root { --blue: #0d47a1; --gold: #ffd600; --glass: rgba(255, 255, 255, 0.95); }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80') center/cover fixed; min-height: 100vh; }
         
-        /* BARRA DE STATUS OFFLINE */
         #status-bar { width: 100%; padding: 5px; text-align: center; font-size: 12px; font-weight: bold; color: white; transition: 0.5s; position: sticky; top: 0; z-index: 10000; }
         .online { background: #4caf50; display: none; }
         .offline { background: #ff9800; display: block; }
@@ -34,12 +33,16 @@
         .btn-link { background: none; border: none; color: var(--blue); text-decoration: underline; cursor: pointer; margin-top: 15px; font-size: 14px; width: auto; }
         .titulo-trimestre { background: var(--gold); color: #000; padding: 8px 15px; margin-top: 25px; border-radius: 6px; font-weight: bold; border-left: 10px solid var(--blue); }
         .item-ocorrencia { background: white; padding: 15px; border-left: 5px solid var(--blue); margin-top: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
-        .filtro-box { margin: 15px 0; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc; }
-        .filtro-item { display: flex; align-items: center; cursor: pointer; font-size: 14px; margin-bottom: 5px; }
-        .filtro-item input { width: 18px; height: 18px; margin-right: 10px; }
+        
+        /* ESTILOS DO DASHBOARD (GRÁFICO) */
+        .chart-row { margin-bottom: 10px; }
+        .bar-bg { background: #eee; border-radius: 5px; height: 12px; overflow: hidden; margin-top: 4px; }
+        .bar-fill { background: var(--blue); height: 100%; transition: width 0.5s; }
+        .dashboard-title { font-size: 14px; font-weight: bold; color: var(--blue); border-left: 4px solid var(--gold); padding-left: 8px; margin: 20px 0 10px; }
+        
         .btn-ajuda-fixo { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; z-index: 9999; cursor: pointer; }
         .modal-ajuda { position: fixed; bottom: 90px; right: 20px; width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; }
-        @media print { #status-bar, .tabs, .btn-main, label, select, .box-auth, button, .btn-link, .btn-ajuda-fixo, .modal-ajuda, .filtro-box { display: none !important; } header { display: flex !important; color: black !important; background: white !important; border-bottom: 2px solid #000 !important; } .card { background: white !important; box-shadow: none !important; } }
+        @media print { #status-bar, .tabs, .btn-main, label, select, .box-auth, button, .btn-link, .btn-ajuda-fixo, .modal-ajuda { display: none !important; } header { background: white !important; border-bottom: 2px solid #000 !important; } .card { background: white !important; box-shadow: none !important; } }
     </style>
 </head>
 <body>
@@ -62,7 +65,6 @@
         <button class="btn-main" onclick="executarLogin()">Entrar</button>
         <button class="btn-link" onclick="irPara('telaRecuperar')">Alterar senha</button>
     </div>
-
     <div id="telaRecuperar" class="box-auth hidden">
         <h2 style="color:var(--blue)">🔑 Recuperar Senha</h2>
         <input type="text" id="recNome" placeholder="Nome Completo">
@@ -82,7 +84,7 @@
     </div>
     <div class="card">
         <div id="aba1">
-            <div id="tipoRegistroContainer" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd;">
+            <div id="tipoRegistroContainer" style="padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd;">
                 <label style="color: #1d4e89; margin-top: 0;">Tipo de Registro:</label>
                 <select id="selTipoRegistro" onchange="ajustarCamposRegistro()" style="border: 2px solid #ccc;">
                     <option value="📝 Ocorrência Disciplinar">📝 Ocorrência Disciplinar</option>
@@ -93,7 +95,6 @@
                     <option value="📎 Outros Atendimentos">📎 Outros Atendimentos</option>
                 </select>
             </div>
-
             <label>Responsável:</label>
             <input type="text" id="nomeProfLogado" readonly style="background:#e9ecef">
             <label>Data:</label>
@@ -102,14 +103,12 @@
             <select id="selTurma" onchange="atualizarAlunos('selTurma', 'selAluno')"><option value="">Carregando...</option></select>
             <label>Aluno:</label>
             <select id="selAluno"><option value="">Selecione a turma...</option></select>
-            
             <div id="boxAdvertencia">
                 <label style="display: flex; align-items: center; cursor: pointer; background: #fff3cd; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba; margin-top: 15px;">
                     <input type="checkbox" id="chkAdvertencia" style="width: auto; margin: 0 10px 0 0;"> 
                     <span>Foi enviada Advertência por Escrito?</span>
                 </label>
             </div>
-
             <label id="labelRelato">Relato do Professor:</label>
             <textarea id="relatoTexto" rows="5"></textarea>
             <div id="containerTratativa"></div>
@@ -125,9 +124,13 @@
                 <option value="2º Trimestre">2º Trimestre</option>
                 <option value="3º Trimestre">3º Trimestre</option>
             </select>
-            <div class="filtro-box">
-                <label class="filtro-item"><input type="checkbox" id="chkMeusRegistros" checked onclick="alternarCheckboxes('meu')"> Ver apenas meus registros</label>
-                <label class="filtro-item"><input type="checkbox" id="chkTodosRegistros" onclick="alternarCheckboxes('todos')"> Ver todas as ocorrências</label>
+            <div class="filtro-box" style="margin: 15px 0; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc;">
+                <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px; margin-bottom: 5px;">
+                    <input type="checkbox" id="chkMeusRegistros" checked onclick="alternarCheckboxes('meu')" style="width:18px; height:18px; margin-right:10px;"> Ver apenas meus registros
+                </label>
+                <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px;">
+                    <input type="checkbox" id="chkTodosRegistros" onclick="alternarCheckboxes('todos')" style="width:18px; height:18px; margin-right:10px;"> Ver todas as ocorrências
+                </label>
             </div>
             <button class="btn-main" onclick="consultarHistorico()">🔍 Buscar Histórico</button>
             <div id="resConsulta"></div>
@@ -135,16 +138,24 @@
         </div>
 
         <div id="aba3" class="hidden">
-            <h3 style="color:var(--blue)">⚠️ Alunos com mais de 10 Ocorrências</h3>
-            <p style="font-size: 12px; color: #666;">Contagem baseada em todo o histórico cadastrado.</p>
-            <button class="btn-main" onclick="gerarAlertaCritico()">📊 Gerar Relatório de Alerta</button>
-            <div id="resAlertaCritico" style="margin-top: 20px;"></div>
+            <h2 style="color:var(--blue); margin-top:0;">📊 Painel de Controle</h2>
+            <button class="btn-main" onclick="gerarAlertaCritico()">🔄 Atualizar Dados em Tempo Real</button>
+            
+            <div id="resDashboard" class="hidden">
+                <div class="dashboard-title">Turmas com mais ocorrências</div>
+                <div id="graficoTurmas"></div>
+
+                <div class="dashboard-title">Top 5 Alunos (Ranking Geral)</div>
+                <div id="tabelaTopAlunos"></div>
+
+                <div class="dashboard-title">Alunos Críticos (+10 Ocorrências)</div>
+                <div id="resAlertaCritico"></div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    const NOME_ESCOLA = "E. M. Sobral Pinto"; 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlVbz3C-bdKUbRvuWx4SrL9eiFdmyRwwZwUYVhi9u8u2df9NSgNRNjsYx7gD5q1qef7g/exec"; 
     let ALUNOS = {};
     let cargoLogado = "", profNomeLogado = "", disciplinaLogada = "", idEditando = null;
@@ -158,12 +169,9 @@
     function updateOnlineStatus() {
         const bar = document.getElementById('status-bar');
         if (navigator.onLine) {
-            bar.className = 'online';
-            bar.innerText = 'Você está Online';
-            sincronizarDados();
+            bar.className = 'online'; bar.innerText = 'Você está Online'; sincronizarDados();
         } else {
-            bar.className = 'offline';
-            bar.innerText = 'Você está Offline - O uso é limitado ao registro';
+            bar.className = 'offline'; bar.innerText = 'Você está Offline';
         }
     }
     window.addEventListener('online', updateOnlineStatus);
@@ -182,9 +190,7 @@
         document.getElementById(id).classList.remove('hidden');
     }
 
-    function normalizarTexto(txt) {
-        return txt.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
-    }
+    function normalizarTexto(txt) { return txt.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim(); }
 
     async function executarRecuperacao() {
         const nome = normalizarTexto(document.getElementById('recNome').value);
@@ -202,8 +208,7 @@
     }
 
     function alternarCheckboxes(quem) {
-        const cMeu = document.getElementById('chkMeusRegistros');
-        const cTodos = document.getElementById('chkTodosRegistros');
+        const cMeu = document.getElementById('chkMeusRegistros'), cTodos = document.getElementById('chkTodosRegistros');
         if (quem === 'meu' && cMeu.checked) cTodos.checked = false;
         else if (quem === 'todos' && cTodos.checked) cMeu.checked = false;
         if (!cMeu.checked && !cTodos.checked) cMeu.checked = true;
@@ -211,10 +216,7 @@
 
     async function carregarDadosIniciais() {
         const cache = localStorage.getItem('cache_alunos_sobral');
-        if (cache) {
-            ALUNOS = JSON.parse(cache);
-            popularTurmas();
-        }
+        if (cache) { ALUNOS = JSON.parse(cache); popularTurmas(); }
         if (navigator.onLine) {
             try {
                 const res = await fetch(`${SCRIPT_URL}?acao=getListaAlunos`);
@@ -238,15 +240,13 @@
     }
 
     function atualizarAlunos(idT, idA) {
-        const t = document.getElementById(idT).value;
-        const s = document.getElementById(idA);
+        const t = document.getElementById(idT).value, s = document.getElementById(idA);
         s.innerHTML = '<option value="">Selecione o Aluno...</option>';
         if(ALUNOS[t]) ALUNOS[t].forEach(al => s.add(new Option(al, al)));
     }
 
     async function executarLogin() {
-        const u = document.getElementById('userLogin').value.trim().toLowerCase();
-        const s = document.getElementById('passLogin').value.trim();
+        const u = document.getElementById('userLogin').value.trim().toLowerCase(), s = document.getElementById('passLogin').value.trim();
         if(!u || !s) return alert("Preencha usuário e senha.");
         if (navigator.onLine) {
             try {
@@ -255,33 +255,27 @@
                 if(d.status === "Autorizado") { 
                     localStorage.setItem('diarioAcessoSobral', JSON.stringify(d)); 
                     localStorage.setItem('ultimoUsuarioSucesso', JSON.stringify({u: u, s: s, dados: d})); 
-                    aplicarLogin(d); 
-                    return;
+                    aplicarLogin(d); return;
                 }
-            } catch (e) { console.log("Tentando login local..."); }
+            } catch (e) { }
         }
         const backup = localStorage.getItem('ultimoUsuarioSucesso');
         if (backup) {
             const check = JSON.parse(backup);
-            if (u === check.u && s === check.s) {
-                alert("Login validado offline.");
-                aplicarLogin(check.dados);
-            } else alert("Dados incorretos.");
+            if (u === check.u && s === check.s) { alert("Login validado offline."); aplicarLogin(check.dados); }
+            else alert("Dados incorretos.");
         } else alert("Sem conexão.");
     }
 
     function aplicarLogin(d) {
-        profNomeLogado = d.nome;
-        disciplinaLogada = d.disciplina;
+        profNomeLogado = d.nome; disciplinaLogada = d.disciplina;
         const cargoPlanilha = String(d.cargo).trim().toUpperCase();
         const cargosGestores = ["DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA", "COORDENADOR", "COORDENADORA", "SUPERVISOR", "SUPERVISORA", "PAS"];
-        const eGestorTotal = cargosGestores.some(c => cargoPlanilha.includes(c));
-        cargoLogado = eGestorTotal ? "Diretor" : "Professor";
+        cargoLogado = cargosGestores.some(c => cargoPlanilha.includes(c)) ? "Diretor" : "Professor";
         document.getElementById('secaoAcesso').classList.add('hidden');
         document.getElementById('conteudoDiario').classList.remove('hidden');
         document.getElementById('nomeProfLogado').value = profNomeLogado;
-        const selTipo = document.getElementById('selTipoRegistro');
-        const containerTipo = document.getElementById('tipoRegistroContainer');
+        const selTipo = document.getElementById('selTipoRegistro'), containerTipo = document.getElementById('tipoRegistroContainer');
         if (cargoPlanilha.includes("PAS")) {
             selTipo.value = "🧠 Equipe PAS"; selTipo.disabled = false; containerTipo.style.background = "#fff3e0";
         } else if (cargoPlanilha.includes("PROF. AEE")) {
@@ -291,51 +285,36 @@
         } else {
             selTipo.value = "📝 Ocorrência Disciplinar"; selTipo.disabled = true; containerTipo.style.background = "#f8f9fa";
         }
-        ajustarCamposRegistro();
-        definirDataHoje();
+        ajustarCamposRegistro(); definirDataHoje();
     }
 
     function ajustarCamposRegistro() {
         const tipo = document.getElementById('selTipoRegistro').value;
-        const label = document.getElementById('labelRelato');
-        const boxAdv = document.getElementById('boxAdvertencia');
-        if(tipo === "📝 Ocorrência Disciplinar") {
-            label.innerText = "Relato do Professor:";
-            boxAdv.classList.remove('hidden');
-        } else {
-            label.innerText = "Detalhamento do Atendimento / Registro:";
-            boxAdv.classList.add('hidden');
-        }
+        const label = document.getElementById('labelRelato'), boxAdv = document.getElementById('boxAdvertencia');
+        if(tipo === "📝 Ocorrência Disciplinar") { label.innerText = "Relato do Professor:"; boxAdv.classList.remove('hidden'); }
+        else { label.innerText = "Detalhamento:"; boxAdv.classList.add('hidden'); }
     }
 
     async function gravarOcorrencia() {
         const dVal = document.getElementById('dataOcorrenciaManual').value;
-        if(!dVal) return alert("Selecione a data!");
+        if(!dVal) return alert("Data!");
         const dFormat = dVal.split("-").reverse().join("/");
         const tipo = document.getElementById('selTipoRegistro').value;
-        let prefixoTipo = `[${tipo}] `;
         const salvo = JSON.parse(localStorage.getItem('diarioAcessoSobral'));
         const cargoPlanilha = String(salvo.cargo).trim().toUpperCase();
         let rotuloUsuario = cargoPlanilha.includes("PAS") ? "PAS:" : "Prof:";
-        const selT = document.getElementById('selTratativa');
-        let textoTratativa = selT ? selT.value : "";
-        const dtC = document.getElementById('dataConvocacao');
-        if (textoTratativa === "Família Convocada" && dtC && dtC.value) {
-            textoTratativa += ` (Data: ${dtC.value.split("-").reverse().join("/")})`;
-        }
-        const rGestao = document.getElementById('relatoGestaoTexto');
+        const selT = document.getElementById('selTratativa'), textoTratativa = selT ? selT.value : "";
         const dados = {
             acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
             id: idEditando || Date.now(),
-            professor: `${prefixoTipo}${rotuloUsuario} ${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`,
+            professor: `[${tipo}] ${rotuloUsuario} ${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`,
             dataManual: dFormat, turma: document.getElementById('selTurma').value,
             aluno: document.getElementById('selAluno').value, texto: document.getElementById('relatoTexto').value,
             advertencia: document.getElementById('chkAdvertencia').checked ? "SIM" : "NÃO",
-            tratativa: textoTratativa, relatoGestao: rGestao ? rGestao.value : ""
+            tratativa: textoTratativa, relatoGestao: document.getElementById('relatoGestaoTexto')?.value || ""
         };
         if (navigator.onLine) {
-            const p = new URLSearchParams();
-            for (let key in dados) p.append(key, dados[key]);
+            const p = new URLSearchParams(); for (let k in dados) p.append(k, dados[k]);
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
             alert("Sucesso!"); limparForm();
         } else {
@@ -349,72 +328,47 @@
         let fila = JSON.parse(localStorage.getItem('filaOfflineSobral') || "[]");
         if (fila.length === 0) return;
         for (let item of fila) {
-            const p = new URLSearchParams();
-            for (let key in item) p.append(key, item[key]);
+            const p = new URLSearchParams(); for (let k in item) p.append(k, item[k]);
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
         }
-        localStorage.removeItem('filaOfflineSobral');
-        alert("Dados sincronizados!");
+        localStorage.removeItem('filaOfflineSobral'); alert("Dados sincronizados!");
     }
 
     async function consultarHistorico() {
-        if (!navigator.onLine) return alert("Busca de histórico disponível apenas online.");
-        const t = document.getElementById('selTurmaCons').value;
-        const a = document.getElementById('selAlunoCons').value;
-        if (!t) return alert("Selecione pelo menos a Turma.");
+        if (!navigator.onLine) return alert("Apenas online.");
+        const t = document.getElementById('selTurmaCons').value, a = document.getElementById('selAlunoCons').value;
+        if (!t) return alert("Selecione a Turma.");
         document.getElementById('resConsulta').innerHTML = "Buscando...";
         try {
             const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
             const data = await res.json();
             exibirDados(data, t, a, document.getElementById('selPeriodoCons').value);
-        } catch (e) { document.getElementById('resConsulta').innerHTML = "Erro de conexão."; }
+        } catch (e) { document.getElementById('resConsulta').innerHTML = "Erro."; }
     }
 
     function exibirDados(data, t, a, p) {
-        const rDiv = document.getElementById('resConsulta');
-        const vT = document.getElementById('chkTodosRegistros').checked;
+        const rDiv = document.getElementById('resConsulta'), vT = document.getElementById('chkTodosRegistros').checked;
         let filtrados = data.filter(r => {
-            const bateTurma = r[3] && String(r[3]).trim() === t;
-            const bateAluno = a ? (r[4] && String(r[4]).trim() === a) : true;
-            return bateTurma && bateAluno;
+            const bateT = r[3] && String(r[3]).trim() === t;
+            const bateA = a ? (r[4] && String(r[4]).trim() === a) : true;
+            return bateT && bateA;
         });
         if (p !== "Ano Todo") filtrados = filtrados.filter(r => identificarTrimestre(r[1]) === p);
-        if (!vT) {
-            const meuNome = profNomeLogado.split(" ")[0];
-            filtrados = filtrados.filter(r => String(r[2]).includes(meuNome));
-        }
+        if (!vT) filtrados = filtrados.filter(r => String(r[2]).includes(profNomeLogado.split(" ")[0]));
         if (filtrados.length === 0) { rDiv.innerHTML = "<p>Nada encontrado.</p>"; return; }
         
         let html = `<h3>Histórico: ${a || "Toda a Turma"}</h3>`;
         let grupos = { "1º Trimestre": [], "2º Trimestre": [], "3º Trimestre": [], "Fora de Período": [] };
-        filtrados.forEach(r => {
-            const tri = identificarTrimestre(r[1]);
-            if(grupos[tri]) grupos[tri].push(r); else grupos["Fora de Período"].push(r);
-        });
+        filtrados.forEach(r => { const tri = identificarTrimestre(r[1]); grupos[tri].push(r); });
 
         for (let tri in grupos) {
             if (grupos[tri].length > 0) {
                 html += `<div class="titulo-trimestre">${tri}</div>`;
                 grupos[tri].forEach(r => {
-                    const souDono = String(r[2]).includes(profNomeLogado.split(" ")[0]);
-                    const souGestor = (cargoLogado === "Diretor");
-                    let estiloCard = "border-left: 5px solid var(--blue); background: white;";
-                    if (String(r[2]).includes("[📖 Atendimento AEE]")) estiloCard = "border-left: 5px solid #9c27b0; background: #f3e5f5;";
-                    else if (String(r[2]).includes("[🧠 Equipe PAS]")) estiloCard = "border-left: 5px solid #ff9800; background: #fff3e0;";
-
-                    const adv = (r[6] === "SIM") ? `<p style="color:red; font-weight:bold;">⚠️ Advertência por Escrito Enviada</p>` : "";
-                    const trat = r[7] ? `<div style="background:rgba(255,255,255,0.5); padding:10px; border-left:4px solid #4caf50; margin-top:10px;"><strong>Ação da Gestão:</strong> ${r[7]}</div>` : "";
-                    const priv = (souGestor && r[8]) ? `<div style="background:rgba(255,255,255,0.6); padding:10px; border:1px dashed #ff9800; margin-top:5px; font-size:13px;"><strong>🔒 Relato Privado:</strong> ${r[8]}</div>` : "";
-
-                    html += `<div class="item-ocorrencia" style="${estiloCard}">
-                        <div style="float:right; display:flex; gap:5px;">
-                            ${souDono || souGestor ? `<button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', false)" style="background:orange; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Editar</button>` : ''}
-                            ${souGestor ? `
-                                <button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', true)" style="background:#1976d2; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Tratar</button>
-                                <button onclick="apagarRegistro('${r[0]}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">X</button>
-                            ` : ''}
-                        </div>
-                        <strong>${r[1]} - ${r[2]}</strong><br><br>${r[5]}${adv}${trat}${priv}
+                    const souG = (cargoLogado === "Diretor");
+                    html += `<div class="item-ocorrencia">
+                        <strong>${r[1]} - ${r[2]}</strong><br>${r[5]}
+                        ${r[7] ? `<br><b>Ação da Gestão:</b> ${r[7]}` : ""}
                     </div>`;
                 });
             }
@@ -422,139 +376,63 @@
         rDiv.innerHTML = html; document.getElementById('btnImp').style.display = "block";
     }
 
-    function carregarParaEdicao(id, data, turma, aluno, texto, tratativa, relatoGestao, focarTratativa) {
-        idEditando = id; tab(1);
-        const p = data.split('/');
-        document.getElementById('dataOcorrenciaManual').value = `${p[2]}-${p[1]}-${p[0]}`;
-        document.getElementById('selTurma').value = turma;
-        atualizarAlunos('selTurma', 'selAluno');
-        setTimeout(() => document.getElementById('selAluno').value = aluno, 150);
-        document.getElementById('relatoTexto').value = texto;
-        const cont = document.getElementById('containerTratativa');
-        if (cargoLogado === "Diretor") {
-            let opcaoSalva = tratativa;
-            if (tratativa.includes("Data:")) opcaoSalva = "Família Convocada";
-            cont.innerHTML = `<div style="background:#f0f7ff; padding:15px; border-radius:8px; margin:15px 0; border:1px solid #1976d2;"><label style="color:#1976d2; margin-top:0;">🛠️ Ação da Gestão:</label><select id="selTratativa" onchange="verificarDataConvocacao()" style="width:100%; border:2px solid #1976d2;"><option value="">Selecione...</option><option value="Conversa com o Aluno">Conversa com o Aluno</option><option value="Advertência Verbal">Advertência Verbal</option><option value="Advertência por Escrito">Advertência por Escrito</option><option value="Família Convocada">Família Convocada</option><option value="Encaminhamento Psicológico">Encaminhamento Psicológico</option></select><div id="divDataConvocacao" style="display:none; margin-top:10px;"><label>Data da Convocação:</label><input type="date" id="dataConvocacao"></div><label style="color:#0d47a1; margin-top:15px;">🔒 Relato Interno (PRIVADO):</label><textarea id="relatoGestaoTexto" rows="3">${relatoGestao || ""}</textarea></div>`;
-            if(focarTratativa) setTimeout(() => document.getElementById('selTratativa').focus(), 300);
-        }
-        document.getElementById('btnGravar').innerText = "💾 Salvar Alteração";
-    }
-
-    function verificarDataConvocacao() {
-        const d = document.getElementById('divDataConvocacao');
-        if(d) d.style.display = (document.getElementById('selTratativa').value === "Família Convocada") ? "block" : "none";
-    }
-
-    function limparForm() {
-        document.getElementById('relatoTexto').value = ""; document.getElementById('chkAdvertencia').checked = false;
-        document.getElementById('containerTratativa').innerHTML = ""; idEditando = null;
-        const salvo = localStorage.getItem('diarioAcessoSobral');
-        if (salvo) aplicarLogin(JSON.parse(salvo));
-        document.getElementById('btnGravar').innerText = "Gravar no Diário";
-        definirDataHoje();
-    }
-
-    function identificarTrimestre(ds) { 
-        const p = ds.split('/'); const d = new Date(p[2], p[1]-1, p[0]);
-        if (d >= new Date(2026, 1, 4) && d <= new Date(2026, 4, 15)) return "1º Trimestre";
-        if (d >= new Date(2026, 4, 18) && d <= new Date(2026, 7, 31)) return "2º Trimestre";
-        if (d >= new Date(2026, 8, 1) && d <= new Date(2026, 11, 15)) return "3º Trimestre";
-        return "Fora de Período";
-    }
-
     async function gerarAlertaCritico() {
-    if (!navigator.onLine) return alert("Conecte-se à internet para processar os alertas.");
-    const resDiv = document.getElementById('resAlertaCritico');
-    resDiv.innerHTML = "<p>⏳ Analisando dados e tratativas... por favor, aguarde.</p>";
-
-    try {
-        const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
-        const data = await res.json();
+        if (!navigator.onLine) return alert("Conecte-se à internet.");
+        const dashboard = document.getElementById('resDashboard');
+        dashboard.classList.add('hidden');
         
-        // Busca tratativas existentes
-        const resTrat = await fetch(`${SCRIPT_URL}?acao=getTratativasAlertas`);
-        const tratativasSalvas = await resTrat.json();
+        try {
+            const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
+            const data = await res.json();
+            if (!Array.isArray(data) || data.length < 2) return alert("Poucos dados para gerar o painel.");
 
-        let contagem = {};
-        for (let i = 1; i < data.length; i++) {
-            const nomeAluno = data[i][4];
-            const nomeTurma = data[i][3];
-            if (nomeAluno) {
-                const chave = `${nomeAluno.trim().toUpperCase()} (${nomeTurma.trim().toUpperCase()})`;
-                contagem[chave] = (contagem[chave] || 0) + 1;
+            let contAlunos = {}, contTurmas = {};
+
+            // Pula cabeçalho
+            for (let i = 1; i < data.length; i++) {
+                const turma = data[i][3], aluno = data[i][4];
+                if (turma) contTurmas[turma] = (contTurmas[turma] || 0) + 1;
+                if (aluno) {
+                    const chave = `${aluno} (${turma})`;
+                    contAlunos[chave] = (contAlunos[chave] || 0) + 1;
+                }
             }
-        }
 
-        let lista = Object.entries(contagem).filter(item => item[1] >= 10).sort((a,b) => b[1] - a[1]);
+            // 1. GERAR GRÁFICO DE TURMAS
+            const turmasOrdenadas = Object.entries(contTurmas).sort((a,b) => b[1] - a[1]);
+            const maxTurma = turmasOrdenadas[0][1];
+            let htmlGrafico = "";
+            turmasOrdenadas.forEach(([t, v]) => {
+                const perc = (v / maxTurma) * 100;
+                htmlGrafico += `<div class="chart-row">
+                    <div style="display:flex; justify-content:space-between; font-size:12px;"><span>${t}</span><b>${v} ocor.</b></div>
+                    <div class="bar-bg"><div class="bar-fill" style="width:${perc}%"></div></div>
+                </div>`;
+            });
+            document.getElementById('graficoTurmas').innerHTML = htmlGrafico;
 
-        if (lista.length === 0) {
-            resDiv.innerHTML = "<div style='padding:20px; background:#e8f5e9; border-radius:8px; color:green; text-align:center;'>✅ Nenhum aluno atingiu o limite de 10 ocorrências.</div>";
-            return;
-        }
+            // 2. GERAR TABELA TOP 5 ALUNOS
+            const topAlunos = Object.entries(contAlunos).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            let htmlTop = '<table style="width:100%; border-collapse:collapse; background:white; font-size:13px; border-radius:8px; overflow:hidden;">';
+            htmlTop += '<tr style="background:#eee;"> <th style="padding:8px; text-align:left;">Aluno</th> <th style="padding:8px;">Total</th> </tr>';
+            topAlunos.forEach(([a, v]) => {
+                htmlTop += `<tr style="border-bottom:1px solid #eee;"> <td style="padding:8px;">${a}</td> <td style="padding:8px; text-align:center; font-weight:bold;">${v}</td> </tr>`;
+            });
+            document.getElementById('tabelaTopAlunos').innerHTML = htmlTop + '</table>';
 
-        // VERIFICAÇÃO DE GESTÃO
-        const eGestor = (cargoLogado === "Diretor");
+            // 3. ALERTAS (+10)
+            const alertas = Object.entries(contAlunos).filter(item => item[1] >= 10).sort((a,b) => b[1] - a[1]);
+            let htmlAlertas = alertas.length > 0 ? 
+                '<table style="width:100%; border-collapse:collapse; background:#fffafa;">' : '<p>Nenhum aluno no limite crítico.</p>';
+            alertas.forEach(([a, v]) => {
+                htmlAlertas += `<tr style="border-bottom:1px solid #ddd;"> <td style="padding:8px;">${a}</td> <td style="padding:8px; text-align:center; color:red; font-weight:bold;">${v}</td> </tr>`;
+            });
+            document.getElementById('resAlertaCritico').innerHTML = htmlAlertas + (alertas.length > 0 ? '</table>' : '');
 
-        let html = '<table style="width:100%; border-collapse: collapse; background: white; font-size: 13px;">';
-        html += '<tr style="background: #d32f2f; color: white;"> <th style="padding: 10px; text-align:left;">Aluno</th> <th style="padding: 10px;">Total</th> <th style="padding: 10px;">Tratativa da Gestão</th> </tr>';
-        
-        lista.forEach(([aluno, total]) => {
-            const textoTratativa = tratativasSalvas[aluno] || "Nenhuma tratativa registrada.";
-            const campoId = `tratAlerta_${btoa(aluno).replace(/=/g, "")}`;
-            
-            let colunaTratativa = "";
-            
-            if (eGestor) {
-                // Se for Gestor, mostra campo de edição e botão
-                colunaTratativa = `
-                    <textarea id="${campoId}" rows="2" style="width:100%; font-size:12px;">${textoTratativa === "Nenhuma tratativa registrada." ? "" : textoTratativa}</textarea>
-                    <button onclick="salvarTratativaAlerta('${aluno}', '${campoId}')" style="background:#4caf50; color:white; border:none; padding:5px; width:100%; border-radius:4px; cursor:pointer; margin-top:5px;">Gravar Tratativa</button>`;
-            } else {
-                // Se for Professor, mostra apenas o texto (ou aviso de privado)
-                colunaTratativa = `<div style="color:#666; font-style:italic;">${textoTratativa}</div>`;
-            }
-            
-            html += `<tr style="border-bottom: 1px solid #ddd;"> 
-                        <td style="padding: 10px; font-weight:bold;">${aluno}</td> 
-                        <td style="padding: 10px; text-align: center; font-weight: bold; color:red;">${total}</td> 
-                        <td style="padding: 10px;">${colunaTratativa}</td> 
-                     </tr>`;
-        });
-        resDiv.innerHTML = html + '</table>';
-    } catch (e) { resDiv.innerHTML = "Erro ao processar dados."; }
-}
+            dashboard.classList.remove('hidden');
 
-    async function salvarTratativaAlerta(aluno, campoId) {
-    // Trava de segurança no código
-    if (cargoLogado !== "Diretor") {
-        alert("Acesso negado: Apenas a equipe de gestão pode realizar esta ação.");
-        return;
+        } catch (e) { alert("Erro ao carregar dashboard."); }
     }
-    
-    const texto = document.getElementById(campoId).value;
-    if (!texto) return alert("Digite o texto da tratativa.");
-
-    const btn = document.querySelector(`button[onclick*="${campoId}"]`);
-    btn.innerText = "⏳ Gravando...";
-    btn.disabled = true;
-
-    const p = new URLSearchParams();
-    p.append('acao', 'salvarTratativaAlerta');
-    p.append('alunoTurma', aluno);
-    p.append('texto', texto);
-    p.append('responsavel', profNomeLogado);
-
-    try {
-        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
-        alert("Tratativa de alerta salva com sucesso!");
-        btn.innerText = "✅ Gravado";
-        btn.style.background = "#2e7d32";
-    } catch (e) {
-        alert("Erro ao conectar.");
-        btn.innerText = "Gravar Tratativa";
-        btn.disabled = false;
-    }
-}
 
     function tab(n) { 
         document.getElementById('aba1').classList.toggle('hidden', n !== 1); 
@@ -569,25 +447,21 @@
     function definirDataHoje() { document.getElementById('dataOcorrenciaManual').value = new Date().toISOString().split('T')[0]; }
     function logout() { localStorage.removeItem('diarioAcessoSobral'); location.reload(); }
     function toggleAjuda() { document.getElementById('caixaAjuda').classList.toggle('hidden'); }
-    async function apagarRegistro(id) { if (!confirm("Excluir?")) return; const p = new URLSearchParams(); p.append('acao', 'apagarOcorrencia'); p.append('id', id); await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p }); consultarHistorico(); }
     
     async function enviarWhatsApp() {
         const duvida = document.getElementById('textoDuvida').value;
-        if(!duvida) return alert("Por favor, descreva sua dúvida.");
-        const nomeProfessor = profNomeLogado || "Não identificado";
-        const msg = `*Suporte EMSP*\n*Nome:* ${nomeProfessor}\n*Dúvida:* ${duvida}`;
+        if(!duvida) return alert("Descreva sua dúvida.");
+        const msg = `*Suporte EMSP*\n*Nome:* ${profNomeLogado}\n*Dúvida:* ${duvida}`;
         window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank');
     }
 </script>
 
-<button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas ou sugestões?</button>
+<button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas?</button>
 <div id="caixaAjuda" class="modal-ajuda hidden">
     <h3>Suporte EMSP</h3>
-    <textarea id="textoDuvida" rows="4" placeholder="Sua dúvida ou sugestão..."></textarea>
+    <textarea id="textoDuvida" rows="4" placeholder="Sua dúvida..."></textarea>
     <button class="btn-main" style="background:#25d366; margin-top:10px;" onclick="enviarWhatsApp()">WhatsApp</button>
 </div>
 
 </body>
 </html>
-
-
