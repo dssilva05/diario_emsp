@@ -404,7 +404,7 @@ if ('serviceWorker' in navigator) {
         
         const selTipo = document.getElementById('selTipoRegistro');
         const containerTipo = document.getElementById('tipoRegistroContainer');
-        selTipo.value = "OCORRENCIA";
+        selTipo.value = "📝 Ocorrência Disciplinar";
 
         if(cargoLogado === "Diretor") {
             selTipo.disabled = false;
@@ -421,7 +421,7 @@ if ('serviceWorker' in navigator) {
         const tipo = document.getElementById('selTipoRegistro').value;
         const label = document.getElementById('labelRelato');
         const boxAdv = document.getElementById('boxAdvertencia');
-        if(tipo === "OCORRENCIA") {
+        if(tipo === "📝 Ocorrência Disciplinar") {
             label.innerText = "Relato do Professor:";
             boxAdv.classList.remove('hidden');
         } else {
@@ -879,6 +879,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
