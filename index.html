@@ -468,13 +468,12 @@
     resDiv.innerHTML = "<p>⏳ Analisando dados e tratativas... por favor, aguarde.</p>";
 
     try {
-        // Busca os dados das ocorrências
         const res = await fetch(`${SCRIPT_URL}?acao=getDados`);
         const data = await res.json();
         
-        // Busca as tratativas já registradas para esses alertas
+        // Busca tratativas existentes
         const resTrat = await fetch(`${SCRIPT_URL}?acao=getTratativasAlertas`);
-        const tratativasSalvas = await resTrat.json(); // Objeto { "NOME (TURMA)": "texto" }
+        const tratativasSalvas = await resTrat.json();
 
         let contagem = {};
         for (let i = 1; i < data.length; i++) {
@@ -493,30 +492,47 @@
             return;
         }
 
+        // VERIFICAÇÃO DE GESTÃO
+        const eGestor = (cargoLogado === "Diretor");
+
         let html = '<table style="width:100%; border-collapse: collapse; background: white; font-size: 13px;">';
         html += '<tr style="background: #d32f2f; color: white;"> <th style="padding: 10px; text-align:left;">Aluno</th> <th style="padding: 10px;">Total</th> <th style="padding: 10px;">Tratativa da Gestão</th> </tr>';
         
         lista.forEach(([aluno, total]) => {
-            const textoTratativa = tratativasSalvas[aluno] || "";
-            const campoId = `tratAlerta_${btoa(aluno).replace(/=/g, "")}`; // ID seguro para o campo
+            const textoTratativa = tratativasSalvas[aluno] || "Nenhuma tratativa registrada.";
+            const campoId = `tratAlerta_${btoa(aluno).replace(/=/g, "")}`;
+            
+            let colunaTratativa = "";
+            
+            if (eGestor) {
+                // Se for Gestor, mostra campo de edição e botão
+                colunaTratativa = `
+                    <textarea id="${campoId}" rows="2" style="width:100%; font-size:12px;">${textoTratativa === "Nenhuma tratativa registrada." ? "" : textoTratativa}</textarea>
+                    <button onclick="salvarTratativaAlerta('${aluno}', '${campoId}')" style="background:#4caf50; color:white; border:none; padding:5px; width:100%; border-radius:4px; cursor:pointer; margin-top:5px;">Gravar Tratativa</button>`;
+            } else {
+                // Se for Professor, mostra apenas o texto (ou aviso de privado)
+                colunaTratativa = `<div style="color:#666; font-style:italic;">${textoTratativa}</div>`;
+            }
             
             html += `<tr style="border-bottom: 1px solid #ddd;"> 
                         <td style="padding: 10px; font-weight:bold;">${aluno}</td> 
                         <td style="padding: 10px; text-align: center; font-weight: bold; color:red;">${total}</td> 
-                        <td style="padding: 10px;">
-                            <textarea id="${campoId}" rows="2" style="width:100%; font-size:12px;" placeholder="Digite a ação tomada...">${textoTratativa}</textarea>
-                            <button onclick="salvarTratativaAlerta('${aluno}', '${campoId}')" style="background:#4caf50; color:white; border:none; padding:5px; width:100%; border-radius:4px; cursor:pointer; margin-top:5px;">Gravar Tratativa</button>
-                        </td> 
+                        <td style="padding: 10px;">${colunaTratativa}</td> 
                      </tr>`;
         });
         resDiv.innerHTML = html + '</table>';
-    } catch (e) { resDiv.innerHTML = "Erro ao processar dados."; console.error(e); }
+    } catch (e) { resDiv.innerHTML = "Erro ao processar dados."; }
 }
 
     async function salvarTratativaAlerta(aluno, campoId) {
-    if (cargoLogado !== "Diretor") return alert("Apenas a gestão pode gravar tratativas de alerta.");
+    // Trava de segurança no código
+    if (cargoLogado !== "Diretor") {
+        alert("Acesso negado: Apenas a equipe de gestão pode realizar esta ação.");
+        return;
+    }
+    
     const texto = document.getElementById(campoId).value;
-    if (!texto) return alert("Digite o texto da tratativa antes de salvar.");
+    if (!texto) return alert("Digite o texto da tratativa.");
 
     const btn = document.querySelector(`button[onclick*="${campoId}"]`);
     btn.innerText = "⏳ Gravando...";
@@ -534,7 +550,7 @@
         btn.innerText = "✅ Gravado";
         btn.style.background = "#2e7d32";
     } catch (e) {
-        alert("Erro ao conectar ao servidor.");
+        alert("Erro ao conectar.");
         btn.innerText = "Gravar Tratativa";
         btn.disabled = false;
     }
@@ -573,4 +589,5 @@
 
 </body>
 </html>
+
 
