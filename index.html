@@ -137,8 +137,9 @@
 <script>
     // --- LÓGICA DE LIMPEZA E MONITORAMENTO DE REDE ---
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(regs => { for(let reg of regs) reg.unregister(); });
-    }
+    navigator.serviceWorker.register('./sw.js') // Certifique-se que o nome do arquivo no GitHub seja sw.js
+    .then(() => console.log("Service Worker Registrado"));
+}
 
     function updateOnlineStatus() {
         const bar = document.getElementById('status-bar');
@@ -495,6 +496,7 @@
 
 </body>
 </html>
+
 
 
 
