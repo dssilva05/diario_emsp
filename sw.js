@@ -1,8 +1,8 @@
 const CACHE_NAME = 'sobral-pinto-test-v2'; // Mude esse v1 sempre que atualizar o código
 const ASSETS = [
   './',
-  './index.html',
-  './manifest.json',
+  'index.html',
+  'manifest.json'
   'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80' // Imagem de fundo
 ];
 
