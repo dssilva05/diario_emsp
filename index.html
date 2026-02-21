@@ -822,10 +822,22 @@ if ('serviceWorker' in navigator) {
         consultarHistorico(); 
     }
 
-    async function enviarWhatsApp() { 
-        const msg = `*Suporte Sobral*\n*Dúvida:* ${document.getElementById('textoDuvida').value}`; 
-        window.open(`https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`, '_blank'); 
-    }
+    async function enviarWhatsApp() {
+    const duvida = document.getElementById('textoDuvida').value;
+    if(!duvida) return alert("Por favor, descreva sua dúvida ou sugestão.");
+
+    // Captura o nome do professor logado. Se não houver, usa "Não identificado"
+    const nomeProfessor = profNomeLogado || "Não identificado";
+    
+    // Monta a mensagem estruturada
+    const msg = `*Suporte Diário de Bordo - EMSP*\n` +
+                `*Escola:* ${NOME_ESCOLA}\n` +
+                `*Professor(a):* ${nomeProfessor}\n` +
+                `*Dúvida/Sugestão:* ${duvida}`;
+
+    const url = `https://api.whatsapp.com/send?phone=5531975580836&text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+}
 </script>
 
 <button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas?</button>
@@ -837,5 +849,6 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
