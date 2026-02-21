@@ -813,7 +813,16 @@ if ('serviceWorker' in navigator) {
     }
 
     function logout() { localStorage.removeItem('diarioAcessoSobral'); location.reload(); }
-    function toggleAjuda() { document.getElementById('caixaAjuda').classList.toggle('hidden'); }
+    function toggleAjuda() {
+    const caixa = document.getElementById('caixaAjuda');
+    caixa.classList.toggle('hidden');
+    
+    // Se a caixa estiver abrindo (não estiver oculta), preenche os dados
+    if (!caixa.classList.contains('hidden')) {
+        document.getElementById('infoEscolaSuporte').innerText = NOME_ESCOLA;
+        document.getElementById('infoProfSuporte').innerText = profNomeLogado || "Não identificado";
+    }
+}
 
     async function apagarRegistro(id) { 
         if (!confirm("Excluir definitivamente?")) return; 
@@ -823,33 +832,42 @@ if ('serviceWorker' in navigator) {
     }
 
     async function enviarWhatsApp() {
-    const duvida = document.getElementById('textoDuvida').value;
-    if (!duvida) return alert("Por favor, digite sua dúvida ou sugestão antes de enviar.");
+    const duvida = document.getElementById('textoDuvida').value.trim();
+    if (!duvida) return alert("Por favor, descreva sua dúvida ou sugestão.");
 
     const nomeProfessor = profNomeLogado || "Não identificado";
     
-    // Layout da mensagem conforme solicitado
+    // Layout da mensagem formatado para o WhatsApp
     const msg = `*Suporte Diário de Bordo*\n` +
                 `*Escola:* ${NOME_ESCOLA}\n` +
                 `*Professor(a):* ${nomeProfessor}\n` +
                 `*Dúvida/Sugestão:* ${duvida}`;
 
-    const numeroSuporte = "5531975580836"; // Seu número de suporte
+    const numeroSuporte = "5531975580836";
     const url = `https://api.whatsapp.com/send?phone=${numeroSuporte}&text=${encodeURIComponent(msg)}`;
     
     window.open(url, '_blank');
 }
 </script>
 
-<button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas?</button>
+<button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas ou sugestões?</button>
 <div id="caixaAjuda" class="modal-ajuda hidden">
-    <h3>Suporte Técnico</h3>
-    <textarea id="textoDuvida" rows="4" placeholder="Sua dúvida..."></textarea>
-    <button class="btn-main" style="background:#25d366; margin-top:10px;" onclick="enviarWhatsApp()">WhatsApp</button>
+    <h3 style="margin-top:0; color:var(--blue);">Suporte Diário</h3>
+    
+    <div style="text-align:left; font-size:12px; margin-bottom:10px; color:#555; background:#f0f0f0; padding:8px; border-radius:6px;">
+        <strong>Escola:</strong> <span id="infoEscolaSuporte"></span><br>
+        <strong>Professor(a):</strong> <span id="infoProfSuporte"></span>
+    </div>
+
+    <textarea id="textoDuvida" rows="4" placeholder="Digite aqui sua dúvida ou sugestão..."></textarea>
+    <button class="btn-main" style="background:#25d366; border:none; margin-top:10px;" onclick="enviarWhatsApp()">
+        🚀 Enviar via WhatsApp
+    </button>
 </div>
 
 </body>
 </html>
+
 
 
 
