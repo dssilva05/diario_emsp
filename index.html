@@ -349,11 +349,28 @@ if ('serviceWorker' in navigator) {
     let cargoLogado = "", profNomeLogado = "", disciplinaLogada = "", idEditando = null;
 
     window.onload = function() {
-        const salvo = localStorage.getItem('diarioAcessoSobral');
-        if (salvo) aplicarLogin(JSON.parse(salvo));
-        carregarDadosIniciais();
-        if (navigator.onLine) sincronizarDados();
-    };
+    updateOnlineStatus(); // Verifica conexão e tenta sincronizar
+
+    // 1. Primeiro tenta recuperar os alunos do cache para não dar erro de "Carregando..."
+    const cacheAlunos = localStorage.getItem('cache_alunos_sobral');
+    if (cacheAlunos) {
+        ALUNOS = JSON.parse(cacheAlunos);
+    }
+
+    // 2. Verifica se existe um login salvo e aplica imediatamente
+    const salvo = localStorage.getItem('diarioAcessoSobral');
+    if (salvo) {
+        try {
+            aplicarLogin(JSON.parse(salvo));
+        } catch (e) {
+            console.error("Erro ao restaurar login:", e);
+            logout(); // Se o dado estiver corrompido, limpa tudo
+        }
+    }
+    
+    // 3. Busca dados atualizados do servidor em segundo plano
+    carregarDadosIniciais();
+};
 
 	function toggleSenha(inputId, iconeId) {
     const campo = document.getElementById(inputId);
@@ -440,29 +457,24 @@ if ('serviceWorker' in navigator) {
     }
 
     function aplicarLogin(d) {
-        profNomeLogado = d.nome;
-        disciplinaLogada = d.disciplina;
-        const cp = String(d.cargo).trim().toUpperCase();
-        const gestores = ["DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA", "COORDENADOR", "COORDENADORA", "SUPERVISOR", "SUPERVISORA", "PAS", "COORDENADORA P. GERAL", "COORDENADOR P. GERAL"];
-        cargoLogado = gestores.some(c => cp.includes(c)) ? "Diretor" : "Professor";
-        document.getElementById('secaoAcesso').classList.add('hidden');
-        document.getElementById('conteudoDiario').classList.remove('hidden');
-        document.getElementById('nomeProfLogado').value = profNomeLogado;
-        
-        const selTipo = document.getElementById('selTipoRegistro');
-        const containerTipo = document.getElementById('tipoRegistroContainer');
-        selTipo.value = "📝 Ocorrência Disciplinar";
+    profNomeLogado = d.nome;
+    disciplinaLogada = d.disciplina;
+    
+    // Identifica se é Gestor ou Professor
+    const cp = String(d.cargo).trim().toUpperCase();
+    const gestores = ["DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA", "COORDENADOR", "COORDENADORA", "SUPERVISOR", "SUPERVISORA", "PAS", "COORDENADORA P. GERAL", "COORDENADOR P. GERAL"];
+    cargoLogado = gestores.some(c => cp.includes(c)) ? "Diretor" : "Professor";
+    
+    // --- AS LINHAS ABAIXO SÃO ESSENCIAIS PARA MANTER LOGADO ---
+    document.getElementById('secaoAcesso').classList.add('hidden'); // Esconde login
+    document.getElementById('conteudoDiario').classList.remove('hidden'); // Mostra o Diário
+    document.getElementById('nomeProfLogado').value = profNomeLogado;
 
-        if(cargoLogado === "Diretor") {
-            selTipo.disabled = false;
-            containerTipo.style.background = "#e3f2fd";
-        } else {
-            selTipo.disabled = true;
-            containerTipo.style.background = "#f8f9fa";
-        }
-        ajustarCamposRegistro();
-        definirDataHoje();
-    }
+    // Inicializa a interface
+    definirDataHoje();
+    popularTurmas();
+    ajustarCamposRegistro();
+}
 
     function ajustarCamposRegistro() {
         const tipo = document.getElementById('selTipoRegistro').value;
@@ -926,6 +938,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
