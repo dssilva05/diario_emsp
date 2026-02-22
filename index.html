@@ -136,6 +136,32 @@
     display: inline-block;
 }
 
+		/* Container para o campo de senha e o botão */
+.senha-container {
+    position: relative;
+    width: 100%;
+}
+
+.senha-container input {
+    padding-right: 40px; /* Dá espaço para o botão não ficar em cima do texto */
+}
+
+.btn-olho {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    color: #666;
+}
+
         /* Estilos da Aba 3 (Dashboards) */
         .chart-row { margin-bottom: 10px; }
         .bar-bg { background: #eee; border-radius: 5px; height: 12px; overflow: hidden; margin-top: 4px; }
@@ -196,10 +222,18 @@
     <div id="telaLogin" class="box-auth">
         <h2 style="color:var(--blue)">🔒 Login</h2>
         <input type="text" id="userLogin" placeholder="Usuário">
-        <input type="password" id="passLogin" placeholder="Senha">
-        <button class="btn-main" onclick="executarLogin()">Entrar</button>
-        <button class="btn-link" onclick="irPara('telaRecuperar')">Alterar senha</button>
+        
+        <div class="senha-container" style="position: relative; width: 100%;">
+            <input type="password" id="passLogin" placeholder="Senha" style="width: 100%; padding-right: 40px;">
+            <button type="button" onclick="toggleSenha('passLogin', 'iconeOlho')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 18px; margin-top: 4px;">
+                <span id="iconeOlho">👁️</span>
+            </button>
+        </div>
+
+        <button class="btn-main" onclick="executarLogin()" style="margin-top: 15px;">Entrar</button>
+        <button class="btn-link" onclick="irPara('telaRecover')">Alterar senha</button>
     </div>
+</div>
 
     <div id="telaRecuperar" class="box-auth hidden">
         <h2 style="color:var(--blue)">🔑 Recuperar Senha</h2>
@@ -321,6 +355,19 @@ if ('serviceWorker' in navigator) {
         if (navigator.onLine) sincronizarDados();
     };
 
+	function toggleSenha(inputId, iconeId) {
+    const campo = document.getElementById(inputId);
+    const icone = document.getElementById(iconeId);
+    
+    if (campo.type === "password") {
+        campo.type = "text";
+        icone.innerText = "🙈"; // Ícone de ocultar
+    } else {
+        campo.type = "password";
+        icone.innerText = "👁️"; // Ícone de mostrar
+    }
+}
+	
     function irPara(id) {
         document.getElementById('telaLogin').classList.add('hidden');
         document.getElementById('telaRecuperar').classList.add('hidden');
@@ -879,6 +926,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
