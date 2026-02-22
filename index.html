@@ -349,27 +349,27 @@ if ('serviceWorker' in navigator) {
     let cargoLogado = "", profNomeLogado = "", disciplinaLogada = "", idEditando = null;
 
     window.onload = function() {
-    updateOnlineStatus(); // Verifica conexão e tenta sincronizar
+    // 1. Define o nome da escola globalmente (caso não tenha definido no topo)
+    window.NOME_ESCOLA = "E. M. Sobral Pinto";
 
-    // 1. Primeiro tenta recuperar os alunos do cache para não dar erro de "Carregando..."
+    // 2. Carrega alunos do cache imediatamente
     const cacheAlunos = localStorage.getItem('cache_alunos_sobral');
     if (cacheAlunos) {
         ALUNOS = JSON.parse(cacheAlunos);
+        popularTurmas();
     }
 
-    // 2. Verifica se existe um login salvo e aplica imediatamente
+    // 3. Restaura a sessão
     const salvo = localStorage.getItem('diarioAcessoSobral');
     if (salvo) {
-        try {
-            aplicarLogin(JSON.parse(salvo));
-        } catch (e) {
-            console.error("Erro ao restaurar login:", e);
-            logout(); // Se o dado estiver corrompido, limpa tudo
-        }
+        aplicarLogin(JSON.parse(salvo));
     }
-    
-    // 3. Busca dados atualizados do servidor em segundo plano
-    carregarDadosIniciais();
+
+    // 4. Sincroniza e atualiza em background
+    if (navigator.onLine) {
+        sincronizarDados();
+        carregarDadosIniciais();
+    }
 };
 
 	function toggleSenha(inputId, iconeId) {
@@ -460,17 +460,34 @@ if ('serviceWorker' in navigator) {
     profNomeLogado = d.nome;
     disciplinaLogada = d.disciplina;
     
-    // Identifica se é Gestor ou Professor
+    // Identifica cargos de gestão
     const cp = String(d.cargo).trim().toUpperCase();
     const gestores = ["DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA", "COORDENADOR", "COORDENADORA", "SUPERVISOR", "SUPERVISORA", "PAS", "COORDENADORA P. GERAL", "COORDENADOR P. GERAL"];
     cargoLogado = gestores.some(c => cp.includes(c)) ? "Diretor" : "Professor";
     
-    // --- AS LINHAS ABAIXO SÃO ESSENCIAIS PARA MANTER LOGADO ---
-    document.getElementById('secaoAcesso').classList.add('hidden'); // Esconde login
-    document.getElementById('conteudoDiario').classList.remove('hidden'); // Mostra o Diário
+    // Interface principal
+    document.getElementById('secaoAcesso').classList.add('hidden');
+    document.getElementById('conteudoDiario').classList.remove('hidden');
     document.getElementById('nomeProfLogado').value = profNomeLogado;
 
-    // Inicializa a interface
+    const selTipo = document.getElementById('selTipoRegistro');
+    const containerTipo = document.getElementById('tipoRegistroContainer');
+
+    // REGRA DE OURO: Bloqueio do Tipo de Registro
+    if (selTipo) {
+        if (cargoLogado === "Diretor") {
+            selTipo.disabled = false;
+            selTipo.style.cursor = "default";
+            if (containerTipo) containerTipo.style.background = "#e3f2fd";
+        } else {
+            selTipo.value = "OCORRENCIA"; // Força a volta para Ocorrência
+            selTipo.disabled = true; // Trava o campo
+            selTipo.style.cursor = "not-allowed"; // Cursor de proibido
+            if (containerTipo) containerTipo.style.background = "#f8f9fa";
+        }
+    }
+
+    // Inicialização de componentes
     definirDataHoje();
     popularTurmas();
     ajustarCamposRegistro();
@@ -938,6 +955,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
