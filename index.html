@@ -341,8 +341,14 @@
 
 <script>
 if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(() => console.log("Motor Offline OK"));
-    }
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('sw.js').then(function(registration) {
+            console.log('ServiceWorker registrado com sucesso: ', registration.scope);
+        }, function(err) {
+            console.log('Falha ao registrar o ServiceWorker: ', err);
+        });
+    });
+}
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlVbz3C-bdKUbRvuWx4SrL9eiFdmyRwwZwUYVhi9u8u2df9NSgNRNjsYx7gD5q1qef7g/exec"; 
     let ALUNOS = {};
@@ -957,6 +963,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
