@@ -4,7 +4,7 @@ const ASSETS = [
   'index.html',
   'manifest.json',
   'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80', // Imagem de fundo
-  'https://cdn-icons-png.flaticon.com/512/3429/3429153.png' // ADICIONE O ÍCONE AQUI TAMBÉM
+  'icon-512.png' // ADICIONE O ÍCONE AQUI TAMBÉM
 ];
 
 // Instalação: Cacheia os arquivos essenciais
