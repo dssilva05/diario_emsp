@@ -465,7 +465,7 @@ if ('serviceWorker' in navigator) {
     const gestores = ["DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA", "COORDENADOR", "COORDENADORA", "SUPERVISOR", "SUPERVISORA", "PAS", "COORDENADORA P. GERAL", "COORDENADOR P. GERAL"];
     cargoLogado = gestores.some(c => cp.includes(c)) ? "Diretor" : "Professor";
     
-    // Interface principal
+    // Mostra o conteúdo e esconde o login
     document.getElementById('secaoAcesso').classList.add('hidden');
     document.getElementById('conteudoDiario').classList.remove('hidden');
     document.getElementById('nomeProfLogado').value = profNomeLogado;
@@ -473,24 +473,26 @@ if ('serviceWorker' in navigator) {
     const selTipo = document.getElementById('selTipoRegistro');
     const containerTipo = document.getElementById('tipoRegistroContainer');
 
-    // REGRA DE OURO: Bloqueio do Tipo de Registro
     if (selTipo) {
+        // 1. PRIMEIRO definimos o valor padrão para todos
+        selTipo.value = "📝 Ocorrência Disciplinar"; 
+
+        // 2. DEPOIS aplicamos a regra de permissão
         if (cargoLogado === "Diretor") {
             selTipo.disabled = false;
             selTipo.style.cursor = "default";
-            if (containerTipo) containerTipo.style.background = "#e3f2fd";
+            if (containerTipo) containerTipo.style.background = "#e3f2fd"; // Azul claro para gestão
         } else {
-            selTipo.value = "OCORRENCIA"; // Força a volta para Ocorrência
-            selTipo.disabled = true; // Trava o campo
-            selTipo.style.cursor = "not-allowed"; // Cursor de proibido
-            if (containerTipo) containerTipo.style.background = "#f8f9fa";
+            selTipo.disabled = true; // Trava para professor
+            selTipo.style.cursor = "not-allowed";
+            if (containerTipo) containerTipo.style.background = "#f8f9fa"; // Cinza claro para professor
         }
     }
 
-    // Inicialização de componentes
+    // Inicializa o restante da página
     definirDataHoje();
     popularTurmas();
-    ajustarCamposRegistro();
+    ajustarCamposRegistro(); // Esta função garante que o label "Relato do Professor" apareça
 }
 
     function ajustarCamposRegistro() {
@@ -955,6 +957,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
