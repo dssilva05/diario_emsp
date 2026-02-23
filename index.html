@@ -102,8 +102,36 @@
         
         .titulo-trimestre { background: var(--gold); color: #000; padding: 8px 15px; margin-top: 25px; border-radius: 6px; font-weight: bold; border-left: 10px solid var(--blue); }
         .item-ocorrencia { background: white; padding: 15px; border-left: 5px solid var(--blue); margin-top: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
-        .btn-ajuda-fixo { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; z-index: 9999; cursor: pointer; }
-        .modal-ajuda { position: fixed; bottom: 90px; right: 20px; width: 280px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; }
+        /* Botão flutuante no canto inferior direito */
+.btn-ajuda-fixo {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #0d47a1;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 10px 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 1001;
+}
+
+/* Modal de Ajuda */
+.modal-ajuda {
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    width: 300px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    padding: 15px;
+    z-index: 1000;
+    border: 1px solid #ddd;
+}
+
+.hidden { display: none; }
     
     @media print {
     /* 1. Configurações gerais de cor e fundo */
@@ -188,14 +216,21 @@
         <button style="background:none; border:none; color:var(--blue); cursor:pointer; margin-top:10px;" onclick="irPara('telaRecuperar')">Alterar senha</button>
     </div>
 
-<button class="btn-ajuda-fixo" onclick="document.getElementById('modalAjuda').classList.toggle('hidden')">
-    ❓ Dúvidas / Sugestões
-</button>
+<button class="btn-ajuda-fixo" onclick="toggleAjuda()">💡 Dúvidas ou sugestões?</button>
 
-<div id="modalAjuda" class="modal-ajuda hidden">
-    <h3 style="margin-top:0; color:var(--blue);">Suporte</h3>
-    <p style="font-size:14px;">Para sugestões ou erros no sistema, entre em contato com a coordenação ou envie um print da tela.</p>
-    <button class="btn-main" onclick="document.getElementById('modalAjuda').classList.add('hidden')">Fechar</button>
+<div id="caixaAjuda" class="modal-ajuda hidden">
+    <h3 style="margin-top:0; color:#0d47a1; font-size:16px;">Suporte Técnico</h3>
+    
+    <div style="text-align:left; font-size:11px; margin-bottom:10px; color:#444; background:#f5f5f5; padding:8px; border-radius:8px;">
+        <strong>Escola:</strong> <span id="infoEscolaSuporte"></span><br>
+        <strong>Professor(a):</strong> <span id="infoProfSuporte"></span>
+    </div>
+
+    <textarea id="textoDuvida" rows="4" placeholder="Descreva sua dúvida ou sugestão aqui..." style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; font-size:13px; box-sizing:border-box;"></textarea>
+    
+    <button class="btn-main" style="background:#25d366; color:white; border:none; width:100%; margin-top:10px; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="enviarWhatsApp()">
+        🚀 Enviar via WhatsApp
+    </button>
 </div>
 
     
@@ -318,6 +353,39 @@
         atualizarStatusRede();
     };
 
+    function toggleAjuda() {
+    const caixa = document.getElementById('caixaAjuda');
+    caixa.classList.toggle('hidden');
+    
+    // Se estiver abrindo a caixa, preenche os dados do professor logado
+    if (!caixa.classList.contains('hidden')) {
+        document.getElementById('infoEscolaSuporte').innerText = typeof NOME_ESCOLA !== 'undefined' ? NOME_ESCOLA : "E. M. Sobral Pinto";
+        document.getElementById('infoProfSuporte').innerText = typeof profNomeLogado !== 'undefined' && profNomeLogado ? profNomeLogado : "Faça login para identificar";
+    }
+}
+
+    function enviarWhatsApp() {
+    const duvida = document.getElementById('textoDuvida').value.trim();
+    if (!duvida) {
+        alert("Por favor, digite sua dúvida antes de enviar.");
+        return;
+    }
+
+    const nomeProfessor = typeof profNomeLogado !== 'undefined' ? profNomeLogado : "Não identificado";
+    const escola = typeof NOME_ESCOLA !== 'undefined' ? NOME_ESCOLA : "E. M. Sobral Pinto";
+    
+    // O layout que você solicitou
+    const msg = `*Suporte Diário de Bordo*\n` +
+                `*Escola:* ${escola}\n` +
+                `*Professor(a):* ${nomeProfessor}\n` +
+                `*Dúvida/Sugestão:* ${duvida}`;
+
+    const numeroSuporte = "5531975580836";
+    const url = `https://api.whatsapp.com/send?phone=${numeroSuporte}&text=${encodeURIComponent(msg)}`;
+    
+    window.open(url, '_blank');
+}
+    
     function atualizarStatusRede() {
         const barra = document.getElementById('status-bar');
         if (navigator.onLine) {
@@ -994,6 +1062,7 @@
 
 </body>
 </html>
+
 
 
 
