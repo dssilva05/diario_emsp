@@ -339,19 +339,22 @@
     }
 
     window.onload = function() {
-        window.NOME_ESCOLA = "E. M. Sobral Pinto";
-        const cacheAlunos = localStorage.getItem('cache_alunos_sobral');
-        if (cacheAlunos) { ALUNOS = JSON.parse(cacheAlunos); popularTurmas(); }
+    window.NOME_ESCOLA = "E. M. Sobral Pinto"; // [cite: 2]
+    
+    // Tenta carregar do cache imediatamente para não ficar vazio
+    const cacheAlunos = localStorage.getItem('cache_alunos_sobral');
+    if (cacheAlunos) { 
+        ALUNOS = JSON.parse(cacheAlunos); 
+        popularTurmas(); 
+    }
 
-        const salvo = localStorage.getItem('diarioAcessoSobral');
-        if (salvo) { aplicarLogin(JSON.parse(salvo)); }
-
-        if (navigator.onLine) { sincronizarDados(); carregarDadosIniciais(); }
-        atualizarStatusRede();
-
-        carregarDadosIniciais(); // Garante que busca os alunos da planilha
-        atualizarStatusRede();
-    };
+    // Tenta atualizar do servidor
+    if (navigator.onLine) { 
+        carregarDadosIniciais(); 
+    }
+    
+    atualizarStatusRede();
+};
 
     function toggleAjuda() {
     const caixa = document.getElementById('caixaAjuda');
@@ -1062,6 +1065,7 @@
 
 </body>
 </html>
+
 
 
 
