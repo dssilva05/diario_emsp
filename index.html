@@ -504,33 +504,35 @@
         const dtC = document.getElementById('dataConvocacao');
         const rG = document.getElementById('relatoGestaoTexto');
 
-        // Se o Diretor preencheu a tratativa na tela
         if (selT && selT.value) {
             tratativaFinal = selT.value;
-            // Se for Família Convocada, anexa a data selecionada
             if (tratativaFinal === "Família Convocada" && dtC && dtC.value) {
                 const dataFormatada = dtC.value.split('-').reverse().join('/');
                 tratativaFinal += ` (Data: ${dataFormatada})`;
             }
         } else {
-            // Se o Diretor está apenas editando o relato e o campo tratativa está vazio, mantém a antiga
             tratativaFinal = window.tratativaAntiga || "";
         }
         
-        // Coleta o relato privado (se o campo estiver visível usa o valor dele, senão mantém o antigo)
         relatoGestaoFinal = (rG && rG.offsetParent !== null) ? rG.value : (window.relatoGestaoAntigo || "");
     } else {
-        // Se for PROFESSOR, ele não tem acesso aos campos de gestão. 
-        // Recuperamos os valores que salvamos no "carregarParaEdicao" para não sobrescrever com vazio.
         tratativaFinal = window.tratativaAntiga || "";
         relatoGestaoFinal = window.relatoGestaoAntigo || "";
+    }
+
+    // --- LÓGICA DE IDENTIFICAÇÃO PAS vs PROF ---
+    let prefixo = "Prof: ";
+    // Verifica se a disciplina ou o cargo contém "PAS"
+    if (disciplinaLogada.toUpperCase().includes("PAS") || cargoLogado.toUpperCase().includes("PAS")) {
+        prefixo = "PAS: ";
     }
 
     // Montagem do objeto de dados para envio
     const dados = {
         acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
         id: idEditando || Date.now(),
-        professor: `[${document.getElementById('selTipoRegistro').value}] ${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`,
+        // Formato: [Tipo] Prefixo Nome (Disciplina)
+        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`,
         dataManual: dVal.split("-").reverse().join("/"),
         turma: tVal,
         aluno: aVal,
@@ -550,13 +552,12 @@
             const p = new URLSearchParams();
             for (let key in dados) p.append(key, dados[key]);
             
-            // Envia para o Google Apps Script
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
             
             alert("✅ Registro gravado com sucesso!");
             limparForm();
             if (idEditando) {
-                tab(2); // Volta para a consulta se for edição
+                tab(2); 
                 consultarHistorico();
             }
         } catch (e) { 
@@ -564,7 +565,6 @@
             salvarFila(dados); 
         }
     } else {
-        // Se estiver offline, salva na fila do localStorage
         salvarFila(dados);
     }
 
@@ -1068,6 +1068,7 @@
 
 </body>
 </html>
+
 
 
 
