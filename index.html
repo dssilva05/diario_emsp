@@ -188,6 +188,17 @@
         <button style="background:none; border:none; color:var(--blue); cursor:pointer; margin-top:10px;" onclick="irPara('telaRecuperar')">Alterar senha</button>
     </div>
 
+<button class="btn-ajuda-fixo" onclick="document.getElementById('modalAjuda').classList.toggle('hidden')">
+    ❓ Dúvidas / Sugestões
+</button>
+
+<div id="modalAjuda" class="modal-ajuda hidden">
+    <h3 style="margin-top:0; color:var(--blue);">Suporte</h3>
+    <p style="font-size:14px;">Para sugestões ou erros no sistema, entre em contato com a coordenação ou envie um print da tela.</p>
+    <button class="btn-main" onclick="document.getElementById('modalAjuda').classList.add('hidden')">Fechar</button>
+</div>
+
+    
     <div id="telaRecuperar" class="box-auth hidden">
         <h2 style="color:var(--blue)">🔑 Recuperar</h2>
         <input type="text" id="recNome" placeholder="Nome Completo">
@@ -280,8 +291,6 @@
 </div>
     </div>
 </div>
-    </div>
-</div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlVbz3C-bdKUbRvuWx4SrL9eiFdmyRwwZwUYVhi9u8u2df9NSgNRNjsYx7gD5q1qef7g/exec";
@@ -303,6 +312,9 @@
         if (salvo) { aplicarLogin(JSON.parse(salvo)); }
 
         if (navigator.onLine) { sincronizarDados(); carregarDadosIniciais(); }
+        atualizarStatusRede();
+
+        carregarDadosIniciais(); // Garante que busca os alunos da planilha
         atualizarStatusRede();
     };
 
@@ -959,4 +971,5 @@
 
 </body>
 </html>
+
 
