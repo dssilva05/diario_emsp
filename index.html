@@ -1307,9 +1307,9 @@ async function gravarOcorrencia() {
     }
 
     async function salvarNovoAluno() {
-        const nome = document.getElementById('novoAlunoNome').value.trim();
+        const nome = document.getElementById('novoAlunoNome').value.trim().toUpperCase();
         const turma = document.getElementById('novoAlunoTurma').value;
-        if(!nome) return alert("Digite o nome!");
+            if(!nome) return alert("Digite o nome!");
         
         const url = `${SCRIPT_URL}?acao=addAluno&nome=${encodeURIComponent(nome)}&turma=${turma}`;
         try {
@@ -1376,6 +1376,7 @@ async function gravarOcorrencia() {
 
 </body>
 </html>
+
 
 
 
