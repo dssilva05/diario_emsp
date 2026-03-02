@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sobral-pinto-v8'; // Incremente sempre que mudar o código
+const CACHE_NAME = 'sobral-pinto-v10'; // Incremente sempre que mudar o código
 const ASSETS = [
   './',
   'index.html',
