@@ -827,8 +827,11 @@ async function gravarOcorrencia() {
 }
 
     function exibirDados(data, t, a, p) {
+    window.ultimoResultadoConsulta = data; // Salva para permitir edição de textos longos
     const rDiv = document.getElementById('resConsulta');
     const verTodos = document.getElementById('chkTodosRegistros').checked;
+
+        
     
     // 1. Filtragem Inicial
     let filtrados = data.filter(r => {
@@ -1048,6 +1051,24 @@ async function gravarOcorrencia() {
         alert("Ocorreu um erro ao tentar excluir o registro no servidor.");
         btn.innerText = textoOriginal;
         btn.disabled = false;
+    }
+}
+    function prepararEdicao(id, focarTratativa) {
+    // Busca o registro completo nos dados que acabaram de ser consultados
+    // 'ultimoResultadoConsulta' deve ser uma variável global ou acessível
+    const registro = window.ultimoResultadoConsulta.find(item => String(item[0]) === String(id));
+    
+    if (registro) {
+        carregarParaEdicao(
+            registro[0], // id
+            registro[1], // data
+            registro[3], // turma
+            registro[4], // aluno
+            registro[5], // texto (relato)
+            registro[7] || "", // tratativa
+            registro[8] || "", // relatoGestao
+            focarTratativa
+        );
     }
 }
     
@@ -1377,6 +1398,7 @@ async function gravarOcorrencia() {
 
 </body>
 </html>
+
 
 
 
