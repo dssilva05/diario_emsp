@@ -830,14 +830,12 @@ async function gravarOcorrencia() {
     const rDiv = document.getElementById('resConsulta');
     const verTodos = document.getElementById('chkTodosRegistros').checked;
     
-    // 1. Filtragem Inicial
     let filtrados = data.filter(r => {
         const turmaBate = r[3] && String(r[3]).trim() === t;
         const alunoBate = a ? (String(r[4]).trim() === a) : true;
         return turmaBate && alunoBate;
     });
 
-    // 2. Filtros de Trimestre e Dono
     if (p !== "Todos os Trimestres") {
         filtrados = filtrados.filter(r => identificarTrimestre(r[1]) === p);
     }
@@ -852,7 +850,6 @@ async function gravarOcorrencia() {
         return; 
     }
 
-    // --- AGRUPAMENTO E CONTAGEM ---
     const agrupadoPorAluno = {};
     filtrados.forEach(r => {
         const nomeAluno = String(r[4]).toUpperCase();
@@ -862,7 +859,6 @@ async function gravarOcorrencia() {
         agrupadoPorAluno[nomeAluno].push(r);
     });
 
-    // --- ORDENAÇÃO POR QUANTIDADE (DECRESCENTE) ---
     const nomesOrdenados = Object.keys(agrupadoPorAluno).sort((a, b) => {
         return agrupadoPorAluno[b].length - agrupadoPorAluno[a].length;
     });
@@ -883,8 +879,8 @@ async function gravarOcorrencia() {
 
         const ocorrenciasAluno = agrupadoPorAluno[nome].sort((m, n) => {
             const converter = (s) => {
-                const p = s.split('/');
-                return new Date(p[2], p[1] - 1, p[0]).getTime();
+                const parts = s.split('/');
+                return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
             };
             return converter(m[1]) - converter(n[1]);
         });
@@ -911,14 +907,19 @@ async function gravarOcorrencia() {
                     <strong>🔒 Relato Privado:</strong> ${r[8]}
                 </div>` : "";
 
-            // RESTAURANDO OS BOTÕES DE CONTROLE AQUI
+            // CRIAMOS UM OBJETO SEGURO PARA OS BOTÕES
+            const objSeguro = JSON.stringify({
+                id: r[0], data: r[1], turma: r[3], aluno: r[4], 
+                texto: r[5], tratativa: r[7]||"", relatoGestao: r[8]||""
+            }).replace(/"/g, '&quot;');
+
             html += `
             <div class="item-ocorrencia" style="margin-top: 10px; border-left: 5px solid var(--gold); position: relative;">
                 <div style="float:right; display:flex; gap:5px;">
-                    ${(souDono || souGestor) ? `<button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', false)" style="background:orange; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer; font-size:10px;">Editar</button>` : ''}
+                    ${(souDono || souGestor) ? `<button onclick="prepararEdicao('${objSeguro}', false)" style="background:orange; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer; font-size:10px;">Editar</button>` : ''}
                     ${souGestor ? `
-                        <button onclick="carregarParaEdicao('${r[0]}','${r[1]}','${r[3]}','${r[4]}','${r[5]}','${r[7]||""}','${r[8]||""}', true)" style="background:#1976d2; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer; font-size:10px;">Tratar</button>
-                        <button onclick="apagarRegistro('${r[0]}')" style="background:red; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold;">X</button>
+                        <button onclick="prepararEdicao('${objSeguro}', true)" style="background:#1976d2; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer; font-size:10px;">Tratar</button>
+                        <button onclick="apagarRegistro('${r[0]}', event)" style="background:red; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold;">X</button>
                     ` : ''}
                 </div>
                 <small><strong>${tri}</strong> | 📅 ${r[1]} | ✍️ ${r[2]}</small>
@@ -1014,18 +1015,16 @@ async function gravarOcorrencia() {
     document.getElementById('btnGravar').innerText = "💾 Salvar Alteração";
 }
 
-    async function apagarRegistro(id) {
-    // 1. A exclusão é uma ação crítica, por isso exige internet para atualizar o banco de dados
+    async function apagarRegistro(id, event) {
     if (!navigator.onLine) {
-        return alert("⚠️ A exclusão de registros exige conexão com a internet para atualizar o banco de dados da escola.");
+        return alert("⚠️ A exclusão de registros exige conexão com a internet.");
     }
 
-    // 2. Confirmação de segurança para evitar cliques acidentais
-    if (!confirm("Tem certeza que deseja excluir este registro definitivamente? Esta ação não pode ser desfeita.")) {
+    if (!confirm("Tem certeza que deseja excluir este registro definitivamente?")) {
         return;
     }
 
-    const btn = event.target; // Captura o botão clicado
+    const btn = event.currentTarget; 
     const textoOriginal = btn.innerText;
     btn.innerText = "⏳...";
     btn.disabled = true;
@@ -1035,16 +1034,13 @@ async function gravarOcorrencia() {
         p.append('acao', 'apagarOcorrencia');
         p.append('id', id);
 
-        // Envia o pedido para o SCRIPT_URL definido no topo do código
-        const res = await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
         
         alert("Registro excluído com sucesso!");
-        
-        // Atualiza a lista na tela para o registro sumir imediatamente
         consultarHistorico(); 
     } catch (e) {
         console.error("Erro ao excluir:", e);
-        alert("Ocorreu um erro ao tentar excluir o registro no servidor.");
+        alert("Ocorreu um erro ao tentar excluir.");
         btn.innerText = textoOriginal;
         btn.disabled = false;
     }
@@ -1261,6 +1257,14 @@ async function gravarOcorrencia() {
     document.getElementById('selTipoRegistro').value = "📝 Ocorrência Disciplinar";
     ajustarCamposRegistro();
 }
+
+    function prepararEdicao(jsonString, focarTratativa) {
+    // Transforma o texto de volta em objeto real
+    const d = JSON.parse(jsonString.replace(/&quot;/g, '"'));
+    // Chama a função de edição original com os dados limpos
+    carregarParaEdicao(d.id, d.data, d.turma, d.aluno, d.texto, d.tratativa, d.relatoGestao, focarTratativa);
+}
+    
     function logout() { localStorage.removeItem('diarioAcessoSobral'); location.reload(); }
     function toggleSenha(id, ic) { const p = document.getElementById(id), i = document.getElementById(ic); p.type = p.type === "password" ? "text" : "password"; i.innerText = p.type === "password" ? "👁️" : "🙈"; }
     function identificarTrimestre(ds) { 
@@ -1376,6 +1380,7 @@ async function gravarOcorrencia() {
 
 </body>
 </html>
+
 
 
 
