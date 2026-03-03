@@ -621,6 +621,10 @@ async function carregarDatalistProfessores() {
     try {
         const res = await fetch(`${SCRIPT_URL}?acao=getListaProfessores`);
         const profs = await res.json();
+        
+        // SALVA NA MEMÓRIA: Criamos uma variável global para consultar a matéria depois
+        window.LISTA_PROF_COMPLETA = profs; 
+
         const list = document.getElementById('listaProfessores');
         if (list) {
             list.innerHTML = "";
@@ -727,16 +731,24 @@ async function gravarOcorrencia() {
     const nomeResponsavelEscrito = document.getElementById('nomeProfLogado').value;
     const primeiroNome = nomeResponsavelEscrito.split(" ")[0] || "Professor";
 
+    let disciplinaDoRegistro = disciplinaLogada; // Padrão: a sua disciplina
+    if (window.LISTA_PROF_COMPLETA) {
+        const buscaProf = window.LISTA_PROF_COMPLETA.find(p => p.nome === nomeResponsavelEscrito);
+        if (buscaProf && buscaProf.disciplina) {
+            disciplinaDoRegistro = buscaProf.disciplina; // Encontrou! Usa a matéria do professor
+        }
+    }
+    
     // Montagem do objeto de dados para envio
     const dados = {
         acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
         id: idEditando || Date.now(),
-        // Aqui usamos o nome que está no campo em vez da variável profNomeLogado fixa
-        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${primeiroNome} (${disciplinaLogada})`,
+        // AGORA USAMOS A 'disciplinaDoRegistro' encontrada acima
+        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${primeiroNome} (${disciplinaDoRegistro})`,
         dataManual: dVal.split("-").reverse().join("/"),
         turma: tVal,
         aluno: aVal,
-        texto: relatoFinal, // Enviando o relato combinado (Opção + Texto)
+        texto: relatoFinal,
         advertencia: document.getElementById('chkAdvertencia').checked ? "SIM" : "NÃO",
         tratativa: tratativaFinal,
         relatoGestao: relatoGestaoFinal
@@ -1439,6 +1451,7 @@ async function gravarOcorrencia() {
 
 </body>
 </html>
+
 
 
 
