@@ -908,20 +908,20 @@ async function gravarOcorrencia() {
                 </div>` : "";
 
             // CRIAMOS UM OBJETO SEGURO PARA OS BOTÕES
-            const objSeguro = JSON.stringify({
-                id: r[0], data: r[1], turma: r[3], aluno: r[4], 
-                texto: r[5], tratativa: r[7]||"", relatoGestao: r[8]||""
-            }).replace(/"/g, '&quot;');
+            const rSeguro = JSON.stringify({
+    id: r[0], data: r[1], turma: r[3], aluno: r[4], 
+    texto: r[5], tratativa: r[7]||"", relatoGestao: r[8]||""
+}).replace(/'/g, "\\'"); // Escapa aspas simples para segurança
 
-            html += `
-            <div class="item-ocorrencia" style="margin-top: 10px; border-left: 5px solid var(--gold); position: relative;">
-                <div style="float:right; display:flex; gap:5px;">
-                    ${(souDono || souGestor) ? `<button onclick="prepararEdicao('${objSeguro}', false)" style="background:orange; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer; font-size:10px;">Editar</button>` : ''}
-                    ${souGestor ? `
-                        <button onclick="prepararEdicao('${objSeguro}', true)" style="background:#1976d2; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer; font-size:10px;">Tratar</button>
-                        <button onclick="apagarRegistro('${r[0]}', event)" style="background:red; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold;">X</button>
-                    ` : ''}
-                </div>
+html += `
+<div class="item-ocorrencia" ...>
+    <div style="float:right; display:flex; gap:5px;">
+        ${(souDono || souGestor) ? `<button onclick="prepararEdicao('${rSeguro}', false)" style="...">Editar</button>` : ''}
+        ${souGestor ? `
+            <button onclick="prepararEdicao('${rSeguro}', true)" style="...">Tratar</button>
+            <button onclick="apagarRegistro('${r[0]}', event)" style="...">X</button>
+        ` : ''}
+    </div>
                 <small><strong>${tri}</strong> | 📅 ${r[1]} | ✍️ ${r[2]}</small>
                 <p style="margin:8px 0; font-size:14px;">${r[5]}</p>
                 ${r[6] === "SIM" ? '<p style="color:red; font-weight:bold; font-size:11px;">⚠️ Advertência Enviada</p>' : ''}
@@ -1016,6 +1016,7 @@ async function gravarOcorrencia() {
 }
 
     async function apagarRegistro(id, event) {
+        const btn = event.currentTarget;
     if (!navigator.onLine) {
         return alert("⚠️ A exclusão de registros exige conexão com a internet.");
     }
@@ -1024,7 +1025,7 @@ async function gravarOcorrencia() {
         return;
     }
 
-    const btn = event.currentTarget; 
+
     const textoOriginal = btn.innerText;
     btn.innerText = "⏳...";
     btn.disabled = true;
@@ -1259,9 +1260,7 @@ async function gravarOcorrencia() {
 }
 
     function prepararEdicao(jsonString, focarTratativa) {
-    // Transforma o texto de volta em objeto real
-    const d = JSON.parse(jsonString.replace(/&quot;/g, '"'));
-    // Chama a função de edição original com os dados limpos
+    const d = JSON.parse(jsonString);
     carregarParaEdicao(d.id, d.data, d.turma, d.aluno, d.texto, d.tratativa, d.relatoGestao, focarTratativa);
 }
     
@@ -1380,6 +1379,7 @@ async function gravarOcorrencia() {
 
 </body>
 </html>
+
 
 
 
