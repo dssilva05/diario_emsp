@@ -267,7 +267,8 @@
                 </select>
             </div>
             <label>Responsável:</label>
-            <input type="text" id="nomeProfLogado" readonly style="background:#e9ecef">
+            <input type="text" id="nomeProfLogado" list="listaProfessores" placeholder="Nome do Responsável">
+            <datalist id="listaProfessores"></datalist>
             <label>Data:</label>
             <input type="date" id="dataOcorrenciaManual">
             <label>Turma:</label>
@@ -296,6 +297,7 @@
     <option value="[🏠 Não fez atividade de casa] ">🏠 Não fez atividade de casa</option>
     <option value="[👥 Bagunça/Conversa excessiva] ">👥 Bagunça/Conversa excessiva</option>
     <option value="[📱 Uso indevido do celular] ">📱 Uso indevido do celular</option>
+    <option value="[💢 Agressão ao colega] ">💢 Agressão ao colega</option>
 </select>
 
 <label id="labelRelato">Descrição complementar (Opcional):</label>
@@ -541,37 +543,49 @@
         btn.innerText = "Entrar";
     }
 
-    function aplicarLogin(d) {
+    async function aplicarLogin(d) {
+    // 1. Definição de variáveis globais baseadas no retorno do servidor
     profNomeLogado = d.nome;
     disciplinaLogada = d.disciplina;
     const cp = String(d.cargo).trim().toUpperCase();
     
-    // Lista de cargos de gestão
+    // 2. Lógica de Hierarquia e Permissões (Mantendo sua estrutura original)
     const gestores = ["DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA", "COORDENADOR", "COORDENADORA", "SUPERVISOR", "SUPERVISORA", "PAS"];
     const ehGestao = gestores.some(c => cp.includes(c));
     const ehAEE = cp.includes("AEE");
     
-cargoLogado = ehGestao ? "Diretor" : (ehAEE ? "AEE" : "Professor");
+    cargoLogado = ehGestao ? "Diretor" : (ehAEE ? "AEE" : "Professor");
 
-    // 2. Trava do Select de Tipos de Registro
+    // 3. Configuração do Campo de Responsável (Nova lógica solicitada)
+    const inputResp = document.getElementById('nomeProfLogado');
+    inputResp.value = profNomeLogado; // Pré-define o nome de quem logou
+
+    if (cargoLogado === "Diretor") {
+        inputResp.readOnly = false; // Gestor pode apagar e digitar
+        inputResp.style.background = "#ffffff"; // Fundo branco para indicar edição
+        inputResp.style.border = "2px solid var(--gold)"; // Destaque visual
+        carregarDatalistProfessores(); // Busca lista de professores no servidor
+    } else {
+        inputResp.readOnly = true; // Professor comum não altera o nome
+        inputResp.style.background = "#e9ecef"; // Fundo cinza (travado)
+        inputResp.style.border = "1px solid #ccc";
+    }
+
+    // 4. Trava do Select de Tipos de Registro (Sua lógica original completa)
     const selTipo = document.getElementById('selTipoRegistro');
     if (selTipo) {
         if (cargoLogado === "Professor") {
-            // Se for professor comum, remove as opções restritas
-            // Mantemos apenas Disciplinar e Pedagógica
             selTipo.innerHTML = `
                 <option value="📝 Ocorrência Disciplinar">📝 Ocorrência Disciplinar</option>
                 <option value="📚 Ocorrência Pedagógica">📚 Ocorrência Pedagógica</option>
             `;
         } else if (cargoLogado === "AEE") {
-            // Se for Professor AEE, ele vê as dele + as básicas se desejar
             selTipo.innerHTML = `
                 <option value="♿ Atendimento AEE">♿ Atendimento AEE</option>
                 <option value="📝 Ocorrência Disciplinar">📝 Ocorrência Disciplinar</option>
                 <option value="📚 Ocorrência Pedagógica">📚 Ocorrência Pedagógica</option>
             `;
         } else {
-            // Gestão continua vendo TUDO
             selTipo.innerHTML = `
                 <option value="📝 Ocorrência Disciplinar">📝 Ocorrência Disciplinar</option>
                 <option value="📚 Ocorrência Pedagógica">📚 Ocorrência Pedagógica</option>
@@ -583,13 +597,12 @@ cargoLogado = ehGestao ? "Diretor" : (ehAEE ? "AEE" : "Professor");
             `;
         }
     }
-    
 
+    // 5. Controle de Visibilidade de Telas e Abas
     document.getElementById('secaoAcesso').classList.add('hidden');
     document.getElementById('conteudoDiario').classList.remove('hidden');
-    document.getElementById('nomeProfLogado').value = profNomeLogado;
 
-    // APARECER O BOTÃO PARA GESTÃO
+    // Aparecer o botão de cadastro (Aba 4) apenas para Gestão
     const btnAlunos = document.getElementById('t4');
     if (cargoLogado === "Diretor") {
         btnAlunos.classList.remove('hidden');
@@ -597,7 +610,29 @@ cargoLogado = ehGestao ? "Diretor" : (ehAEE ? "AEE" : "Professor");
         btnAlunos.classList.add('hidden');
     }
 
-    definirDataHoje(); popularTurmas(); ajustarCamposRegistro();
+    // 6. Inicialização de Dados
+    definirDataHoje(); 
+    popularTurmas(); 
+    ajustarCamposRegistro();
+}
+
+// Função auxiliar obrigatória para carregar os nomes dos professores no datalist
+async function carregarDatalistProfessores() {
+    try {
+        const res = await fetch(`${SCRIPT_URL}?acao=getListaProfessores`);
+        const profs = await res.json();
+        const list = document.getElementById('listaProfessores');
+        if (list) {
+            list.innerHTML = "";
+            profs.forEach(p => {
+                let opt = document.createElement('option');
+                opt.value = p.nome;
+                list.appendChild(opt);
+            });
+        }
+    } catch (e) { 
+        console.error("Erro ao carregar lista de professores:", e); 
+    }
 }
 
     function popularTurmas() {
@@ -687,11 +722,17 @@ async function gravarOcorrencia() {
         prefixo = "PAS: ";
     }
 
+    // --- CAPTURA DO NOME DO RESPONSÁVEL (Dinâmico para Gestores) ---
+    // Pega o nome que está escrito no input, permitindo que o gestor mude o autor
+    const nomeResponsavelEscrito = document.getElementById('nomeProfLogado').value;
+    const primeiroNome = nomeResponsavelEscrito.split(" ")[0] || "Professor";
+
     // Montagem do objeto de dados para envio
     const dados = {
         acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
         id: idEditando || Date.now(),
-        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`,
+        // Aqui usamos o nome que está no campo em vez da variável profNomeLogado fixa
+        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${primeiroNome} (${disciplinaLogada})`,
         dataManual: dVal.split("-").reverse().join("/"),
         turma: tVal,
         aluno: aVal,
@@ -1398,6 +1439,7 @@ async function gravarOcorrencia() {
 
 </body>
 </html>
+
 
 
 
