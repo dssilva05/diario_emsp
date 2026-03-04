@@ -563,6 +563,28 @@
     inputResp.style.background = "#e9ecef"; // Fundo cinza de leitura
     inputResp.style.border = "1px solid #ccc";
 
+    const seletorExistente = document.getElementById('containerMultiDisciplina');
+    if (seletorExistente) seletorExistente.remove();
+
+    if (disciplinaLogada === "MULTI") {
+        // Injetamos o seletor de disciplinas específicas
+        document.getElementById('nomeProfLogado').insertAdjacentHTML('afterend', `
+            <div id="containerMultiDisciplina" style="margin-top: 10px; background: #e3f2fd; padding: 10px; border-radius: 8px; border: 1px solid #bbdefb;">
+                <label style="margin-top:0; color: #1976d2; font-weight:bold;">📚 Disciplina do Registro:</label>
+                <select id="selDisciplinaMulti" style="width:100%; padding:8px; border-radius:5px; border:1px solid #1976d2;">
+                    <option value="Português">Português</option>
+                    <option value="Matemática">Matemática</option>
+                    <option value="Ciências">Ciências</option>
+                    <option value="História">História</option>
+                    <option value="Geografia">Geografia</option>
+                    <option value="Artes">Artes</option>
+                    <option value="Ed. Física">Ed. Física</option>
+                    <option value="Inglês">Inglês</option>
+                </select>
+            </div>
+        `);
+    }
+
     // 4. Injeção do Campo de "Professor de Referência" apenas para Gestão
     // Removemos o campo caso ele já exista (para evitar duplicidade em relogins)
     const campoExistente = document.getElementById('containerRefProf');
@@ -1455,6 +1477,7 @@ async function gravarOcorrencia() {
 
 </body>
 </html>
+
 
 
 
