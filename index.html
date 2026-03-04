@@ -973,7 +973,6 @@ async function gravarOcorrencia() {
             // RESTAURANDO OS BOTÕES DE CONTROLE AQUI
             html += `
             <div class="item-ocorrencia" style="margin-top: 10px; border-left: 5px solid var(--gold); position: relative;">
-                // Substitua o bloco dos botões por este:
                 <div style="float:right; display:flex; gap:5px;">
                     ${(souDono || souGestor) ? `<button onclick="prepararEdicao('${r[0]}', false)" style="background:orange; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer; font-size:10px;">Editar</button>` : ''}
                     ${souGestor ? `
@@ -1456,6 +1455,7 @@ async function gravarOcorrencia() {
 
 </body>
 </html>
+
 
 
 
