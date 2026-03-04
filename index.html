@@ -717,15 +717,14 @@ async function gravarOcorrencia() {
         return alert("⚠️ Preencha Data, Turma, Aluno e escolha uma Ocorrência ou escreva o Relato!");
     }
 
-    // 2. NOVA LÓGICA COM TRAVA DE SEGURANÇA: 
-    // Verifica se o elemento existe antes de tentar ler o .value
+    // 2. NOVA LÓGICA COM TRAVA DE SEGURANÇA (Professor de Referência): 
     let profRef = "";
     const inputRef = document.getElementById('profReferencia'); 
     if (inputRef && inputRef.value.trim() !== "") {
         profRef = `(Prof: ${inputRef.value.trim()}) `;
     }
 
-    // Concatena tudo com segurança
+    // Concatena tudo com segurança para o campo de texto
     const relatoFinal = (opcaoRapida + profRef + rVal).trim();
 
     let tratativaFinal = "";
@@ -764,12 +763,20 @@ async function gravarOcorrencia() {
         prefixo = "Gestão: ";
     }
 
+    // --- NOVA LÓGICA PARA DISCIPLINAS MULTI ---
+    let disciplinaParaGravar = disciplinaLogada; 
+    const selMulti = document.getElementById('selDisciplinaMulti');
+    // Se o seletor MULTI existir na tela, usa o valor selecionado nele
+    if (selMulti) {
+        disciplinaParaGravar = selMulti.value;
+    }
+
     // 5. Montagem dos dados
     const dados = {
         acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
         id: idEditando || Date.now(),
-        // Salva sempre no SEU nome (quem logou)
-        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`,
+        // Salva sempre no SEU nome, mas usa a disciplina escolhida (se for MULTI)
+        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${profNomeLogado.split(" ")[0]} (${disciplinaParaGravar})`,
         dataManual: dVal.split("-").reverse().join("/"),
         turma: tVal,
         aluno: aVal,
@@ -1477,6 +1484,7 @@ async function gravarOcorrencia() {
 
 </body>
 </html>
+
 
 
 
