@@ -689,25 +689,26 @@ async function gravarOcorrencia() {
     const opcaoRapida = document.getElementById('selOcorrenciaRapida').value; 
     const rVal = document.getElementById('relatoTexto').value;
 
-    // 1. Validação de segurança
+    // 1. Validação de campos obrigatórios
     if (!dVal || !tVal || !aVal || (opcaoRapida === "" && rVal.trim() === "")) {
         return alert("⚠️ Preencha Data, Turma, Aluno e escolha uma Ocorrência ou escreva o Relato!");
     }
 
-    // 2. NOVA LÓGICA: Captura o Professor de Referência para o texto
+    // 2. NOVA LÓGICA COM TRAVA DE SEGURANÇA: 
+    // Verifica se o elemento existe antes de tentar ler o .value
     let profRef = "";
-    const inputRef = document.getElementById('profReferencia');
+    const inputRef = document.getElementById('profReferencia'); 
     if (inputRef && inputRef.value.trim() !== "") {
         profRef = `(Prof: ${inputRef.value.trim()}) `;
     }
 
-    // Concatena a opção rápida + o professor de referência + o relato manual
+    // Concatena tudo com segurança
     const relatoFinal = (opcaoRapida + profRef + rVal).trim();
 
     let tratativaFinal = "";
     let relatoGestaoFinal = "";
 
-    // 3. Lógica de Preservação de Tratativas (Diretor vs Professor)
+    // 3. Lógica de Diretor vs Professor (Sua original)
     if (cargoLogado === "Diretor") {
         const selT = document.getElementById('selTratativa');
         const dtC = document.getElementById('dataConvocacao');
@@ -728,7 +729,7 @@ async function gravarOcorrencia() {
         relatoGestaoFinal = window.relatoGestaoAntigo || "";
     }
 
-    // 4. Lógica de Prefixo baseada no cargo logado
+    // 4. Lógica de Identificação de Prefixo
     let prefixo = "Prof: ";
     const dadosUsuario = JSON.parse(localStorage.getItem('diarioAcessoSobral') || '{}');
     const cargoReal = (dadosUsuario.cargo || "").toUpperCase();
@@ -736,24 +737,20 @@ async function gravarOcorrencia() {
 
     if (cargoReal.includes("PAS") || disciplinaReal.includes("PAS")) {
         prefixo = "PAS: ";
-    } else if (ehGestao) { // Se você for gestor, pode usar um prefixo diferente se quiser
+    } else if (cargoLogado === "Diretor") {
         prefixo = "Gestão: ";
     }
 
-    // 5. Autor do registro sempre será VOCÊ (quem fez o login)
-    // Usamos profNomeLogado e disciplinaLogada originais do login
-    const primeiroNomeSeu = profNomeLogado.split(" ")[0];
-
-    // Montagem do objeto de dados para envio
+    // 5. Montagem dos dados
     const dados = {
         acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
         id: idEditando || Date.now(),
-        // Aqui garantimos que salva no SEU nome, mas com o tipo de registro escolhido
-        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${primeiroNomeSeu} (${disciplinaLogada})`,
+        // Salva sempre no SEU nome (quem logou)
+        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${profNomeLogado.split(" ")[0]} (${disciplinaLogada})`,
         dataManual: dVal.split("-").reverse().join("/"),
         turma: tVal,
         aluno: aVal,
-        texto: relatoFinal, // O texto agora contém "(Prof: Nome)" injetado
+        texto: relatoFinal,
         advertencia: document.getElementById('chkAdvertencia').checked ? "SIM" : "NÃO",
         tratativa: tratativaFinal,
         relatoGestao: relatoGestaoFinal
@@ -1458,6 +1455,7 @@ async function gravarOcorrencia() {
 
 </body>
 </html>
+
 
 
 
