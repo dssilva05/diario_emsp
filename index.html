@@ -556,22 +556,31 @@
     
     cargoLogado = ehGestao ? "Diretor" : (ehAEE ? "AEE" : "Professor");
 
-    // 3. Configuração do Campo de Responsável (Nova lógica solicitada)
+    // 3. Configuração do Campo de Responsável (Volta a ser o autor logado)
     const inputResp = document.getElementById('nomeProfLogado');
-    inputResp.value = profNomeLogado; // Pré-define o nome de quem logou
+    inputResp.value = profNomeLogado; 
+    inputResp.readOnly = true; // Travado para garantir o autor real do login
+    inputResp.style.background = "#e9ecef"; // Fundo cinza de leitura
+    inputResp.style.border = "1px solid #ccc";
 
-    if (cargoLogado === "Diretor") {
-        inputResp.readOnly = false; // Gestor pode apagar e digitar
-        inputResp.style.background = "#ffffff"; // Fundo branco para indicar edição
-        inputResp.style.border = "2px solid var(--gold)"; // Destaque visual
-        carregarDatalistProfessores(); // Busca lista de professores no servidor
-    } else {
-        inputResp.readOnly = true; // Professor comum não altera o nome
-        inputResp.style.background = "#e9ecef"; // Fundo cinza (travado)
-        inputResp.style.border = "1px solid #ccc";
+    // 4. Injeção do Campo de "Professor de Referência" apenas para Gestão
+    // Removemos o campo caso ele já exista (para evitar duplicidade em relogins)
+    const campoExistente = document.getElementById('containerRefProf');
+    if (campoExistente) campoExistente.remove();
+
+    if (ehGestao) {
+        // Insere o campo visual novo acima das turmas para facilitar
+        document.getElementById('tipoRegistroContainer').insertAdjacentHTML('afterend', `
+            <div id="containerRefProf" style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ffeeba;">
+                <label style="margin-top:0; color: #856404; font-weight:bold;">📋 Relato em nome do Prof:</label>
+                <input type="text" id="profReferencia" list="listaProfessores" placeholder="Selecione o professor (opcional)" style="background: white; border: 1px solid #856404; width:100%; padding:10px; border-radius:8px; box-sizing:border-box;">
+                <small style="color:#856404;">O nome selecionado aparecerá no início do relato.</small>
+            </div>
+        `);
+        carregarDatalistProfessores(); // Popula o datalist para este novo campo
     }
 
-    // 4. Trava do Select de Tipos de Registro (Sua lógica original completa)
+    // 5. Trava do Select de Tipos de Registro (Sua lógica original completa)
     const selTipo = document.getElementById('selTipoRegistro');
     if (selTipo) {
         if (cargoLogado === "Professor") {
@@ -598,11 +607,10 @@
         }
     }
 
-    // 5. Controle de Visibilidade de Telas e Abas
+    // 6. Controle de Visibilidade de Telas e Abas
     document.getElementById('secaoAcesso').classList.add('hidden');
     document.getElementById('conteudoDiario').classList.remove('hidden');
 
-    // Aparecer o botão de cadastro (Aba 4) apenas para Gestão
     const btnAlunos = document.getElementById('t4');
     if (cargoLogado === "Diretor") {
         btnAlunos.classList.remove('hidden');
@@ -610,7 +618,7 @@
         btnAlunos.classList.add('hidden');
     }
 
-    // 6. Inicialização de Dados
+    // 7. Inicialização de Dados
     definirDataHoje(); 
     popularTurmas(); 
     ajustarCamposRegistro();
@@ -678,23 +686,28 @@ async function gravarOcorrencia() {
     const aVal = document.getElementById('selAluno').value;
     const dVal = document.getElementById('dataOcorrenciaManual').value;
     
-    // Novos campos de ocorrência rápida e relato
     const opcaoRapida = document.getElementById('selOcorrenciaRapida').value; 
     const rVal = document.getElementById('relatoTexto').value;
 
-    // --- NOVA VALIDAÇÃO ACORDADA ---
-    // Barra apenas se: não tiver data OU turma OU aluno OU (não tiver opção rápida E nem texto)
+    // 1. Validação de segurança
     if (!dVal || !tVal || !aVal || (opcaoRapida === "" && rVal.trim() === "")) {
         return alert("⚠️ Preencha Data, Turma, Aluno e escolha uma Ocorrência ou escreva o Relato!");
     }
 
-    // Une a opção do select com o texto digitado (se houver)
-    const relatoFinal = (opcaoRapida + rVal).trim();
+    // 2. NOVA LÓGICA: Captura o Professor de Referência para o texto
+    let profRef = "";
+    const inputRef = document.getElementById('profReferencia');
+    if (inputRef && inputRef.value.trim() !== "") {
+        profRef = `(Prof: ${inputRef.value.trim()}) `;
+    }
+
+    // Concatena a opção rápida + o professor de referência + o relato manual
+    const relatoFinal = (opcaoRapida + profRef + rVal).trim();
 
     let tratativaFinal = "";
     let relatoGestaoFinal = "";
 
-    // LÓGICA DE PRESERVAÇÃO E ATUALIZAÇÃO (Diretor vs Professor) - Mantida original
+    // 3. Lógica de Preservação de Tratativas (Diretor vs Professor)
     if (cargoLogado === "Diretor") {
         const selT = document.getElementById('selTratativa');
         const dtC = document.getElementById('dataConvocacao');
@@ -709,14 +722,13 @@ async function gravarOcorrencia() {
         } else {
             tratativaFinal = window.tratativaAntiga || "";
         }
-        
         relatoGestaoFinal = (rG && rG.offsetParent !== null) ? rG.value : (window.relatoGestaoAntigo || "");
     } else {
         tratativaFinal = window.tratativaAntiga || "";
         relatoGestaoFinal = window.relatoGestaoAntigo || "";
     }
 
-    // --- LÓGICA DE IDENTIFICAÇÃO DE PREFIXO --- Mantida original
+    // 4. Lógica de Prefixo baseada no cargo logado
     let prefixo = "Prof: ";
     const dadosUsuario = JSON.parse(localStorage.getItem('diarioAcessoSobral') || '{}');
     const cargoReal = (dadosUsuario.cargo || "").toUpperCase();
@@ -724,31 +736,24 @@ async function gravarOcorrencia() {
 
     if (cargoReal.includes("PAS") || disciplinaReal.includes("PAS")) {
         prefixo = "PAS: ";
+    } else if (ehGestao) { // Se você for gestor, pode usar um prefixo diferente se quiser
+        prefixo = "Gestão: ";
     }
 
-    // --- CAPTURA DO NOME DO RESPONSÁVEL (Dinâmico para Gestores) ---
-    // Pega o nome que está escrito no input, permitindo que o gestor mude o autor
-    const nomeResponsavelEscrito = document.getElementById('nomeProfLogado').value;
-    const primeiroNome = nomeResponsavelEscrito.split(" ")[0] || "Professor";
+    // 5. Autor do registro sempre será VOCÊ (quem fez o login)
+    // Usamos profNomeLogado e disciplinaLogada originais do login
+    const primeiroNomeSeu = profNomeLogado.split(" ")[0];
 
-    let disciplinaDoRegistro = disciplinaLogada; // Padrão: a sua disciplina
-    if (window.LISTA_PROF_COMPLETA) {
-        const buscaProf = window.LISTA_PROF_COMPLETA.find(p => p.nome === nomeResponsavelEscrito);
-        if (buscaProf && buscaProf.disciplina) {
-            disciplinaDoRegistro = buscaProf.disciplina; // Encontrou! Usa a matéria do professor
-        }
-    }
-    
     // Montagem do objeto de dados para envio
     const dados = {
         acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
         id: idEditando || Date.now(),
-        // AGORA USAMOS A 'disciplinaDoRegistro' encontrada acima
-        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${primeiroNome} (${disciplinaDoRegistro})`,
+        // Aqui garantimos que salva no SEU nome, mas com o tipo de registro escolhido
+        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${primeiroNomeSeu} (${disciplinaLogada})`,
         dataManual: dVal.split("-").reverse().join("/"),
         turma: tVal,
         aluno: aVal,
-        texto: relatoFinal,
+        texto: relatoFinal, // O texto agora contém "(Prof: Nome)" injetado
         advertencia: document.getElementById('chkAdvertencia').checked ? "SIM" : "NÃO",
         tratativa: tratativaFinal,
         relatoGestao: relatoGestaoFinal
@@ -1318,6 +1323,8 @@ async function gravarOcorrencia() {
     document.getElementById('selOcorrenciaRapida').value = ""; // Acrescentado: Reseta o dropdown
     document.getElementById('containerTratativa').innerHTML = "";
     document.getElementById('containerTratativa').classList.add('hidden');
+        const inputRef = document.getElementById('profReferencia');
+    if (inputRef) inputRef.value = ""; // Limpa o nome do professor de referência
     
     // 2. Reseta o controle de edição
     idEditando = null;
@@ -1451,6 +1458,7 @@ async function gravarOcorrencia() {
 
 </body>
 </html>
+
 
 
 
