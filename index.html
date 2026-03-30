@@ -550,25 +550,24 @@
     disciplinaLogada = d.disciplina;
     const cp = String(d.cargo).trim().toUpperCase();
     
-    // 2. Lógica de Hierarquia e Permissões (Mantendo sua estrutura original)
+    // 2. Lógica de Hierarquia e Permissões
     const gestores = ["DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA", "COORDENADOR", "COORDENADORA", "SUPERVISOR", "SUPERVISORA", "PAS"];
     const ehGestao = gestores.some(c => cp.includes(c));
     const ehAEE = cp.includes("AEE");
     
     cargoLogado = ehGestao ? "Diretor" : (ehAEE ? "AEE" : "Professor");
 
-    // 3. Configuração do Campo de Responsável (Volta a ser o autor logado)
+    // 3. Configuração do Campo de Responsável
     const inputResp = document.getElementById('nomeProfLogado');
     inputResp.value = profNomeLogado; 
-    inputResp.readOnly = true; // Travado para garantir o autor real do login
-    inputResp.style.background = "#e9ecef"; // Fundo cinza de leitura
+    inputResp.readOnly = true; 
+    inputResp.style.background = "#e9ecef"; 
     inputResp.style.border = "1px solid #ccc";
 
     const seletorExistente = document.getElementById('containerMultiDisciplina');
     if (seletorExistente) seletorExistente.remove();
 
     if (disciplinaLogada === "MULTI") {
-        // Injetamos o seletor de disciplinas específicas
         document.getElementById('nomeProfLogado').insertAdjacentHTML('afterend', `
             <div id="containerMultiDisciplina" style="margin-top: 10px; background: #e3f2fd; padding: 10px; border-radius: 8px; border: 1px solid #bbdefb;">
                 <label style="margin-top:0; color: #1976d2; font-weight:bold;">📚 Disciplina do Registro:</label>
@@ -586,13 +585,14 @@
         `);
     }
 
-    // 4. Injeção do Campo de "Professor de Referência" apenas para Gestão
-    // Removemos o campo caso ele já exista (para evitar duplicidade em relogins)
+    // 4. Injeção do Campo de "Professor de Referência" e Bloco de Tratativa para Gestão
     const campoExistente = document.getElementById('containerRefProf');
     if (campoExistente) campoExistente.remove();
 
+    const cont = document.getElementById('containerTratativa');
+
     if (ehGestao) {
-        // Insere o campo visual novo acima das turmas para facilitar
+        // Campo de referência (quem relatou)
         document.getElementById('tipoRegistroContainer').insertAdjacentHTML('afterend', `
             <div id="containerRefProf" style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ffeeba;">
                 <label style="margin-top:0; color: #856404; font-weight:bold;">📋 Relato em nome do Prof:</label>
@@ -600,10 +600,31 @@
                 <small style="color:#856404;">O nome selecionado aparecerá no início do relato.</small>
             </div>
         `);
-        carregarDatalistProfessores(); // Popula o datalist para este novo campo
+        carregarDatalistProfessores();
+
+        // Injeção imediata dos campos de Tratativa
+        cont.innerHTML = `
+            <div style="background:#f0f7ff; padding:15px; border-radius:8px; margin-top:15px; border:1px solid #1976d2;">
+                <label style="color:#1976d2; font-weight:bold;">🛠️ Espaço da Gestão (Tratativa)</label>
+                <select id="selTratativa" onchange="verificarDataConvocacao()" style="width:100%; margin-top:8px;">
+                    <option value="">Selecione a ação...</option>
+                    <option value="Conversa com o Aluno">Conversa com o Aluno</option>
+                    <option value="Advertência Verbal">Advertência Verbal</option>
+                    <option value="Advertência por Escrito">Advertência por Escrito</option>
+                    <option value="Família Convocada">Família Convocada</option>
+                    <option value="Encaminhamento PAS">Encaminhamento PAS</option>
+                </select>
+                <div id="divDataConvocacao" style="display:none; margin-top:10px;">
+                    <label>📅 Data da Reunião:</label>
+                    <input type="date" id="dataConvocacao" style="width:100%;">
+                </div>
+                <label style="display:block; margin-top:15px;">🔒 Relato Interno (Privado):</label>
+                <textarea id="relatoGestaoTexto" rows="3" style="width:100%;" placeholder="Anotações da gestão..."></textarea>
+            </div>`;
+        cont.classList.remove('hidden');
     }
 
-    // 5. Trava do Select de Tipos de Registro (Sua lógica original completa)
+    // 5. Trava do Select de Tipos de Registro
     const selTipo = document.getElementById('selTipoRegistro');
     if (selTipo) {
         if (cargoLogado === "Professor") {
@@ -1345,28 +1366,38 @@ async function gravarOcorrencia() {
     
     function definirDataHoje() { document.getElementById('dataOcorrenciaManual').value = new Date().toISOString().split('T')[0]; }
     function limparForm() {
-    // 1. Limpa os campos visíveis
+    // 1. Limpa os campos de relato e ocorrência rápida
     document.getElementById('relatoTexto').value = "";
-    document.getElementById('selOcorrenciaRapida').value = ""; // Acrescentado: Reseta o dropdown
-    document.getElementById('containerTratativa').innerHTML = "";
-    document.getElementById('containerTratativa').classList.add('hidden');
-        const inputRef = document.getElementById('profReferencia');
-    if (inputRef) inputRef.value = ""; // Limpa o nome do professor de referência
+    document.getElementById('selOcorrenciaRapida').value = "";
     
-    // 2. Reseta o controle de edição
+    const inputRef = document.getElementById('profReferencia');
+    if (inputRef) inputRef.value = ""; 
+
+    const cont = document.getElementById('containerTratativa');
+
+    // 2. Lógica Inteligente para o Bloco de Tratativa
+    if (cargoLogado === "Diretor") {
+        // Se for gestor, apenas reseta os valores dos campos internos sem remover o HTML
+        if(document.getElementById('selTratativa')) document.getElementById('selTratativa').value = "";
+        if(document.getElementById('relatoGestaoTexto')) document.getElementById('relatoGestaoTexto').value = "";
+        if(document.getElementById('divDataConvocacao')) document.getElementById('divDataConvocacao').style.display = "none";
+        if(document.getElementById('dataConvocacao')) document.getElementById('dataConvocacao').value = "";
+    } else {
+        // Se for professor comum, remove o bloco completamente
+        cont.innerHTML = "";
+        cont.classList.add('hidden');
+    }
+    
+    // 3. Reseta o controle de edição
     idEditando = null;
     document.getElementById('btnGravar').innerText = "Gravar no Diário";
     
-    // 3. LIMPA AS VARIÁVEIS DE MEMÓRIA
+    // 4. Limpa as variáveis de memória de edições anteriores
     window.tratativaAntiga = "";
     window.relatoGestaoAntigo = "";
-    window.tratativaAtual = "";      
-    window.relatoGestaoAtual = "";
 
-    // 4. Reseta a data para hoje
+    // 5. Reseta a data para hoje e o tipo de registro padrão
     definirDataHoje();
-    
-    // 5. Volta o select de tipo para o padrão
     document.getElementById('selTipoRegistro').value = "📝 Ocorrência Disciplinar";
     ajustarCamposRegistro();
 }
