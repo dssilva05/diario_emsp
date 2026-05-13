@@ -249,6 +249,7 @@
         <button id="t1" class="tab-btn active" onclick="tab(1)">📝 INCLUIR</button>
         <button id="t2" class="tab-btn" onclick="tab(2)">🔍 CONSULTAR</button>
         <button id="t3" class="tab-btn" onclick="tab(3)">📊 ALERTAS</button>
+        <button id="t5" class="tab-btn hidden" onclick="tab(5)">👨‍🏫 ATENDIMENTO PROF</button>
         <button id="t4" class="tab-btn hidden" onclick="tab(4)">👥 CADASTRO</button>                                                          
         <button onclick="logout()" style="background:none; color:white; flex:0.3; cursor:pointer">Sair</button>
     </div>
@@ -299,7 +300,6 @@
     <option value="[📱 Uso indevido do celular] ">📱 Uso indevido do celular</option>
     <option value="[🪑 Não respeitou o mapeamento] ">🪑 Não respeitou o mapeamento</option>
     <option value="[💢 Agressão ao colega] ">💢 Agressão ao colega</option>
-    <option value="[📖 Não trouxe caderno/livro] ">📖  Não trouxe caderno/livro</option>
 </select>
 
 <label id="labelRelato">Descrição complementar (Opcional):</label>
@@ -340,6 +340,9 @@
 
         <div class="dashboard-title">Alunos com mais ocorrências</div>
         <div id="listaAlunosMaisOcorrencias" style="margin-bottom:20px;"></div>
+
+        <div class="dashboard-title">Ranking de Registros por Profissional </div>
+        <div id="listaProfessoresMaisOcorrencias" style="margin-bottom:20px;"></div>
 
         <div class="dashboard-title">Ocorrências (Geral)</div>
         <div class="pie-charts-wrapper">
@@ -393,6 +396,30 @@
     <button class="btn-main" style="background:#d32f2f; margin-top:15px;" onclick="excluirAluno()">Excluir Aluno Definitivamente</button>
 </div>
         </div>
+
+        <div id="aba5" class="hidden">
+    <h2 style="color:var(--blue); margin-top:0;">📋 Acompanhamento Pedagógico</h2>
+    
+    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bbdefb;">
+        <label>Professor(a):</label>
+        <input type="text" id="feedbackProfNome" list="listaProfessores" placeholder="Selecione o professor...">
+        
+        <label>Data do Atendimento:</label>
+        <input type="date" id="feedbackData">
+        
+        <label>Pauta / Assunto:</label>
+        <textarea id="feedbackTexto" rows="4" placeholder="Descreva os pontos tratados, orientações pedagógicas e combinados..."></textarea>
+        
+        <button class="btn-main" style="background:#1976d2; margin-top:10px;" onclick="gravarFeedbackPedagogico()">💾 Registrar Conversa</button>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #ccc; margin: 20px 0;">
+    
+    <h3 style="color:var(--blue);">🔍 Consultar Histórico</h3>
+    <input type="text" id="buscaFeedbackProf" list="listaProfessores" placeholder="Filtrar por professor..." onkeyup="filtrarFeedbacks()">
+    <div id="resFeedback" style="margin-top:15px;"></div>
+</div>
+        
     </div>
 </div>
 
@@ -555,6 +582,8 @@
     const gestores = ["DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA", "COORDENADOR", "COORDENADORA", "SUPERVISOR", "SUPERVISORA", "PAS"];
     const ehGestao = gestores.some(c => cp.includes(c));
     const ehAEE = cp.includes("AEE");
+    const gestoresFeedback = ["COORDENADOR", "COORDENADORA", "DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA"];
+    const podeVerFeedback = gestoresFeedback.some(c => cp.includes(c));
     
     cargoLogado = ehGestao ? "Diretor" : (ehAEE ? "AEE" : "Professor");
 
@@ -564,6 +593,13 @@
     inputResp.readOnly = true; 
     inputResp.style.background = "#e9ecef"; 
     inputResp.style.border = "1px solid #ccc";
+
+    const btnFeedback = document.getElementById('t5');
+        if (podeVerFeedback) {
+        btnFeedback.classList.remove('hidden');
+            } else {
+        btnFeedback.classList.add('hidden');
+            }
 
     const seletorExistente = document.getElementById('containerMultiDisciplina');
     if (seletorExistente) seletorExistente.remove();
@@ -1187,7 +1223,8 @@ async function gravarOcorrencia() {
     }
 }
 
-    async function gerarAlertaCritico() {
+    // --- FUNÇÃO DASHBOARD CORRIGIDA E PROTEGIDA ---
+async function gerarAlertaCritico() {
     if (!navigator.onLine) return alert("⚠️ Você está offline. Conecte-se para atualizar o Dashboard.");
     
     const dashboard = document.getElementById('resDashboard');
@@ -1199,129 +1236,85 @@ async function gravarOcorrencia() {
         const data = await res.json();
 
         let contAlunos = {}, contManha = {}, contTarde = {}, contTipos = {}, contTratativas = {};
+        let contProfessores = {}; 
         let detalheTurmas = {};
-        // Lista exata das turmas do turno da tarde
         const turmasTarde = ["5ºC", "601", "602", "603", "701", "702", "801", "802", "901", "902"];
         const cores = ["#0d47a1", "#ffd600", "#4caf50", "#f44336", "#9c27b0", "#ff9800", "#00bcd4"];
 
-        // 1. Processamento dos dados da Planilha (i=1 pula o cabeçalho)
         for (let i = 1; i < data.length; i++) {
+            // Ignora linhas vazias para não dar erro
+            if (!data[i] || !data[i][2]) continue;
+
             const profField = data[i][2] || ""; 
             const turma = data[i][3];
             const aluno = data[i][4];
             const tratativaRaw = (data[i][7] || "").split(" (")[0].trim();
 
-            // Contagem por Turno
+            // Ranking de Professores (Pega o nome após o colchete)
+            let nomeProfLimpo = profField.split('] ')[1] || profField;
+            contProfessores[nomeProfLimpo] = (contProfessores[nomeProfLimpo] || 0) + 1;
+
             if (turma) {
                 if (turmasTarde.includes(turma)) contTarde[turma] = (contTarde[turma] || 0) + 1;
                 else contManha[turma] = (contManha[turma] || 0) + 1;
             }
 
-            // Contagem por Aluno (Ignora registros coletivos para o ranking individual)
             if (aluno && aluno !== "TODA A TURMA") {
                 const chave = `${aluno} (${turma})`;
                 contAlunos[chave] = (contAlunos[chave] || 0) + 1;
-            }
-
-            if (turma && aluno && aluno !== "TODA A TURMA") {
                 if (!detalheTurmas[turma]) detalheTurmas[turma] = {};
                 detalheTurmas[turma][aluno] = (detalheTurmas[turma][aluno] || 0) + 1;
             }
 
-            
-
-            // Extração do Tipo [Entre Colchetes]
             const tipoMatch = profField.match(/\[(.*?)\]/);
             const tipo = tipoMatch ? tipoMatch[1] : "OUTRO";
-            
             contTipos[tipo] = (contTipos[tipo] || 0) + 1;
-            
-            if (tratativaRaw !== "") {
-                contTratativas[tratativaRaw] = (contTratativas[tratativaRaw] || 0) + 1;
-            }
+            if (tratativaRaw !== "") contTratativas[tratativaRaw] = (contTratativas[tratativaRaw] || 0) + 1;
         }
 
-        // --- FUNÇÕES DE RENDERIZAÇÃO INTERNAS ---
-
-        // Gráfico de Colunas Azuis
-        const renderColunas = (obj, titulo) => {
-    const entradas = Object.entries(obj).sort((a,b) => b[1] - a[1]);
-    if (!entradas.length) return "";
-    const max = Math.max(...Object.values(obj));
-    let h = `<b style="font-size:13px; color:var(--blue); margin-left:10px;">Turno: ${titulo}</b><div class="column-chart-container">`;
-    
-    entradas.forEach(([t, v]) => {
-        const altura = (v / max) * 100;
-        // Adicionamos o onclick passando o nome da turma e os dados coletados
-        h += `<div class="column-wrapper">
-                <div class="column-value">${v}</div>
-                <div class="column-bar" style="height:${altura}%" onclick="mostrarDetalhesTurma('${t}')"></div>
-                <div class="column-label">${t}</div>
-              </div>`;
-    });
-    return h + `</div>`;
-};
-
-        // Gráfico de Pizza com Legenda Zebra
-        const renderPizza = (obj, titulo) => {
-            const dados = Object.entries(obj).sort((a,b) => b[1] - a[1]).slice(0, 6);
-            const total = Object.values(obj).reduce((a, b) => a + b, 0);
-            if (total === 0) return "";
-            
-            let curr = 0;
-            const slices = dados.map(([lab, val], idx) => {
-                const p = (val / total) * 100;
-                const s = `${cores[idx % cores.length]} ${curr.toFixed(2)}% ${(curr + p).toFixed(2)}%`;
-                curr += p;
-                return { label: lab, val: val, color: cores[idx % cores.length], slice: s };
-            });
-
-            let h = `<b style="font-size:13px; color:var(--blue);">${titulo}</b>`;
-            h += `<div class="pie-chart" style="background: conic-gradient(${slices.map(s => s.slice).join(', ')})"></div>`;
-            h += `<ul class="pie-legend">`;
-            slices.forEach(s => {
-                h += `<li><div><span class="dot" style="background:${s.color}"></span>${s.label}</div> <b>${s.val}</b></li>`;
-            });
-            return h + `</ul>`;
-        };
-
-        // Lista de Alunos (Tabela Zebra)
-        const renderListaAlunos = (obj, limite) => {
-            const ordenados = Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, limite);
-            if (!ordenados.length) return "<p style='text-align:center; color:gray;'>Nenhum dado.</p>";
-
-            let html = '<table style="width:100%; border-collapse:collapse; font-size:12px; background:white; border-radius:8px; overflow:hidden;">';
-            ordenados.forEach(([nome, total]) => {
-                html += `<tr style="border-bottom: 1px solid #eee">
-                            <td style="padding:10px; text-transform: uppercase;">${nome}</td>
-                            <td style="padding:10px; color:red; text-align:right;"><b>${total} reg.</b></td>
-                         </tr>`;
-            });
-            return html + '</table>';
-        };
-
-        // --- APLICAÇÃO DOS DADOS NOS CONTAINERS ---
-
-        // 1. Alunos Críticos (+10)
-        const criticos = Object.entries(contAlunos).filter(a => a[1] >= 10);
-        document.getElementById('resAlertaCritico').innerHTML = renderListaAlunos(Object.fromEntries(criticos), 20);
-
-        // 2. Ocorrências por Turma (Barras)
+        // Renderizações na tela
+        document.getElementById('resAlertaCritico').innerHTML = renderListaAlunos(Object.fromEntries(Object.entries(contAlunos).filter(a => a[1] >= 10)), 20);
         document.getElementById('graficoTurmas').innerHTML = renderColunas(contManha, "Manhã") + renderColunas(contTarde, "Tarde");
-
-        // 3. Ranking de Alunos (Lista)
         document.getElementById('listaAlunosMaisOcorrencias').innerHTML = renderListaAlunos(contAlunos, 8);
-
-        // 4. Pizzas (Geral)
+        document.getElementById('listaProfessoresMaisOcorrencias').innerHTML = renderListaProfessores(contProfessores, 20);
         document.getElementById('graficoPizzaTipos').innerHTML = renderPizza(contTipos, "Tipos de Registro");
         document.getElementById('graficoPizzaTratativas').innerHTML = renderPizza(contTratativas, "Ações da Gestão");
 
         window.detalheGlobal = detalheTurmas;
-        
     } catch (e) { 
-        console.error("Erro Dashboard:", e);
-        alert("Erro ao processar os dados do Dashboard."); 
+        console.error(e);
+        alert("Erro ao carregar Dashboard. Tente novamente."); 
     }
+}
+
+// Funções de desenho que devem existir no código
+function renderColunas(obj, titulo) {
+    const entradas = Object.entries(obj).sort((a,b) => b[1] - a[1]);
+    if (!entradas.length) return "";
+    const max = Math.max(...Object.values(obj));
+    let h = `<b style="font-size:13px; color:var(--blue); margin-left:10px;">Turno: ${titulo}</b><div class="column-chart-container">`;
+    entradas.forEach(([t, v]) => {
+        const altura = (v / max) * 100;
+        h += `<div class="column-wrapper"><div class="column-value">${v}</div><div class="column-bar" style="height:${altura}%" onclick="mostrarDetalhesTurma('${t}')"></div><div class="column-label">${t}</div></div>`;
+    });
+    return h + `</div>`;
+}
+
+function renderPizza(obj, titulo) {
+    const dados = Object.entries(obj).sort((a,b) => b[1] - a[1]).slice(0, 6);
+    const total = Object.values(obj).reduce((a, b) => a + b, 0);
+    if (total === 0) return "";
+    const cores = ["#0d47a1", "#ffd600", "#4caf50", "#f44336", "#9c27b0", "#ff9800", "#00bcd4"];
+    let curr = 0;
+    const slices = dados.map(([lab, val], idx) => {
+        const p = (val / total) * 100;
+        const s = `${cores[idx % cores.length]} ${curr.toFixed(2)}% ${(curr + p).toFixed(2)}%`;
+        curr += p;
+        return { label: lab, val: val, color: cores[idx % cores.length], slice: s };
+    });
+    let h = `<b style="font-size:13px; color:var(--blue);">${titulo}</b><div class="pie-chart" style="background: conic-gradient(${slices.map(s => s.slice).join(', ')})"></div><ul class="pie-legend">`;
+    slices.forEach(s => { h += `<li><div><span class="dot" style="background:${s.color}"></span>${s.label}</div> <b>${s.val}</b></li>`; });
+    return h + `</ul>`;
 }
 
     document.getElementById('selAluno').addEventListener('change', function() {
@@ -1336,31 +1329,22 @@ async function gravarOcorrencia() {
     }
 
     function tab(n) {
-    // 1. Bloqueio de Segurança: Se for a aba 4 e não for Diretor, cancela.
-    if (n === 4 && cargoLogado !== "Diretor") {
+    // Bloqueio de segurança para Abas de Gestão
+    if ((n === 4 || n === 5) && cargoLogado !== "Diretor") {
+        // Nota: O cargoLogado "Diretor" no seu código já engloba a gestão após o login
         alert("Acesso restrito à equipe de gestão.");
         return;
     }
 
-    // 2. Lógica de alternância (Loop em todas as 4 abas)
-    [1, 2, 3, 4].forEach(i => {
+    [1, 2, 3, 4, 5].forEach(i => { // Incluído o 5 aqui
         const aba = document.getElementById('aba' + i);
         const btn = document.getElementById('t' + i);
-        
-        if (aba) {
-            if (n === i) {
-                aba.classList.remove('hidden');
-            } else {
-                aba.classList.add('hidden');
-            }
-        }
-        
-        if (btn) {
-            btn.classList.toggle('active', n === i);
-        }
+        if (aba) aba.classList.toggle('hidden', n !== i);
+        if (btn) btn.classList.toggle('active', n === i);
     });
 
     // 3. Funções específicas ao abrir a aba
+    if (n === 5) consultarFeedbacks();
     if (n === 4) carregarListaTransferencia();
     if (n === 1 && !idEditando) limparForm();
 }
@@ -1485,7 +1469,6 @@ async function gravarOcorrencia() {
 
     function mostrarDetalhesTurma(turma) {
     const container = document.getElementById('detalheAlunosTurma');
-    // window.dadosDetalhados deve ser alimentado na gerarAlertaCritico
     const alunos = window.detalheGlobal[turma]; 
 
     if (!alunos) {
@@ -1496,15 +1479,19 @@ async function gravarOcorrencia() {
     const listaOrdenada = Object.entries(alunos).sort((a, b) => b[1] - a[1]);
     
     let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h4 style="margin:0; color:var(--blue);">Alunos com Ocorrência: Turma ${turma}</h4>
+                    <h4 style="margin:0; color:var(--blue);">Turma ${turma}: Clique no nome para filtrar</h4>
                     <button onclick="document.getElementById('detalheAlunosTurma').classList.add('hidden')" style="border:none; background:none; cursor:pointer; font-weight:bold; color:red;">[ Fechar ]</button>
                 </div>`;
     
     html += '<table style="width:100%; border-collapse:collapse; font-size:12px;">';
     listaOrdenada.forEach(([nome, total]) => {
+        // Agora o nome chama a função irParaConsultaDireta, permitindo o redirecionamento
         html += `<tr style="border-bottom:1px solid #eee;">
-                    <td style="padding:8px; text-transform:uppercase;">${nome}</td>
-                    <td style="padding:8px; text-align:right;"><b>${total}</b></td>
+                    <td style="padding:8px; text-transform:uppercase; color:var(--blue); cursor:pointer; text-decoration:underline;" 
+                        onclick="irParaConsultaDireta('${nome}', '${turma}')">
+                        ${nome}
+                    </td>
+                    <td style="padding:8px; text-align:right;"><b>${total} reg.</b></td>
                  </tr>`;
     });
     html += '</table>';
@@ -1513,44 +1500,191 @@ async function gravarOcorrencia() {
     container.classList.remove('hidden');
     container.scrollIntoView({ behavior: 'smooth' });
 }
+
+    let idFeedbackEditando = null; // Variável global para controle
+
+function prepararEdicaoFeedback(id, professor, data, relato) {
+    idFeedbackEditando = id;
+    
+    // Preenche os campos do formulário no topo da aba 5
+    document.getElementById('feedbackProfNome').value = professor;
+    
+    // Converte data dd/mm/aaaa para yyyy-mm-dd para o input date
+    const partes = data.split('/');
+    if(partes.length === 3) {
+        document.getElementById('feedbackData').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
+    }
+    
+    document.getElementById('feedbackTexto').value = relato;
+    
+    // Altera o botão para modo de edição
+    const btn = document.querySelector("#aba5 .btn-main");
+    btn.innerText = "💾 Salvar Alterações";
+    btn.style.background = "#ef6c00";
+    
+    // Rola para o topo do formulário
+    document.getElementById('aba5').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function excluirFeedback(id) {
+    if (!confirm("Deseja realmente excluir este registro pedagógico?")) return;
+    
+    if (!navigator.onLine) return alert("Ação disponível apenas online.");
+
+    const p = new URLSearchParams();
+    p.append('acao', 'excluirFeedback');
+    p.append('id', id);
+
+    try {
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        alert("✅ Registro excluído.");
+        consultarFeedbacks(); // Atualiza a lista
+    } catch (e) {
+        alert("Erro ao excluir registro.");
+    }
+}
+
+    async function gravarFeedbackPedagogico() {
+    const prof = document.getElementById('feedbackProfNome').value;
+    const data = document.getElementById('feedbackData').value;
+    const texto = document.getElementById('feedbackTexto').value;
+
+    if (!prof || !data || !texto) return alert("Preencha todos os campos.");
+
+    const dados = {
+        acao: idFeedbackEditando ? 'editarFeedback' : 'salvarFeedback',
+        id: idFeedbackEditando || Date.now(),
+        professorAlvo: prof,
+        quemRegistrou: profNomeLogado,
+        data: data.split("-").reverse().join("/"),
+        relato: texto
+    };
+
+    try {
+        const p = new URLSearchParams();
+        for (let k in dados) p.append(k, dados[k]);
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+        
+        alert(idFeedbackEditando ? "✅ Alteração salva!" : "✅ Registro salvo!");
+        
+        // Reseta o formulário
+        idFeedbackEditando = null;
+        document.getElementById('feedbackTexto').value = "";
+        const btn = document.querySelector("#aba5 .btn-main");
+        btn.innerText = "💾 Registrar Conversa";
+        btn.style.background = "#1976d2";
+        
+        consultarFeedbacks();
+    } catch (e) {
+        alert("Erro ao processar solicitação.");
+    }
+}
+
+async function consultarFeedbacks() {
+    const resDiv = document.getElementById('resFeedback');
+    resDiv.innerHTML = "Carregando registros...";
+    
+    try {
+        const res = await fetch(`${SCRIPT_URL}?acao=getFeedbacks`); // Criar essa acao no Apps Script
+        const dados = await res.json();
+        window.LISTA_FEEDBACKS = dados; // Salva para filtro local
+        renderizarFeedbacks(dados);
+    } catch (e) {
+        resDiv.innerHTML = "Erro ao carregar feedbacks.";
+    }
+}
+
+function renderizarFeedbacks(dados) {
+    const resDiv = document.getElementById('resFeedback');
+    if (!dados || dados.length <= 1) {
+        resDiv.innerHTML = "Nenhum registro encontrado.";
+        return;
+    }
+
+    let html = "";
+    // i=0 é o cabeçalho, os dados começam em i=1
+    for (let i = 1; i < dados.length; i++) {
+        const id = dados[i][0];
+        const profAlvo = dados[i][1];
+        const quemRegistrou = dados[i][2];
+        const dataStr = dados[i][3];
+        const relato = dados[i][4];
+
+        html += `
+        <div class="item-ocorrencia" style="border-left: 5px solid #1976d2; position: relative; margin-bottom:15px;">
+            <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 5px;">
+                <button onclick="prepararEdicaoFeedback('${id}', '${profAlvo}', '${dataStr}', \`${relato}\`)" 
+                        style="background:orange; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px;">
+                    Editar
+                </button>
+                <button onclick="excluirFeedback('${id}')" 
+                        style="background:#d32f2f; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px;">
+                    Excluir
+                </button>
+            </div>
+            <small>📅 ${dataStr} | 👤 Prof: <b>${profAlvo}</b></small><br>
+            <small>✍️ Registrado por: ${quemRegistrou}</small>
+            <p style="margin-top:10px; font-size:14px; color:#333; line-height:1.4;">${relato}</p>
+        </div>`;
+    }
+    resDiv.innerHTML = html;
+}
+
+function filtrarFeedbacks() {
+    const busca = document.getElementById('buscaFeedbackProf').value.toUpperCase();
+    const filtrados = window.LISTA_FEEDBACKS.filter((r, index) => {
+        if (index === 0) return false;
+        return r[1].toUpperCase().includes(busca);
+    });
+    // Adiciona o cabeçalho fake para manter a estrutura da função de renderizar
+    renderizarFeedbacks([[], ...filtrados]);
+}
+
+    // Renderiza lista de profissionais (Top 20)
+const renderListaProfessores = (obj, limite) => {
+    const ordenados = Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, limite);
+    if (!ordenados.length) return "<p style='text-align:center; color:gray;'>Nenhum dado.</p>";
+    let html = '<table style="width:100%; border-collapse:collapse; font-size:12px; background:white; border-radius:8px; overflow:hidden; border: 1px solid #ddd;">';
+    html += '<tr style="background:#f8f9fa; border-bottom:2px solid var(--gold);"><th style="padding:10px; text-align:left;">Profissional</th><th style="padding:10px; text-align:right;">Total</th></tr>';
+    ordenados.forEach(([nome, total]) => {
+        html += `<tr style="border-bottom: 1px solid #eee"><td style="padding:10px; font-weight:bold;">${nome}</td><td style="padding:10px; text-align:right;"><b>${total} reg.</b></td></tr>`;
+    });
+    return html + '</table>';
+};
+
+// Renderiza lista de alunos com link clicável
+const renderListaAlunos = (obj, limite) => {
+    const ordenados = Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, limite);
+    if (!ordenados.length) return "<p style='text-align:center; color:gray;'>Nenhum dado.</p>";
+    let html = '<table style="width:100%; border-collapse:collapse; font-size:12px; background:white; border-radius:8px; overflow:hidden;">';
+    ordenados.forEach(([chave, total]) => {
+        const match = chave.match(/(.*) \((.*)\)/);
+        const nome = match ? match[1] : chave;
+        const turma = match ? match[2] : "";
+        html += `<tr style="border-bottom: 1px solid #eee">
+            <td style="padding:10px; text-transform: uppercase; color: var(--blue); cursor:pointer; text-decoration:underline;" onclick="irParaConsultaDireta('${nome}', '${turma}')">${chave}</td>
+            <td style="padding:10px; color:red; text-align:right;"><b>${total} reg.</b></td>
+        </tr>`;
+    });
+    return html + '</table>';
+};
+
+// Função que faz a mágica de filtrar o aluno automaticamente na Aba 2
+function irParaConsultaDireta(nome, turma) {
+    tab(2);
+    const selT = document.getElementById('selTurmaCons');
+    selT.value = turma;
+    atualizarAlunos('selTurmaCons', 'selAlunoCons');
+    setTimeout(() => {
+        const selA = document.getElementById('selAlunoCons');
+        selA.value = nome;
+        document.getElementById('chkTodosRegistros').checked = true;
+        document.getElementById('chkMeusRegistros').checked = false;
+        consultarHistorico();
+    }, 300);
+}
+    
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
