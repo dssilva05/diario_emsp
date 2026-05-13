@@ -1503,14 +1503,12 @@ function renderPizza(obj, titulo) {
 
     let idFeedbackEditando = null; // Variável global para controle
 
-function prepararEdicaoFeedback(id, professor, data, relatoCoded) {
+function prepararEdicaoFeedback(id, professor, data, relato) { // <--- Aqui o nome é 'relato'
     idFeedbackEditando = id;
     
-    // Decodifica o texto para voltar ao normal (com acentos e quebras)
-    // Corrigido: Agora o parâmetro bate com a variável
-    const relato = decodeURIComponent(relatoCoded);
+    // Como você agora está enviando o texto de forma simples, 
+    // apenas remova a linha que tinha o decodeURIComponent.
     
-    // Preenche os campos
     document.getElementById('feedbackProfNome').value = professor;
     
     const partes = data.split('/');
@@ -1518,9 +1516,8 @@ function prepararEdicaoFeedback(id, professor, data, relatoCoded) {
         document.getElementById('feedbackData').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
     }
     
-    document.getElementById('feedbackTexto').value = relato;
+    document.getElementById('feedbackTexto').value = relato; // <--- Aqui usa o mesmo nome
     
-    // Altera o botão para modo de edição
     const btn = document.querySelector("#aba5 .btn-main");
     if (btn) {
         btn.innerText = "💾 Salvar Alterações";
@@ -1619,7 +1616,7 @@ function renderizarFeedbacks(dados) {
         html += `
         <div class="item-ocorrencia" style="border-left: 5px solid #1976d2; position: relative; margin-bottom:15px;">
             <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 5px;">
-                <button onclick="prepararEdicaoFeedback('${id}', '${profAlvo}', '${dataStr}', '${relatoSeguro}')" 
+                <button onclick="prepararEdicaoFeedback('${id}', '${profAlvo}', '${dataStr}', \`${relato}\`)"
                         style="background:orange; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px;">
                     Editar
                 </button>
