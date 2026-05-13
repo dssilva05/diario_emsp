@@ -1503,27 +1503,29 @@ function renderPizza(obj, titulo) {
 
     let idFeedbackEditando = null; // Variável global para controle
 
-function prepararEdicaoFeedback(id, professor, data, relato) { // <--- Aqui o nome é 'relato'
+function prepararEdicaoFeedback(id, professor, data, relato) {
     idFeedbackEditando = id;
     
-    // Como você agora está enviando o texto de forma simples, 
-    // apenas remova a linha que tinha o decodeURIComponent.
-    
+    // Preenche os campos do formulário no topo
     document.getElementById('feedbackProfNome').value = professor;
     
+    // Converte data dd/mm/aaaa para yyyy-mm-dd
     const partes = data.split('/');
     if(partes.length === 3) {
         document.getElementById('feedbackData').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
     }
     
-    document.getElementById('feedbackTexto').value = relato; // <--- Aqui usa o mesmo nome
+    // Coloca o texto no campo de mensagem
+    document.getElementById('feedbackTexto').value = relato;
     
+    // Muda visualmente o botão de salvar
     const btn = document.querySelector("#aba5 .btn-main");
     if (btn) {
         btn.innerText = "💾 Salvar Alterações";
         btn.style.background = "#ef6c00";
     }
     
+    // Rola a tela para cima para você ver o formulário preenchido
     document.getElementById('aba5').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -1616,8 +1618,8 @@ function renderizarFeedbacks(dados) {
         html += `
         <div class="item-ocorrencia" style="border-left: 5px solid #1976d2; position: relative; margin-bottom:15px;">
             <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 5px;">
-                <button onclick="prepararEdicaoFeedback('${id}', '${profAlvo}', '${dataStr}', \`${relato}\`)"
-                        style="background:orange; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px;">
+                <button onclick="prepararEdicaoFeedback('${id}', '${profAlvo}', '${dataStr}', \`${relato}\` )" 
+                    style="background:orange; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px;">
                     Editar
                 </button>
                 <button onclick="excluirFeedback('${id}')" 
