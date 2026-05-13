@@ -1507,6 +1507,7 @@ function prepararEdicaoFeedback(id, professor, data, relatoCoded) {
     idFeedbackEditando = id;
     
     // Decodifica o texto para voltar ao normal (com acentos e quebras)
+    // Corrigido: Agora o parâmetro bate com a variável
     const relato = decodeURIComponent(relatoCoded);
     
     // Preenche os campos
@@ -1520,14 +1521,12 @@ function prepararEdicaoFeedback(id, professor, data, relatoCoded) {
     document.getElementById('feedbackTexto').value = relato;
     
     // Altera o botão para modo de edição
-    // Importante: Verifique se o seletor abaixo encontra seu botão (é o botão dentro da aba 5)
     const btn = document.querySelector("#aba5 .btn-main");
     if (btn) {
         btn.innerText = "💾 Salvar Alterações";
         btn.style.background = "#ef6c00";
     }
     
-    // Rola para o topo do formulário para o gestor ver que carregou
     document.getElementById('aba5').scrollIntoView({ behavior: 'smooth' });
 }
 
