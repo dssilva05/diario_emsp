@@ -1506,10 +1506,12 @@ function renderPizza(obj, titulo) {
 function prepararEdicaoFeedback(id, professor, data, relato) {
     idFeedbackEditando = id;
     
-    // Preenche os campos do formulário no topo da aba 5
+    // Decodifica o texto para voltar ao normal (com acentos e quebras)
+    const relato = decodeURIComponent(relatoCoded);
+    
+    // Preenche os campos
     document.getElementById('feedbackProfNome').value = professor;
     
-    // Converte data dd/mm/aaaa para yyyy-mm-dd para o input date
     const partes = data.split('/');
     if(partes.length === 3) {
         document.getElementById('feedbackData').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
@@ -1518,11 +1520,14 @@ function prepararEdicaoFeedback(id, professor, data, relato) {
     document.getElementById('feedbackTexto').value = relato;
     
     // Altera o botão para modo de edição
+    // Importante: Verifique se o seletor abaixo encontra seu botão (é o botão dentro da aba 5)
     const btn = document.querySelector("#aba5 .btn-main");
-    btn.innerText = "💾 Salvar Alterações";
-    btn.style.background = "#ef6c00";
+    if (btn) {
+        btn.innerText = "💾 Salvar Alterações";
+        btn.style.background = "#ef6c00";
+    }
     
-    // Rola para o topo do formulário
+    // Rola para o topo do formulário para o gestor ver que carregou
     document.getElementById('aba5').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -1602,7 +1607,6 @@ function renderizarFeedbacks(dados) {
     }
 
     let html = "";
-    // i=0 é o cabeçalho, os dados começam em i=1
     for (let i = 1; i < dados.length; i++) {
         const id = dados[i][0];
         const profAlvo = dados[i][1];
@@ -1610,10 +1614,13 @@ function renderizarFeedbacks(dados) {
         const dataStr = dados[i][3];
         const relato = dados[i][4];
 
+        // Usamos uma técnica mais segura para passar o texto do relato para o botão
+        const relatoSeguro = encodeURIComponent(relato);
+
         html += `
         <div class="item-ocorrencia" style="border-left: 5px solid #1976d2; position: relative; margin-bottom:15px;">
             <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 5px;">
-                <button onclick="prepararEdicaoFeedback('${id}', '${profAlvo}', '${dataStr}', \`${relato}\`)" 
+                <button onclick="prepararEdicaoFeedback('${id}', '${profAlvo}', '${dataStr}', '${relatoSeguro}')" 
                         style="background:orange; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px;">
                     Editar
                 </button>
