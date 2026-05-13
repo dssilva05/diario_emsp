@@ -755,13 +755,18 @@ async function carregarDatalistProfessores() {
 }
 
     function atualizarAlunos(idT, idA) {
-        const t = document.getElementById(idT).value, s = document.getElementById(idA);
-        s.innerHTML = '<option value="">-- Selecione --</option>';
-        if(ALUNOS[t]) {
-            s.add(new Option("👥 TODA A TURMA", "TODA A TURMA"));
-            ALUNOS[t].forEach(al => s.add(new Option(al, al)));
-        }
+    const t = document.getElementById(idT).value, s = document.getElementById(idA);
+    s.innerHTML = '<option value="">-- Selecione --</option>';
+    
+    if(ALUNOS[t]) {
+        s.add(new Option("👥 TODA A TURMA", "TODA A TURMA"));
+        
+        // Criamos uma cópia da lista e aplicamos a ordem alfabética antes de exibir
+        const alunosOrdenados = [...ALUNOS[t]].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        
+        alunosOrdenados.forEach(al => s.add(new Option(al, al)));
     }
+}
 
 async function gravarOcorrencia() {
     const tVal = document.getElementById('selTurma').value;
