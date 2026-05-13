@@ -1427,14 +1427,21 @@ function renderPizza(obj, titulo) {
 }
 
     function carregarListaTransferencia() {
-        const selTransferir = document.getElementById('selectAlunoTransferir');
-        selTransferir.innerHTML = '<option value="">Selecione o aluno...</option>';
-        Object.keys(ALUNOS).sort().forEach(turma => {
-            ALUNOS[turma].forEach(aluno => {
-                selTransferir.add(new Option(`${aluno} (${turma})`, `${aluno}|${turma}`));
-            });
+    const selTransferir = document.getElementById('selectAlunoTransferir');
+    selTransferir.innerHTML = '<option value="">Selecione o aluno...</option>';
+    
+    // Organiza as turmas primeiro
+    const turmas = Object.keys(ALUNOS).sort();
+    
+    turmas.forEach(turma => {
+        // Organiza os alunos daquela turma antes de adicionar no seletor
+        const alunosDaTurma = [...ALUNOS[turma]].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        
+        alunosDaTurma.forEach(aluno => {
+            selTransferir.add(new Option(`${aluno} (${turma})`, `${aluno}|${turma}`));
         });
-    }
+    });
+}
 
     async function salvarNovoAluno() {
         const nome = document.getElementById('novoAlunoNome').value.trim().toUpperCase();
