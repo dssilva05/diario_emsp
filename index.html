@@ -300,11 +300,6 @@
     <option value="[📱 Uso indevido do celular] ">📱 Uso indevido do celular</option>
     <option value="[🪑 Não respeitou o mapeamento] ">🪑 Não respeitou o mapeamento</option>
     <option value="[💢 Agressão ao colega] ">💢 Agressão ao colega</option>
-    <option value="[​🤝 Atendimento à família] ">​🤝 Atendimento à família</option>
-    <option value="[🕒 Aluno ficou depois do horário] ">🕒 Aluno ficou depois do horário</option>
-    <option value="[🩹 Aluno machucou] ">🩹 Aluno machucou</option>
-    <option value="[🤒 Aluno doente] ">🤒 Aluno doente</option>
-    
 </select>
 
 <label id="labelRelato">Descrição complementar (Opcional):</label>
@@ -365,6 +360,25 @@
                 <select id="novoAlunoTurma"></select>
                 <button class="btn-main" onclick="salvarNovoAluno()">Cadastrar Aluno</button>
             </div>
+
+            <div class="card" style="border-left: 5px solid var(--blue); margin-top: 20px;">
+    <h3 style="color:var(--blue); margin-top:0;">📸 Tirar Foto do Aluno</h3>
+    
+    <label>1. Selecione a Turma:</label>
+    <select id="fotoAlunoTurma" onchange="atualizarAlunos('fotoAlunoTurma', 'fotoAlunoNome')">
+        <option value="">Selecione a turma...</option>
+    </select>
+
+    <label>2. Selecione o Aluno:</label>
+    <select id="fotoAlunoNome">
+        <option value="">Selecione a turma primeiro...</option>
+    </select>
+
+    <label>3. Tirar/Selecionar Foto:</label>
+    <input type="file" id="arquivoFoto" accept="image/*" capture="camera" style="margin-top: 10px;">
+    
+    <button class="btn-main" style="margin-top:15px; background: #2e7d32;" onclick="uploadFoto()">Salvar Foto no Drive</button>
+</div>
 
             <div class="card" style="border-left: 5px solid orange;">
     <h3 style="color:orange; margin-top:0;">🔄 Transferir Aluno</h3>
@@ -744,9 +758,9 @@ async function carregarDatalistProfessores() {
     }
 }
 
-    function popularTurmas() {
-    // Adicionado 'selTurmaTransf' na lista
-    const ids = ['selTurma', 'selTurmaCons', 'novoAlunoTurma', 'novaTurmaDestino', 'selTurmaTransf', 'selTurmaExcluir'];
+function popularTurmas() {
+    // Adicionado o ID 'fotoAlunoTurma' para que ele também receba a lista de turmas da escola
+    const ids = ['selTurma', 'selTurmaCons', 'novoAlunoTurma', 'novaTurmaDestino', 'selTurmaTransf', 'selTurmaExcluir', 'fotoAlunoTurma'];
     const turmas = Object.keys(ALUNOS).sort();
     ids.forEach(id => {
         const sel = document.getElementById(id);
@@ -755,9 +769,9 @@ async function carregarDatalistProfessores() {
             turmas.forEach(t => sel.add(new Option(t, t)));
         }
     });
-}
+} // <-- MANTENHA APENAS ESTA CHAVE DE FECHAMENTO AQUI
 
-    function abrirAba(num) {
+function abrirAba(num) {
     // Se tentar abrir a aba 4 e não for gestor, bloqueia
     if (num === 4 && cargoLogado !== "Diretor") {
         alert("Acesso restrito à equipe de gestão.");
@@ -769,17 +783,26 @@ async function carregarDatalistProfessores() {
     document.getElementById('aba' + num).classList.remove('hidden');
 }
 
-    function atualizarAlunos(idT, idA) {
+function atualizarAlunos(idT, idA) {
     const t = document.getElementById(idT).value, s = document.getElementById(idA);
     s.innerHTML = '<option value="">-- Selecione --</option>';
     
     if(ALUNOS[t]) {
         s.add(new Option("👥 TODA A TURMA", "TODA A TURMA"));
         
-        // Criamos uma cópia da lista e aplicamos a ordem alfabética antes de exibir
-        const alunosOrdenados = [...ALUNOS[t]].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        // Criamos uma cópia da lista organizada por ordem alfabética usando a propriedade .nome
+        const alunosOrdenados = [...ALUNOS[t]].sort((a, b) => {
+            const nomeA = typeof a === 'object' ? a.nome : a;
+            const nomeB = typeof b === 'object' ? b.nome : b;
+            return nomeA.localeCompare(nomeB, 'pt-BR');
+        });
         
-        alunosOrdenados.forEach(al => s.add(new Option(al, al)));
+        alunosOrdenados.forEach(al => {
+            // Se o aluno for um objeto (formato novo com foto), pega o al.nome
+            // Se for texto puro (formato antigo do cache), usa o próprio al
+            const nomeExibicao = typeof al === 'object' ? al.nome : al;
+            s.add(new Option(nomeExibicao, nomeExibicao));
+        });
     }
 }
 
@@ -992,13 +1015,11 @@ async function gravarOcorrencia() {
     }
 }
 
-    function exibirDados(data, t, a, p) {
+function exibirDados(data, t, a, p) {
     window.ultimoResultadoConsulta = data; // Salva para permitir edição de textos longos
     const rDiv = document.getElementById('resConsulta');
     const verTodos = document.getElementById('chkTodosRegistros').checked;
 
-        
-    
     // 1. Filtragem Inicial
     let filtrados = data.filter(r => {
         const turmaBate = r[3] && String(r[3]).trim() === t;
@@ -1042,12 +1063,41 @@ async function gravarOcorrencia() {
     nomesOrdenados.forEach(nome => {
         const qtd = agrupadoPorAluno[nome].length;
         
+        // --- BUSCA DINÂMICA DO ID DA FOTO NO DRIVE ---
+        // O código vai varrer o objeto local ALUNOS procurando o ID salvo ao lado do nome do estudante
+        // --- BUSCA DINÂMICA DO ID DA FOTO NO DRIVE (CORRIGIDO) ---
+        let idFotoDrive = "";
+        
+        // Procura o aluno na lista global ALUNOS daquela turma específica
+        if (ALUNOS && ALUNOS[t]) {
+            const cadastroAluno = ALUNOS[t].find(al => {
+                const nomeCadastrado = typeof al === 'object' ? al.nome : al;
+                return String(nomeCadastrado).toUpperCase() === nome.toUpperCase();
+            });
+            
+            // Se achou o objeto do aluno, captura o fotoId que salvamos do servidor
+            if (cadastroAluno && cadastroAluno.fotoId) {
+                idFotoDrive = cadastroAluno.fotoId;
+            }
+        }
+
+        // URL corrigida para renderização direta em tags <img> sem bloqueio do Drive
+        const urlFoto = idFotoDrive 
+            ? `https://lh3.googleusercontent.com/d/${idFotoDrive}`
+            : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(nome)}&backgroundType=solid,gradientLinear`;
+        
+        // MODIFICADO: O cabeçalho azul do aluno agora tem suporte flexbox para acomodar a foto redonda
         html += `
-        <div style="background: var(--blue); color: white; padding: 10px; margin-top: 20px; border-radius: 8px 8px 0 0; font-weight: bold; border-bottom: 3px solid var(--gold); display: flex; justify-content: space-between; align-items: center;">
-            <span>👤 ALUNO(A): ${nome}</span>
-            <span style="background: var(--gold); color: black; padding: 2px 10px; border-radius: 12px; font-size: 12px;">${qtd} ${qtd > 1 ? 'registros' : 'registro'}</span>
+        <div style="background: var(--blue); color: white; padding: 12px 15px; margin-top: 20px; border-radius: 8px 8px 0 0; font-weight: bold; border-bottom: 3px solid var(--gold); display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="${urlFoto}" 
+                     onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=avatar'"
+                     style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: white; border: 2px solid var(--gold); box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+                <span style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.3px;">👤 ${nome}</span>
+            </div>
+            <span style="background: var(--gold); color: black; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">${qtd} ${qtd > 1 ? 'registros' : 'registro'}</span>
         </div>
-        <div style="background: rgba(255,255,255,0.5); padding: 10px; border: 1px solid #ccc; border-top: none; border-radius: 0 0 8px 8px; margin-bottom: 10px;">
+        <div style="background: rgba(255,255,255,0.5); padding: 15px; border: 1px solid #ccc; border-top: none; border-radius: 0 0 8px 8px; margin-bottom: 10px;">
         `;
 
         const ocorrenciasAluno = agrupadoPorAluno[nome].sort((m, n) => {
@@ -1070,7 +1120,6 @@ async function gravarOcorrencia() {
             // Lógica para extrair Data e Horário salvos na string da Tratativa
             if (textoTratativaBruto.includes("(Data:")) {
                 const matchData = textoTratativaBruto.match(/\d{2}\/\d{2}\/\d{4}/);
-                // Procura por um padrão de horário como "14:30" ou "08:00"
                 const matchHora = textoTratativaBruto.match(/\d{2}:\d{2}/);
                 
                 if (matchData) {
@@ -1079,10 +1128,7 @@ async function gravarOcorrencia() {
                         detalheAgenda += ` | ⏰ Horário: ${matchHora[0]}`;
                     }
                     
-                    // Cria uma etiqueta em destaque vermelho/laranja para a reunião agendada
                     avisoDataReuniao = `<div style="background:#fff3cd; color:#d32f2f; border:1px solid #ffeeba; padding:8px; border-radius:6px; font-weight:bold; margin-top:8px; display:inline-block; font-size:12px;">⚠️ REUNIÃO AGENDADA -> ${detalheAgenda}</div>`;
-                    
-                    // Limpa o texto bruto para exibição na linha comum da ação da gestão
                     textoExibicao = textoTratativaBruto.replace(/\s\(Data:.*?\)/g, "");
                 }
             }
@@ -1115,6 +1161,10 @@ async function gravarOcorrencia() {
 
     rDiv.innerHTML = html;
     document.getElementById('btnImp').style.display = "block";
+}
+
+    function prepararEdicaoCompleta(id, data, turma, aluno, texto, tratativa, relatoGestao, focarTratativa) {
+    carregarParaEdicao(id, data, turma, aluno, texto, tratativa, relatoGestao, focarTratativa);
 }
 
     function carregarParaEdicao(id, data, turma, aluno, texto, tratativa, relatoGestao, focarTratativa) {
@@ -1742,6 +1792,59 @@ function irParaConsultaDireta(nome, turma) {
         document.getElementById('chkMeusRegistros').checked = false;
         consultarHistorico();
     }, 300);
+}
+
+    async function uploadFoto() {
+    const turma = document.getElementById('fotoAlunoTurma').value;
+    const aluno = document.getElementById('fotoAlunoNome').value;
+    const arquivoInput = document.getElementById('arquivoFoto');
+
+    // Validações básicas
+    if (!turma || !aluno || aluno === "TODA A TURMA") {
+        return alert("⚠️ Por favor, selecione a turma e o aluno específico.");
+    }
+    if (!arquivoInput.files || arquivoInput.files.length === 0) {
+        return alert("⚠️ Por favor, tire ou selecione uma foto primeiro.");
+    }
+
+    const btn = event.target;
+    btn.innerText = "⏳ Enviando...";
+    btn.disabled = true;
+
+    const arquivo = arquivoInput.files[0];
+    const fr = new FileReader();
+
+    // Este evento roda quando o navegador termina de ler o arquivo de imagem
+    fr.onload = async function(e) {
+        // Converte a imagem em uma string Base64 (texto) para enviar
+        const rawLog = e.target.result.split(',')[1];
+        
+        // Prepara os dados para enviar para o SCRIPT_URL
+        const p = new URLSearchParams();
+        p.append('acao', 'uploadFotoAluno');
+        p.append('nomeAluno', aluno);
+        p.append('turmaAluno', turma);
+        p.append('imagemBase64', rawLog);
+        p.append('tipoMime', arquivo.type); // ex: image/jpeg
+
+        try {
+            // Envia os dados para o seu SCRIPT_URL (Google Apps Script)
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+            
+            alert("✅ Foto salva com sucesso no Drive!");
+            // Limpa o campo de arquivo para a próxima foto
+            arquivoInput.value = ""; 
+        } catch (e) {
+            console.error(e);
+            alert("❌ Erro ao enviar a foto para o Drive.");
+        } finally {
+            btn.innerText = "Salvar Foto no Drive";
+            btn.disabled = false;
+        }
+    };
+
+    // Inicia a leitura do arquivo como uma URL de dados (necessário para o Base64)
+    fr.readAsDataURL(arquivo);
 }
     
 </script>
