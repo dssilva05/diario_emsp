@@ -1202,22 +1202,31 @@ function exibirDados(data, t, a, p) {
     nomesOrdenados.forEach(nome => {
         const qtd = agrupadoPorAluno[nome].length;
         
-        // --- BUSCA DINÂMICA DO ID DA FOTO NO DRIVE ---
-        // O código vai varrer o objeto local ALUNOS procurando o ID salvo ao lado do nome do estudante
-        // --- BUSCA DINÂMICA DO ID DA FOTO NO DRIVE (CORRIGIDO) ---
+        // --- BUSCA DINÂMICA DO ID DA FOTO E DO LAUDO NO OBJETO LOCAL ALUNOS ---
         let idFotoDrive = "";
+        let laudoObservacao = ""; // Nova variável para guardar a informação do laudo
         
-        // Procura o aluno na lista global ALUNOS daquela turma específica
         if (ALUNOS && ALUNOS[t]) {
             const cadastroAluno = ALUNOS[t].find(al => {
                 const nomeCadastrado = typeof al === 'object' ? al.nome : al;
                 return String(nomeCadastrado).toUpperCase() === nome.toUpperCase();
             });
             
-            // Se achou o objeto do aluno, captura o fotoId que salvamos do servidor
-            if (cadastroAluno && cadastroAluno.fotoId) {
-                idFotoDrive = cadastroAluno.fotoId;
+            if (cadastroAluno) {
+                if (cadastroAluno.fotoId) idFotoDrive = cadastroAluno.fotoId;
+                if (cadastroAluno.laudo) laudoObservacao = cadastroAluno.laudo; // Captura o campo laudo
             }
+        }
+
+        // Bloco HTML Condicional do Laudo
+        let blocoLaudoHTML = "";
+        if (laudoObservacao && laudoObservacao.trim() !== "") {
+            blocoLaudoHTML = `
+                <div style="margin-top: 8px; background-color: #fff3cd; color: #856404; border-left: 4px solid #ffc107; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: normal; display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box;">
+                    <span>⚠️</span>
+                    <div><strong>Laudo/Atenção:</strong> ${laudoObservacao}</div>
+                </div>
+            `;
         }
 
         // URL corrigida para renderização direta em tags <img> sem bloqueio do Drive
@@ -1225,17 +1234,20 @@ function exibirDados(data, t, a, p) {
             ? `https://lh3.googleusercontent.com/d/${idFotoDrive}`
             : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(nome)}&backgroundType=solid,gradientLinear`;
         
-        // MODIFICADO: O cabeçalho azul do aluno agora tem suporte flexbox para acomodar a foto redonda
+        // MODIFICADO: Ajustado para acomodar o laudo logo abaixo do nome dentro do layout flex do cabeçalho azul
         html += `
         <div style="background: var(--blue); color: white; padding: 12px 15px; margin-top: 20px; border-radius: 8px 8px 0 0; font-weight: bold; border-bottom: 3px solid var(--gold); display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px; flex-grow: 1; max-width: 80%;">
                 <img src="${urlFoto}" 
                              onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=avatar'"
-                             style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: white; border: 2px solid var(--gold); box-shadow: 0 2px 4px rgba(0,0,0,0.15); cursor: zoom-in;"
+                             style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: white; border: 2px solid var(--gold); box-shadow: 0 2px 4px rgba(0,0,0,0.15); cursor: zoom-in; flex-shrink: 0;"
                      onclick="ampliarFotoAluno('${urlFoto}')">
-                <span style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.3px;">👤 ${nome}</span>
+                <div style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
+                    <span style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.3px;">👤 ${nome}</span>
+                    ${blocoLaudoHTML}
+                </div>
             </div>
-            <span style="background: var(--gold); color: black; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">${qtd} ${qtd > 1 ? 'registros' : 'registro'}</span>
+            <span style="background: var(--gold); color: black; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink: 0;">${qtd} ${qtd > 1 ? 'registros' : 'registro'}</span>
         </div>
         <div style="background: rgba(255,255,255,0.5); padding: 15px; border: 1px solid #ccc; border-top: none; border-radius: 0 0 8px 8px; margin-bottom: 10px;">
         `;
@@ -1257,7 +1269,6 @@ function exibirDados(data, t, a, p) {
             let textoExibicao = textoTratativaBruto;
             let avisoDataReuniao = "";
 
-            // Lógica para extrair Data e Horário salvos na string da Tratativa
             if (textoTratativaBruto.includes("(Data:")) {
                 const matchData = textoTratativaBruto.match(/\d{2}\/\d{2}\/\d{4}/);
                 const matchHora = textoTratativaBruto.match(/\d{2}:\d{2}/);
@@ -1278,7 +1289,6 @@ function exibirDados(data, t, a, p) {
                     <strong>🔒 Relato Privado:</strong> ${r[8]}
                 </div>` : "";
 
-            // RESTAURANDO OS BOTÕES DE CONTROLE AQUI
             html += `
             <div class="item-ocorrencia" style="margin-top: 10px; border-left: 5px solid var(--gold); position: relative;">
                 <div style="float:right; display:flex; gap:5px;">
