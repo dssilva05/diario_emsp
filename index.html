@@ -1062,12 +1062,15 @@ async function gravarOcorrencia() {
         anexoExistente: window.anexoAntigo || ""
     };
 
+    // ✅ ENVIO ROBUSTO PARA ARQUIVOS BASE64
     if (navigator.onLine) {
         try {
-            const p = new URLSearchParams();
-            for (let key in dados) p.append(key, dados[key]);
-            
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: p });
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(dados) 
+            });
             
             alert("✅ Registro gravado com sucesso!");
             limparForm();
@@ -1362,58 +1365,58 @@ function exibirDados(data, t, a, p) {
     carregarParaEdicao(id, data, turma, aluno, texto, tratativa, relatoGestao, focarTratativa);
 }
 
-    function carregarParaEdicao(id, data, turma, aluno, texto, tratativa, relatoGestao, focarTratativa) {
-    // ESTAS DUAS LINHAS SÃO A CHAVE PARA NÃO SUMIR:
+    function carregarParaEdicao(id, data, turma, aluno, texto, tratativa, relatoGestao, encaminhamento, anexoUrl, focarTratativa) {
     window.tratativaAntiga = tratativa || "";
     window.relatoGestaoAntigo = relatoGestao || "";
     window.anexoAntigo = anexoUrl || "";
 
     idEditando = id; 
-    tab(1);
+    tab(1); // Alterna para a aba de formulário
     
-    // Ajuste da data principal
-    const p = data.split('/');
-    if(p.length === 3) document.getElementById('dataOcorrenciaManual').value = `${p[2]}-${p[1]}-${p[0]}`;
-    document.getElementById('selOcorrenciaRapida').value = "";
-    document.getElementById('selTurma').value = turma;
+    // Tratamento seguro de Data
+    if (data && typeof data === 'string' && data.includes('/')) {
+        const p = data.split('/');
+        if (p.length === 3) document.getElementById('dataOcorrenciaManual').value = `${p[2]}-${p[1]}-${p[0]}`;
+    }
+    
+    if (document.getElementById('selOcorrenciaRapida')) document.getElementById('selOcorrenciaRapida').value = "";
+    if (document.getElementById('selTurma')) document.getElementById('selTurma').value = turma;
+    
     atualizarAlunos('selTurma', 'selAluno');
-    
     setTimeout(() => {
-        document.getElementById('selAluno').value = aluno;
+        if (document.getElementById('selAluno')) document.getElementById('selAluno').value = aluno;
     }, 200);
     
-    document.getElementById('relatoTexto').value = texto;
+    if (document.getElementById('relatoTexto')) document.getElementById('relatoTexto').value = texto;
 
-    const cont = document.getElementById('containerTratativa');
-
+    // Encaminhamento
     if (document.getElementById('selEncaminhamento')) {
         document.getElementById('selEncaminhamento').value = encaminhamento || "";
     }
 
+    // Visualização do Anexo Existente
     const boxLink = document.getElementById('linkAnexoAtual');
     if (anexoUrl && boxLink) {
         boxLink.style.display = "block";
-        boxLink.innerHTML = `📎 Anexo atual: <a href="${anexoUrl}" target="_blank" style="color:var(--blue); font-weight:bold;">Visualizar documento</a> (Selecione outro arquivo apenas se quiser substituir)`;
+        boxLink.innerHTML = `📎 Anexo atual: <a href="${anexoUrl}" target="_blank" style="color:var(--blue); font-weight:bold;">Visualizar documento</a> (Envie outro arquivo apenas se quiser substituir)`;
     } else if (boxLink) {
         boxLink.style.display = "none";
     }
-    
+
+    // Tratativa da Gestão
+    const cont = document.getElementById('containerTratativa');
     if (cargoLogado === "Diretor" && focarTratativa === true) {
-        // Extração precisa da data da convocação
         let opcaoLimpa = tratativa.split(" (Data:")[0].trim();
         let dataParaInput = "";
         
         if (tratativa.includes("(Data:")) {
             const extrair = tratativa.match(/\d{2}\/\d{2}\/\d{4}/);
-            if (extrair) {
-                dataParaInput = extrair[0].split('/').reverse().join('-');
-            }
+            if (extrair) dataParaInput = extrair[0].split('/').reverse().join('-');
         }
 
         cont.innerHTML = `
             <div style="background:#f0f7ff; padding:15px; border-radius:8px; margin-top:15px; border:1px solid #1976d2;">
                 <label style="color:#1976d2; font-weight:bold;">🛠️ Espaço da Gestão (Tratativa)</label>
-                
                 <select id="selTratativa" onchange="verificarDataConvocacao()" style="width:100%; margin-top:8px;">
                     <option value="">Selecione a ação...</option>
                     <option value="Conversa com o Aluno">Conversa com o Aluno</option>
@@ -1422,7 +1425,6 @@ function exibirDados(data, t, a, p) {
                     <option value="Família Convocada">Família Convocada</option>
                     <option value="Encaminhamento PAS">Encaminhamento PAS</option>
                 </select>
-
                 <div id="divDataConvocacao" style="display:none; margin-top:10px;">
                     <div style="display: flex; gap: 10px;">
                         <div style="flex: 1;">
@@ -1435,34 +1437,28 @@ function exibirDados(data, t, a, p) {
                         </div>
                     </div>
                 </div>
-
                 <label style="display:block; margin-top:15px;">🔒 Relato Interno (Privado):</label>
                 <textarea id="relatoGestaoTexto" rows="3" style="width:100%;" placeholder="Anotações da gestão..."></textarea>
             </div>`;
         
         cont.classList.remove('hidden');
 
-        // IMPORTANTE: Atribuir valores APÓS criar o HTML acima
         setTimeout(() => {
-            document.getElementById('selTratativa').value = opcaoLimpa;
-            document.getElementById('relatoGestaoTexto').value = relatoGestao || "";
-            
-            if (opcaoLimpa === "Família Convocada") {
+            if(document.getElementById('selTratativa')) document.getElementById('selTratativa').value = opcaoLimpa;
+            if(document.getElementById('relatoGestaoTexto')) document.getElementById('relatoGestaoTexto').value = relatoGestao || "";
+            if (opcaoLimpa === "Família Convocada" && document.getElementById('divDataConvocacao')) {
                 document.getElementById('divDataConvocacao').style.display = 'block';
                 document.getElementById('dataConvocacao').value = dataParaInput;
-                
                 const extrairHora = tratativa.match(/\d{2}:\d{2}/);
-                if (extrairHora) {
-                    document.getElementById('horarioConvocacao').value = extrairHora[0];
-                }
+                if (extrairHora) document.getElementById('horarioConvocacao').value = extrairHora[0];
             }
-            document.getElementById('selTratativa').focus();
         }, 50);
 
-    } else {
+    } else if (cargoLogado !== "Diretor") {
         cont.innerHTML = "";
         cont.classList.add('hidden');
     }
+    
     document.getElementById('btnGravar').innerText = "💾 Salvar Alteração";
 }
 
@@ -1502,23 +1498,25 @@ function exibirDados(data, t, a, p) {
     }
 }
     function prepararEdicao(id, focarTratativa) {
-    // Busca o registro completo nos dados que acabaram de ser consultados
-    // 'ultimoResultadoConsulta' deve ser uma variável global ou acessível
+    if (!window.ultimoResultadoConsulta) return alert("Erro: Dados de consulta não encontrados.");
+    
     const registro = window.ultimoResultadoConsulta.find(item => String(item[0]) === String(id));
     
     if (registro) {
         carregarParaEdicao(
-            registro[0], // id
-            registro[1], // data
-            registro[3], // turma
-            registro[4], // aluno
-            registro[5], // texto (relato)
-            registro[7] || "", // tratativa
-            registro[8] || "", // relatoGestao
-            registro[9] || "",
-            registro[10] || "",
-            focarTratativa
+            registro[0],        // Coluna A: ID
+            registro[1],        // Coluna B: Data
+            registro[3],        // Coluna D: Turma
+            registro[4],        // Coluna E: Aluno
+            registro[5],        // Coluna F: Relato
+            registro[7] || "",  // Coluna H: Tratativa
+            registro[8] || "",  // Coluna I: Relato Gestão
+            registro[9] || "",  // Coluna J: Encaminhamento
+            registro[10] || "", // Coluna K: Anexo URL
+            focarTratativa      // Booleano para focar na tratativa
         );
+    } else {
+        alert("⚠️ Registro não encontrado.");
     }
 }
     
