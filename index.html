@@ -1591,19 +1591,23 @@ async function gerarAlertaCritico() {
         let htmlEnc = "";
 
         // Função auxiliar interna para gerar os cards das ocorrências pendentes
-        const renderItensPendentes = (lista) => {
+        // Função interna ajustada com o botão de resolver
+const renderItensPendentes = (lista) => {
     let h = `<div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">`;
     lista.forEach(r => {
         h += `
-        <div style="background:white; padding:10px; border-radius:6px; border:1px solid #ddd; color:#333; font-size:13px;">
+        <div id="card-encaminhamento-${r[0]}" style="background:white; padding:10px; border-radius:6px; border:1px solid #ddd; color:#333; font-size:13px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <!-- 🟢 NOME CLICÁVEL AQUI -->
                 <strong style="color:var(--blue); cursor:pointer; text-decoration:underline;" 
                         onclick="irParaConsultaDireta('${r[4]}', '${r[3]}')">
                     👤 ${r[4]} (${r[3]})
                 </strong>
                 
-                
+                <!-- 🟢 CHECKBOX / BOTÃO DE CONCLUÍDO -->
+                <button onclick="marcarEncaminhamentoResolvido('${r[0]}')" 
+                        style="background:#2e7d32; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold;">
+                    ✓ Marcar como Resolvido
+                </button>
             </div>
             <small style="color:#666;">📅 ${r[1]} | ✍️ ${r[2]}</small>
             <p style="margin:5px 0 0 0; font-size:13px; color:#444;">${r[5]}</p>
@@ -2149,6 +2153,36 @@ function irParaConsultaDireta(nome, turma) {
             menu.classList.remove('active');
             overlay.classList.remove('active');
         }
+    }
+}
+
+    async function marcarEncaminhamentoResolvido(id) {
+    if (!navigator.onLine) return alert("⚠️ Conecte-se à internet para atualizar o status do encaminhamento.");
+
+    if (!confirm("Deseja marcar este encaminhamento como resolvido? Ele será removido da lista de pendências.")) return;
+
+    // Efeito visual imediato: esconde o card
+    const card = document.getElementById(`card-encaminhamento-${id}`);
+    if (card) card.style.opacity = "0.4";
+
+    try {
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+                acao: 'concluirEncaminhamento',
+                id: id
+            })
+        });
+
+        alert("✅ Encaminhamento marcado como resolvido!");
+        // Atualiza o painel para recalcular e sumir da lista
+        gerarAlertaCritico();
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao atualizar o encaminhamento.");
+        if (card) card.style.opacity = "1";
     }
 }
     
