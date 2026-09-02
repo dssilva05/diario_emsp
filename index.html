@@ -651,6 +651,22 @@
     atualizarStatusRede();
 };
 
+    function formatarNomeResponsavel(nomeCompleto) {
+    if (!nomeCompleto) return "";
+    const partes = nomeCompleto.trim().split(/\s+/);
+    if (partes.length === 0) return "";
+
+    const primeiroNome = partes[0];
+    const primeiroNomeNorm = primeiroNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+
+    // Se o primeiro nome for ANA ou JOAO (com ou sem acento) e houver segundo nome:
+    if ((primeiroNomeNorm === "ANA" || primeiroNomeNorm === "JOAO") && partes.length > 1) {
+        return `${primeiroNome} ${partes[1]}`;
+    }
+
+    return primeiroNome;
+}
+
     function toggleAjuda() {
     const caixa = document.getElementById('caixaAjuda');
     caixa.classList.toggle('hidden');
@@ -1042,10 +1058,12 @@ async function gravarOcorrencia() {
         });
     }
 
+    const nomeExibicaoProf = formatarNomeResponsavel(profNomeLogado);
+
     const dados = {
         acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
         id: idEditando || Date.now(),
-        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${profNomeLogado.split(" ")[0]} (${disciplinaParaGravar})`,
+        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${nomeExibicaoProf} (${disciplinaParaGravar})`,
         dataManual: dVal.split("-").reverse().join("/"),
         turma: tVal,
         aluno: aVal,
@@ -1203,7 +1221,7 @@ function exibirDados(data, t, a, p) {
     }
     
     if (!verTodos) {
-        const meuNome = profNomeLogado.split(" ")[0].toUpperCase();
+        const meuNome = formatarNomeResponsavel(profNomeLogado).toUpperCase();
         filtrados = filtrados.filter(r => String(r[2]).toUpperCase().includes(meuNome));
     }
 
@@ -1288,7 +1306,8 @@ function exibirDados(data, t, a, p) {
         });
 
         ocorrenciasAluno.forEach(r => {
-            const souDono = String(r[2]).toUpperCase().includes(profNomeLogado.split(" ")[0].toUpperCase());
+            const meuNomeFormatado = formatarNomeResponsavel(profNomeLogado).toUpperCase();
+            const souDono = String(r[2]).toUpperCase().includes(meuNomeFormatado);
             const souGestor = (cargoLogado === "Diretor");
             const tri = identificarTrimestre(r[1]);
 
