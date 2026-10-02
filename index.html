@@ -771,6 +771,7 @@
     // 2. Lógica de Hierarquia e Permissões
     const gestores = ["DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA", "COORDENADOR", "COORDENADORA", "SUPERVISOR", "SUPERVISORA", "PAS"];
     const ehGestao = gestores.some(c => cp.includes(c));
+        window.podeVerAnexos = ehGestao;
     const ehAEE = cp.includes("AEE");
     const gestoresFeedback = ["COORDENADOR", "COORDENADORA", "DIRETOR", "DIRETORA", "VICE-DIRETOR", "VICE-DIRETORA"];
     const podeVerFeedback = gestoresFeedback.some(c => cp.includes(c));
@@ -1349,22 +1350,23 @@ function exibirDados(data, t, a, p) {
 
             // 🟢 2. TRATAMENTO DO DOCUMENTO ANEXO (Coluna K / r[10])
             // Procure onde gera o blocoAnexoHTML em exibirDados():
-                const linkAnexoUrl = r[10] || ""; // Coluna K
-                let blocoAnexoHTML = "";
+                const linkAnexoUrl = r[10] || ""; 
+            let blocoAnexoHTML = "";
 
-                if (linkAnexoUrl) {
-                    const urls = linkAnexoUrl.split(",");
-                    blocoAnexoHTML = `<div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:5px;">`;
-                    urls.forEach((url, index) => {
-                if (url.trim()) {
-                    blocoAnexoHTML += `
-                    <a href="${url.trim()}" target="_blank" style="display:inline-block; background:#f5f5f5; color:#333; border:1px solid #ccc; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; text-decoration:none;">
-                    📎 Abrir Anexo ${urls.length > 1 ? (index + 1) : ''}
-                    </a>`;
-        }
-    });
-    blocoAnexoHTML += `</div>`;
-}
+            // Exibe APENAS se houver links salvos E o usuário logado for Gestor ou PAS
+            if (linkAnexoUrl && window.podeVerAnexos) {
+                const urls = linkAnexoUrl.split(",");
+                blocoAnexoHTML = `<div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:5px;">`;
+                urls.forEach((url, index) => {
+                    if (url.trim()) {
+                        blocoAnexoHTML += `
+                            <a href="${url.trim()}" target="_blank" style="display:inline-block; background:#f5f5f5; color:#333; border:1px solid #ccc; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; text-decoration:none;">
+                                📎 Abrir Anexo ${urls.length > 1 ? (index + 1) : ''}
+                            </a>`;
+                    }
+                });
+                blocoAnexoHTML += `</div>`;
+            }
 
             html += `
             <div class="item-ocorrencia" style="margin-top: 10px; border-left: 5px solid var(--gold); position: relative;">
@@ -1426,14 +1428,14 @@ function exibirDados(data, t, a, p) {
 
     // Visualização do Anexo Existente
     const boxLink = document.getElementById('linkAnexoAtual');
-    if (anexoUrl && boxLink) {
+    if (anexoUrl && boxLink && window.podeVerAnexos) {
         boxLink.style.display = "block";
         const links = anexoUrl.split(',');
         let linksFormatados = links.map((u, idx) => 
             `<a href="${u.trim()}" target="_blank" style="color:var(--blue); font-weight:bold; margin-right:8px;">📎 Anexo ${links.length > 1 ? (idx + 1) : ''}</a>`
         ).join('');
         
-        boxLink.innerHTML = `<div><strong>Anexos já salvos:</strong> ${linksFormatados}</div><small style="color:#666;">(Selecione novo(s) arquivo(s) apenas se quiser substituir)</small>`;
+        boxLink.innerHTML = `<div><strong>Anexos salvos:</strong> ${linksFormatados}</div><small style="color:#666;">(Selecione novo(s) arquivo(s) apenas se quiser substituir)</small>`;
     } else if (boxLink) {
         boxLink.style.display = "none";
     }
