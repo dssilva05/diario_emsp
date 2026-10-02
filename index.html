@@ -434,10 +434,10 @@
             </div>
 
             <div id="boxAnexo" style="margin-top: 15px; background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
-                <label style="margin-top:0;">📎 Anexar Documento:</label>
-                <input type="file" id="arquivoAnexo" accept="image/*,.pdf,.doc,.docx" style="margin-top: 5px;">
-                <div id="linkAnexoAtual" style="margin-top: 5px; font-size: 12px; display: none;"></div>
-            </div>
+    <label style="margin-top:0;">📎 Anexar Documento:</label>
+    <input type="file" id="arquivoAnexo" accept="image/*,.pdf,.doc,.docx" multiple style="margin-top: 5px;">
+    <div id="linkAnexoAtual" style="margin-top: 5px; font-size: 12px; display: none;"></div>
+</div>
             
             <label>Tipo de Ocorrência Comum:</label>
 <select id="selOcorrenciaRapida">
@@ -1042,28 +1042,31 @@ async function gravarOcorrencia() {
     btn.disabled = true;
 
     // 🟢 LÓGICA DE PROCESSAMENTO DO ANEXO
+    // 🟢 LÓGICA PARA PROCESSAR MÚLTIPLOS ANEXOS
     const arquivoInput = document.getElementById('arquivoAnexo');
-    let arquivoBase64 = "";
-    let nomeArquivo = "";
-    let tipoMime = "";
+    let listaAnexos = [];
 
     if (arquivoInput && arquivoInput.files.length > 0) {
-        const arq = arquivoInput.files[0];
-        nomeArquivo = arq.name;
-        tipoMime = arq.type;
-        arquivoBase64 = await new Promise((resolve) => {
-            const fr = new FileReader();
-            fr.onload = (e) => resolve(e.target.result.split(',')[1]);
-            fr.readAsDataURL(arq);
-        });
-    }
+        for (let i = 0; i < arquivoInput.files.length; i++) {
+            const arq = arquivoInput.files[i];
+            const base64 = await new Promise((resolve) => {
+                const fr = new FileReader();
+                fr.onload = (e) => resolve(e.target.result.split(',')[1]);
+                fr.readAsDataURL(arq);
+            });
 
-    const nomeExibicaoProf = formatarNomeResponsavel(profNomeLogado);
+            listaAnexos.push({
+                nomeAnexo: arq.name,
+                tipoMimeAnexo: arq.type,
+                anexoBase64: base64
+            });
+        }
+    }
 
     const dados = {
         acao: idEditando ? 'editarOcorrencia' : 'salvarOcorrencia',
         id: idEditando || Date.now(),
-        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${nomeExibicaoProf} (${disciplinaParaGravar})`,
+        professor: `[${document.getElementById('selTipoRegistro').value}] ${prefixo}${profNomeLogado.split(" ")[0]} (${disciplinaParaGravar})`,
         dataManual: dVal.split("-").reverse().join("/"),
         turma: tVal,
         aluno: aVal,
@@ -1073,10 +1076,8 @@ async function gravarOcorrencia() {
         relatoGestao: relatoGestaoFinal,
         encaminhamento: document.getElementById('selEncaminhamento') ? document.getElementById('selEncaminhamento').value : "",
         
-        // 🟢 NOVOS CAMPOS PARA O ANEXO
-        anexoBase64: arquivoBase64,
-        nomeAnexo: nomeArquivo,
-        tipoMimeAnexo: tipoMime,
+        // 🟢 ENVIA A LISTA DE ANEXOS
+        anexosNovos: listaAnexos,
         anexoExistente: window.anexoAntigo || ""
     };
 
@@ -1347,13 +1348,23 @@ function exibirDados(data, t, a, p) {
             }
 
             // 🟢 2. TRATAMENTO DO DOCUMENTO ANEXO (Coluna K / r[10])
-            const linkAnexoUrl = r[10] || "";
-            const blocoAnexoHTML = linkAnexoUrl ? 
-                `<div style="margin-top:8px;">
-                    <a href="${linkAnexoUrl}" target="_blank" style="display:inline-block; background:#f5f5f5; color:#333; border:1px solid #ccc; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; text-decoration:none;">
-                        📎 Abrir Documento Anexo
-                    </a>
-                 </div>` : "";
+            // Procure onde gera o blocoAnexoHTML em exibirDados():
+                const linkAnexoUrl = r[10] || ""; // Coluna K
+                let blocoAnexoHTML = "";
+
+                if (linkAnexoUrl) {
+                    const urls = linkAnexoUrl.split(",");
+                    blocoAnexoHTML = `<div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:5px;">`;
+                    urls.forEach((url, index) => {
+                if (url.trim()) {
+                    blocoAnexoHTML += `
+                    <a href="${url.trim()}" target="_blank" style="display:inline-block; background:#f5f5f5; color:#333; border:1px solid #ccc; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; text-decoration:none;">
+                    📎 Abrir Anexo ${urls.length > 1 ? (index + 1) : ''}
+                    </a>`;
+        }
+    });
+    blocoAnexoHTML += `</div>`;
+}
 
             html += `
             <div class="item-ocorrencia" style="margin-top: 10px; border-left: 5px solid var(--gold); position: relative;">
@@ -1417,7 +1428,12 @@ function exibirDados(data, t, a, p) {
     const boxLink = document.getElementById('linkAnexoAtual');
     if (anexoUrl && boxLink) {
         boxLink.style.display = "block";
-        boxLink.innerHTML = `📎 Anexo atual: <a href="${anexoUrl}" target="_blank" style="color:var(--blue); font-weight:bold;">Visualizar documento</a> (Envie outro arquivo apenas se quiser substituir)`;
+        const links = anexoUrl.split(',');
+        let linksFormatados = links.map((u, idx) => 
+            `<a href="${u.trim()}" target="_blank" style="color:var(--blue); font-weight:bold; margin-right:8px;">📎 Anexo ${links.length > 1 ? (idx + 1) : ''}</a>`
+        ).join('');
+        
+        boxLink.innerHTML = `<div><strong>Anexos já salvos:</strong> ${linksFormatados}</div><small style="color:#666;">(Selecione novo(s) arquivo(s) apenas se quiser substituir)</small>`;
     } else if (boxLink) {
         boxLink.style.display = "none";
     }
